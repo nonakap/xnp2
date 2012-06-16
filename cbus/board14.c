@@ -15,16 +15,16 @@
 
 UINT board14_pitcount(void) {
 
-	SINT32	clock;
+	SINT32	clk;
 
-	clock = nevent_getremain(NEVENT_MUSICGEN);
-	if (clock >= 0) {
-		clock /= pccore.multiple;
-		clock /= 8;
+	clk = nevent_getremain(NEVENT_MUSICGEN);
+	if (clk >= 0) {
+		clk /= pccore.multiple;
+		clk /= 8;
 		if (!(pccore.cpumode & CPUMODE_8MHZ)) {
-			clock = clock * 13 / 16;
+			clk = clk * 13 / 16;
 		}
-		return(clock);
+		return(clk);
 	}
 	return(0);
 }

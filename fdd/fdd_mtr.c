@@ -117,9 +117,9 @@ void fddmtr_initialize(void) {
 	FillMemory(fddmtr.head, sizeof(fddmtr.head), 42);
 }
 
-void fddmtr_callback(UINT time) {
+void fddmtr_callback(UINT nowtime) {
 
-	if ((fddmtr.curevent) && (time >= fddmtr.nextevent)) {
+	if ((fddmtr.curevent) && (nowtime >= fddmtr.nextevent)) {
 		fddmtr_event();
 	}
 }

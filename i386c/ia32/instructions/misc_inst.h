@@ -1,5 +1,3 @@
-/*	$Id: misc_inst.h,v 1.2 2005/03/12 12:33:48 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2003 NONAKA Kimihiro
  * All rights reserved.

@@ -109,6 +109,8 @@ NP2OSCFG np2oscfg = {
 	MMXFLAG_DISABLE,	/* disablemmx */
 	INTERP_NEAREST,		/* drawinterp */
 	0,			/* F11KEY */
+
+	FALSE,			/* cfgreadonly */
 };
 
 volatile sig_atomic_t np2running = 0;
@@ -128,15 +130,14 @@ char bmpfilefolder[MAX_PATH];
 char modulefile[MAX_PATH];
 char statpath[MAX_PATH];
 
+char np2appname[MAX_PATH] = "np2";
+const char np2flagext[] = "s%02d";
+const char np2resumeext[] = "sav";
+
 #ifndef FONTFACE
 #define FONTFACE "-misc-fixed-%s-r-normal--%d-*-*-*-*-*-*-*"
 #endif
 char fontname[1024] = FONTFACE;
-
-#ifndef	FONTNAME_DEFAULT
-#define	FONTNAME_DEFAULT	"./default.ttf"
-#endif
-char fontfilename[MAX_PATH] = FONTNAME_DEFAULT;
 
 char timidity_cfgfile_path[MAX_PATH];
 
@@ -158,15 +159,17 @@ getstatfilename(char* path, const char* ext, int size)
 
 	/*
 	 * default:
-	 * e.g. resume:   "/home/user_name/.np2/sav/sav"
-	 *      statpath: "/home/user_name/.np2/sav/s00"
+	 * e.g. resume:   "/home/user_name/.np2/sav/np2.sav"
+	 *      statpath: "/home/user_name/.np2/sav/np2.s00"
+	 *      config:   "/home/user_name/.np2/np2rc"
 	 *
 	 * --config option:
-	 * e.g. resume:   "/config_file_path/sav"
-	 *      statpath: "/config_file_path/s00"
+	 * e.g. resume:   "/config_file_path/sav/np2.sav"
+	 *      statpath: "/config_file_path/sav/np2.s00"
 	 *      config:   "/config_file_path/config_file_name"
 	 */
 	file_cpyname(path, statpath, size);
+	file_catname(path, ".", size);
 	file_catname(path, ext, size);
 }
 
@@ -204,16 +207,18 @@ flagload(const char* ext, const char* title, BOOL force)
 	int ret;
 	int rv = 0;
 
-	UNUSED(title);
-
 	getstatfilename(path, ext, sizeof(path));
 	ret = statsave_check(path, buf, sizeof(buf));
 	if (ret & (~STATFLAG_DISKCHG)) {
-		fprintf(stderr, "Couldn't restart\n");
+		toolkit_msgbox(title, "Couldn't restart",
+		    TK_MB_OK|TK_MB_ICON_ERROR);
 		rv = 1;
 	} else if ((!force) && (ret & STATFLAG_DISKCHG)) {
-		fprintf(stderr, "Conflict\n");
-		rv = 1;
+		ret = toolkit_msgbox(title, "Conflict!\nContinue?",
+		    TK_MB_YESNO|TK_MB_ICON_QUESTION);
+		if (ret != TK_MB_YES) {
+			rv = 1;
+		}
 	}
 	if (rv == 0) {
 		statsave_load(path);
@@ -307,8 +312,6 @@ int
 mainloop(void *p)
 {
 
-	UNUSED(p);
-
 	if (np2oscfg.NOWAIT) {
 		joymng_sync();
 		mousemng_callback();
@@ -370,12 +373,14 @@ mainloop(void *p)
 	return TRUE;
 }
 
-#if defined(GCC_CPU_ARCH_IA32)
 int mmxflag;
 
 int
 havemmx(void)
 {
+#if !defined(GCC_CPU_ARCH_IA32)
+	return 0;
+#else	/* GCC_CPU_ARCH_IA32 */
 	int rv;
 
 #if defined(GCC_CPU_ARCH_AMD64)
@@ -403,6 +408,5 @@ havemmx(void)
 		: "=a" (rv));
 #endif /* GCC_CPU_ARCH_AMD64 */
 	return rv;
-}
-
 #endif /* GCC_CPU_ARCH_IA32 */
+}

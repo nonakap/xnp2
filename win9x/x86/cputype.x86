@@ -23,5 +23,3 @@ _havemmx:		pushfd
 				and			eax, 00800000h
 nocpuid:		ret
 
-	ends
-

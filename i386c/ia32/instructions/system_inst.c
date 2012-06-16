@@ -1,5 +1,3 @@
-/*	$Id: system_inst.c,v 1.32 2008/01/25 18:02:18 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -32,7 +30,7 @@
 #include "system_inst.h"
 
 
-void
+void CPUCALL
 LGDT_Ms(UINT32 op)
 {
 	UINT32 madr;
@@ -40,7 +38,7 @@ LGDT_Ms(UINT32 op)
 	UINT16 limit;
 
 	if (op < 0xc0) {
-		if (!CPU_STAT_PM || !CPU_STAT_VM86 || CPU_STAT_CPL == 0) {
+		if (!CPU_STAT_PM || (CPU_STAT_CPL == 0 && !CPU_STAT_VM86)) {
 			CPU_WORKCLOCK(11);
 			madr = calc_ea_dst(op);
 			limit = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr);
@@ -63,7 +61,7 @@ LGDT_Ms(UINT32 op)
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 SGDT_Ms(UINT32 op)
 {
 	UINT32 madr;
@@ -85,7 +83,7 @@ SGDT_Ms(UINT32 op)
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 LLDT_Ew(UINT32 op)
 {
 	UINT32 madr;
@@ -107,11 +105,11 @@ LLDT_Ew(UINT32 op)
 		VERBOSE(("LLDT: CPL(%d) != 0", CPU_STAT_CPL));
 		EXCEPTION(GP_EXCEPTION, 0);
 	}
-	VERBOSE(("LLDT: VM86"));
+	VERBOSE(("LLDT: real-mode or VM86"));
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 SLDT_Ew(UINT32 op)
 {
 	UINT32 madr;
@@ -133,11 +131,11 @@ SLDT_Ew(UINT32 op)
 		}
 		return;
 	}
-	VERBOSE(("SLDT: VM86"));
+	VERBOSE(("SLDT: real-mode or VM86"));
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 LTR_Ew(UINT32 op)
 {
 	UINT32 madr;
@@ -159,11 +157,11 @@ LTR_Ew(UINT32 op)
 		VERBOSE(("LTR: CPL(%d) != 0", CPU_STAT_CPL));
 		EXCEPTION(GP_EXCEPTION, 0);
 	}
-	VERBOSE(("LTR: VM86"));
+	VERBOSE(("LTR: real-mode or VM86"));
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 STR_Ew(UINT32 op)
 {
 	UINT32 madr;
@@ -185,11 +183,11 @@ STR_Ew(UINT32 op)
 		}
 		return;
 	}
-	VERBOSE(("STR: VM86"));
+	VERBOSE(("STR: real-mode or VM86"));
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 LIDT_Ms(UINT32 op)
 {
 	UINT32 madr;
@@ -197,7 +195,7 @@ LIDT_Ms(UINT32 op)
 	UINT16 limit;
 
 	if (op < 0xc0) {
-		if (!CPU_STAT_PM || !CPU_STAT_VM86 || CPU_STAT_CPL == 0) {
+		if (!CPU_STAT_PM || (CPU_STAT_CPL == 0 && !CPU_STAT_VM86)) {
 			CPU_WORKCLOCK(11);
 			madr = calc_ea_dst(op);
 			limit = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr);
@@ -220,7 +218,7 @@ LIDT_Ms(UINT32 op)
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 SIDT_Ms(UINT32 op)
 {
 	UINT32 madr;
@@ -276,7 +274,7 @@ MOV_CdRd(void)
 			 * 31 = PG (pageing)
 			 */
 
-			/* ≤º¥¨ p.182 ≥‰§Íπ˛§ﬂ 13 - ∞Ï»Ã ›∏ÓŒ„≥∞ */
+			/* ‰∏ãÂ∑ª p.182 Ââ≤„ÇäËæº„Åø 13 - ‰∏ÄËà¨‰øùË≠∑‰æãÂ§ñ */
 			if ((src & (CPU_CR0_PE|CPU_CR0_PG)) == (UINT32)CPU_CR0_PG) {
 				EXCEPTION(GP_EXCEPTION, 0);
 			}
@@ -288,6 +286,7 @@ MOV_CdRd(void)
 			src &= CPU_CR0_ALL;
 #if defined(USE_FPU)
 			src |= CPU_CR0_ET;	/* FPU present */
+			src &= ~CPU_CR0_EM;
 #else
 			src |= CPU_CR0_EM | CPU_CR0_NE;
 			src &= ~(CPU_CR0_MP | CPU_CR0_ET);
@@ -296,7 +295,7 @@ MOV_CdRd(void)
 			VERBOSE(("MOV_CdRd: %04x:%08x: cr0: 0x%08x <- 0x%08x(%s)", CPU_CS, CPU_PREV_EIP, reg, CPU_CR0, reg32_str[op & 7]));
 
 			if ((reg ^ CPU_CR0) & (CPU_CR0_PE|CPU_CR0_PG)) {
-				tlb_flush(TRUE);
+				tlb_flush(1);
 			}
 			if ((reg ^ CPU_CR0) & CPU_CR0_PE) {
 				if (CPU_CR0 & CPU_CR0_PE) {
@@ -332,7 +331,7 @@ MOV_CdRd(void)
 			 * 3 = PWT (page level write throgh)
 			 */
 			reg = CPU_CR3;
-			set_CR3(src);
+			set_cr3(src);
 			VERBOSE(("MOV_CdRd: %04x:%08x: cr3: 0x%08x <- 0x%08x(%s)", CPU_CS, CPU_PREV_EIP, reg, CPU_CR3, reg32_str[op & 7]));
 			break;
 
@@ -367,7 +366,7 @@ MOV_CdRd(void)
 			VERBOSE(("MOV_CdRd: %04x:%08x: cr4: 0x%08x <- 0x%08x(%s)", CPU_CS, CPU_PREV_EIP, reg, CPU_CR4, reg32_str[op & 7]));
 
 			if ((reg ^ CPU_CR4) & (CPU_CR4_PSE|CPU_CR4_PGE|CPU_CR4_PAE)) {
-				tlb_flush(TRUE);
+				tlb_flush(1);
 			}
 			break;
 
@@ -427,7 +426,7 @@ MOV_RdCd(void)
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 LMSW_Ew(UINT32 op)
 {
 	UINT32 src, madr;
@@ -455,14 +454,18 @@ LMSW_Ew(UINT32 op)
 	EXCEPTION(GP_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 SMSW_Ew(UINT32 op)
 {
 	UINT32 madr;
 
 	if (op >= 0xc0) {
 		CPU_WORKCLOCK(2);
-		*(reg16_b20[op]) = (UINT16)CPU_CR0;
+		if (CPU_INST_OP32) {
+			*(reg32_b20[op]) = (UINT16)CPU_CR0;
+		} else {
+			*(reg16_b20[op]) = (UINT16)CPU_CR0;
+		}
 	} else {
 		CPU_WORKCLOCK(3);
 		madr = calc_ea_dst(op);
@@ -516,7 +519,7 @@ ARPL_EwGw(void)
 		}
 		return;
 	}
-	VERBOSE(("ARPL: VM86"));
+	VERBOSE(("ARPL: real-mode or VM86"));
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
@@ -542,10 +545,11 @@ LAR_GwEw(void)
 			return;
 		}
 
-		if (sel.desc.s) {
+		if (!SEG_IS_SYSTEM(&sel.desc)) {
 			/* code or data segment */
-			if (!(sel.desc.u.seg.c && sel.desc.u.seg.ec)) {
-				/* not conforming code segment */
+			if ((SEG_IS_DATA(&sel.desc)
+			 || !SEG_IS_CONFORMING_CODE(&sel.desc))) {
+				/* data or non-conforming code segment */
 				if ((sel.desc.dpl < CPU_STAT_CPL)
 				 || (sel.desc.dpl < sel.rpl)) {
 					CPU_FLAGL &= ~Z_FLAG;
@@ -576,7 +580,7 @@ LAR_GwEw(void)
 		CPU_FLAGL |= Z_FLAG;
 		return;
 	}
-	VERBOSE(("LAR: VM86"));
+	VERBOSE(("LAR: real-mode or VM86"));
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
@@ -599,10 +603,11 @@ LAR_GdEw(void)
 			return;
 		}
 
-		if (sel.desc.s) {
+		if (!SEG_IS_SYSTEM(&sel.desc)) {
 			/* code or data segment */
-			if (!(sel.desc.u.seg.c && sel.desc.u.seg.ec)) {
-				/* not conforming code segment */
+			if ((SEG_IS_DATA(&sel.desc)
+			 || !SEG_IS_CONFORMING_CODE(&sel.desc))) {
+				/* data or non-conforming code segment */
 				if ((sel.desc.dpl < CPU_STAT_CPL)
 				 || (sel.desc.dpl < sel.rpl)) {
 					CPU_FLAGL &= ~Z_FLAG;
@@ -633,7 +638,7 @@ LAR_GdEw(void)
 		CPU_FLAGL |= Z_FLAG;
 		return;
 	}
-	VERBOSE(("LAR: VM86"));
+	VERBOSE(("LAR: real-mode or VM86"));
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
@@ -655,10 +660,11 @@ LSL_GwEw(void)
 			return;
 		}
 
-		if (sel.desc.s) {
+		if (!SEG_IS_SYSTEM(&sel.desc)) {
 			/* code or data segment */
-			if (!(sel.desc.u.seg.c && sel.desc.u.seg.ec)) {
-				/* not conforming code segment */
+			if ((SEG_IS_DATA(&sel.desc)
+			 || !SEG_IS_CONFORMING_CODE(&sel.desc))) {
+				/* data or non-conforming code segment */
 				if ((sel.desc.dpl < CPU_STAT_CPL)
 				 || (sel.desc.dpl < sel.rpl)) {
 					CPU_FLAGL &= ~Z_FLAG;
@@ -685,7 +691,7 @@ LSL_GwEw(void)
 		CPU_FLAGL |= Z_FLAG;
 		return;
 	}
-	VERBOSE(("LSL: VM86"));
+	VERBOSE(("LSL: real-mode or VM86"));
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
@@ -707,10 +713,11 @@ LSL_GdEw(void)
 			return;
 		}
 
-		if (sel.desc.s) {
+		if (!SEG_IS_SYSTEM(&sel.desc)) {
 			/* code or data segment */
-			if (!(sel.desc.u.seg.c && sel.desc.u.seg.ec)) {
-				/* not conforming code segment */
+			if ((SEG_IS_DATA(&sel.desc)
+			 || !SEG_IS_CONFORMING_CODE(&sel.desc))) {
+				/* data or non-conforming code segment */
 				if ((sel.desc.dpl < CPU_STAT_CPL)
 				 || (sel.desc.dpl < sel.rpl)) {
 					CPU_FLAGL &= ~Z_FLAG;
@@ -737,11 +744,11 @@ LSL_GdEw(void)
 		CPU_FLAGL |= Z_FLAG;
 		return;
 	}
-	VERBOSE(("LSL: VM86"));
+	VERBOSE(("LSL: real-mode or VM86"));
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 VERR_Ew(UINT32 op)
 {
 	selector_t sel;
@@ -766,13 +773,14 @@ VERR_Ew(UINT32 op)
 		}
 
 		/* system segment */
-		if (!sel.desc.s) {
+		if (SEG_IS_SYSTEM(&sel.desc)) {
 			CPU_FLAGL &= ~Z_FLAG;
 			return;
 		}
-		/* not conforming code segment && (CPL > DPL || RPL > DPL) */
-		if (!(sel.desc.u.seg.c && sel.desc.u.seg.ec)) {
-			/* not conforming code segment */
+
+		/* data or non-conforming code segment */
+		if ((SEG_IS_DATA(&sel.desc)
+		 || !SEG_IS_CONFORMING_CODE(&sel.desc))) {
 			if ((sel.desc.dpl < CPU_STAT_CPL)
 			 || (sel.desc.dpl < sel.rpl)) {
 				CPU_FLAGL &= ~Z_FLAG;
@@ -780,7 +788,8 @@ VERR_Ew(UINT32 op)
 			}
 		}
 		/* code segment is not readable */
-		if (sel.desc.u.seg.c && !sel.desc.u.seg.wr) {
+		if (SEG_IS_CODE(&sel.desc)
+		 && !SEG_IS_READABLE_CODE(&sel.desc)) {
 			CPU_FLAGL &= ~Z_FLAG;
 			return;
 		}
@@ -788,11 +797,11 @@ VERR_Ew(UINT32 op)
 		CPU_FLAGL |= Z_FLAG;
 		return;
 	}
-	VERBOSE(("VERR: VM86"));
+	VERBOSE(("VERR: real-mode or VM86"));
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 VERW_Ew(UINT32 op)
 {
 	selector_t sel;
@@ -817,12 +826,12 @@ VERW_Ew(UINT32 op)
 		}
 
 		/* system segment || code segment */
-		if (!sel.desc.s || sel.desc.u.seg.c) {
+		if (SEG_IS_SYSTEM(&sel.desc) || SEG_IS_CODE(&sel.desc)) {
 			CPU_FLAGL &= ~Z_FLAG;
 			return;
 		}
 		/* data segment is not writable */
-		if (!sel.desc.u.seg.wr) {
+		if (!SEG_IS_WRITABLE_DATA(&sel.desc)) {
 			CPU_FLAGL &= ~Z_FLAG;
 			return;
 		}
@@ -835,7 +844,7 @@ VERW_Ew(UINT32 op)
 		CPU_FLAGL |= Z_FLAG;
 		return;
 	}
-	VERBOSE(("VERW: VM86"));
+	VERBOSE(("VERW: real-mode or VM86"));
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
@@ -845,9 +854,6 @@ MOV_DdRd(void)
 	UINT32 src;
 	UINT op;
 	int idx;
-#if defined(IA32_SUPPORT_DEBUG_REGISTER)
-	int i;
-#endif
 
 	CPU_WORKCLOCK(11);
 	GET_PCBYTE(op);
@@ -875,32 +881,13 @@ MOV_DdRd(void)
 			CPU_DR(idx) = src;
 			break;
 
-#if CPU_FAMILY >= 5
-		case 4:
-			if (CPU_CR4 & CPU_CR4_DE) {
-				EXCEPTION(UD_EXCEPTION, 0);
-			}
-#endif
 		case 6:
 			CPU_DR6 = src;
 			break;
 
-#if CPU_FAMILY >= 5
-		case 5:
-			if (CPU_CR4 & CPU_CR4_DE) {
-				EXCEPTION(UD_EXCEPTION, 0);
-			}
-#endif
 		case 7:
 			CPU_DR7 = src;
 			CPU_STAT_BP = 0;
-#if defined(IA32_SUPPORT_DEBUG_REGISTER)
-			for (i = 0; i < CPU_DEBUG_REG_INDEX_NUM; i++) {
-				if (CPU_DR7 & (CPU_DR7_L(i)|CPU_DR7_G(i))) {
-					CPU_STAT_BP |= (1 << i);
-				}
-			}
-#endif	/* IA32_SUPPORT_DEBUG_REGISTER */
 			break;
 
 		default:
@@ -947,25 +934,10 @@ MOV_RdDd(void)
 			break;
 
 		case 4:
-#if CPU_FAMILY >= 5
-			if (CPU_CR4 & CPU_CR4_DE) {
-				EXCEPTION(UD_EXCEPTION, 0);
-			}
-#endif
 		case 6:
-#if CPU_FAMILY == 4
 			*out = (CPU_DR6 & 0x0000f00f) | 0xffff0ff0;
-#elif CPU_FAMILY >= 5
-			*out = (CPU_DR6 & 0x0000e00f) | 0xffff0ff0;
-#endif
 			break;
 
-#if CPU_FAMILY >= 5
-		case 5:
-			if (CPU_CR4 & CPU_CR4_DE) {
-				EXCEPTION(UD_EXCEPTION, 0);
-			}
-#endif
 		case 7:
 			*out = CPU_DR7;
 			break;
@@ -1002,13 +974,12 @@ WBINVD(void)
 	}
 }
 
-void
+void CPUCALL
 INVLPG(UINT32 op)
 {
-	descriptor_t *sd;
+	descriptor_t *sdp;
 	UINT32 madr;
 	int idx;
-	int exc;
 
 	if (CPU_STAT_PM && (CPU_STAT_VM86 || CPU_STAT_CPL != 0)) {
 		VERBOSE(("INVLPG: VM86(%s) or CPL(%d) != 0", CPU_STAT_VM86 ? "true" : "false", CPU_STAT_CPL));
@@ -1020,38 +991,29 @@ INVLPG(UINT32 op)
 		madr = calc_ea_dst(op);
 
 		idx = CPU_INST_SEGREG_INDEX;
-		sd = &CPU_STAT_SREG(idx);
-		if (!sd->valid) {
-			exc = GP_EXCEPTION;
-			goto err;
+		sdp = &CPU_STAT_SREG(idx);
+		if (!SEG_IS_VALID(sdp)) {
+			EXCEPTION(GP_EXCEPTION, 0);
 		}
-		switch (sd->type) {
+		switch (sdp->type) {
 		case 4: case 5: case 6: case 7:
-			if (madr <= sd->u.seg.limit) {
-				if (idx == CPU_SS_INDEX)
-					exc = SS_EXCEPTION;
-				else
-					exc = GP_EXCEPTION;
-				goto err;
+			if (madr <= sdp->u.seg.limit) {
+				EXCEPTION((idx == CPU_SS_INDEX) ?
+				    SS_EXCEPTION: GP_EXCEPTION, 0);
 			}
 			break;
 
 		default:
-			if (madr > sd->u.seg.limit) {
-				if (idx == CPU_SS_INDEX)
-					exc = SS_EXCEPTION;
-				else
-					exc = GP_EXCEPTION;
-				goto err;
+			if (madr > sdp->u.seg.limit) {
+				EXCEPTION((idx == CPU_SS_INDEX) ?
+				    SS_EXCEPTION: GP_EXCEPTION, 0);
 			}
 			break;
 		}
-		tlb_flush_page(sd->u.seg.segbase + madr);
+		tlb_flush_page(sdp->u.seg.segbase + madr);
 		return;
 	}
-	exc = UD_EXCEPTION;
-err:
-	EXCEPTION(exc, 0);
+	EXCEPTION(UD_EXCEPTION, 0);
 }
 
 void
@@ -1070,8 +1032,9 @@ HLT(void)
 		EXCEPTION(GP_EXCEPTION, 0);
 	}
 
+	VERBOSE(("HLT: do HLT."));
 	CPU_HALT();
-	CPU_EIP--;
+	CPU_EIP = CPU_PREV_EIP;
 	CPU_STAT_HLT = 1;
 }
 
@@ -1112,7 +1075,7 @@ WRMSR(void)
 
 	idx = CPU_ECX;
 	switch (idx) {
-		/* MTRR §ÿ§ŒΩÒ§≠π˛§ﬂª˛ tlb_flush(TRUE); */
+		/* MTRR „Å∏„ÅÆÊõ∏„ÅçËæº„ÅøÊôÇ tlb_flush(1); */
 
 	default:
 		EXCEPTION(GP_EXCEPTION, 0);

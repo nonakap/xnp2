@@ -5,6 +5,8 @@
 
 #include "joymng.h"
 
+G_BEGIN_DECLS
+
 typedef struct {
 	BYTE	port;
 	BYTE	def_en;
@@ -62,6 +64,8 @@ typedef struct {
 	BYTE	disablemmx;
 	BYTE	drawinterp;
 	BYTE	F11KEY;
+
+	BYTE	cfgreadonly;
 } NP2OSCFG;
 
 
@@ -85,10 +89,6 @@ enum {
 	INTERP_HYPER		= 3
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* np2.c */
 extern volatile sig_atomic_t np2running;
 extern NP2OSCFG np2oscfg;
@@ -110,7 +110,10 @@ extern char bmpfilefolder[MAX_PATH];
 extern char modulefile[MAX_PATH];
 extern char statpath[MAX_PATH];
 extern char fontname[1024];
-extern char fontfilename[MAX_PATH];
+
+extern char np2appname[MAX_PATH];
+extern const char np2flagext[];
+extern const char np2resumeext[];
 
 int flagload(const char* ext, const char* title, BOOL force);
 int flagsave(const char* ext);
@@ -121,13 +124,9 @@ void framereset(UINT cnt);
 void processwait(UINT cnt);
 int mainloop(void *);
 
-#if defined(GCC_CPU_ARCH_IA32)
 extern int mmxflag;
 int havemmx(void);
-#endif
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #endif	/* NP2_X11_NP2_H__ */

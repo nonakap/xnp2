@@ -253,5 +253,3 @@ deldirty_lp:	and		[ebx], edx
 				popad
 				ret
 
-	ends
-

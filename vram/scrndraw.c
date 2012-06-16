@@ -47,7 +47,7 @@ void scrndraw_changepalette(void) {
 static UINT8 rasterdraw(SDRAWFN sdrawfn, SDRAW sdraw, int maxy) {
 
 	RGB32		pal[16];
-	SINT32		clock;
+	SINT32		clk;
 	PAL1EVENT	*event;
 	PAL1EVENT	*eventterm;
 	int			nextupdate;
@@ -55,12 +55,12 @@ static UINT8 rasterdraw(SDRAWFN sdrawfn, SDRAW sdraw, int maxy) {
 
 	TRACEOUT(("rasterdraw: maxy = %d", maxy));
 	CopyMemory(pal, palevent.pal, sizeof(pal));
-	clock = maxy;
-	clock += 2;
-	clock += np2cfg.realpal;
-	clock -= 32;
-	clock += (gdc.m.para[GDC_SYNC + 5] >> 2) & 0x3f;
-	clock *= gdc.rasterclock;
+	clk = maxy;
+	clk += 2;
+	clk += np2cfg.realpal;
+	clk -= 32;
+	clk += (gdc.m.para[GDC_SYNC + 5] >> 2) & 0x3f;
+	clk *= gdc.rasterclock;
 	event = palevent.event;
 	eventterm = event + palevent.events;
 	nextupdate = 0;
@@ -69,7 +69,7 @@ static UINT8 rasterdraw(SDRAWFN sdrawfn, SDRAW sdraw, int maxy) {
 			break;
 		}
 		// ‚¨•Ù“–‚Í‚ ‚Á‚½H
-		if (clock < event->clock) {
+		if (clk < event->clock) {
 			if (!(np2cfg.LCD_MODE & 1)) {
 				pal_makeanalog(pal, 0xffff);
 			}
@@ -85,7 +85,7 @@ static UINT8 rasterdraw(SDRAWFN sdrawfn, SDRAW sdraw, int maxy) {
 			(*sdrawfn)(sdraw, y);
 			nextupdate = y;
 			// ‚¨•Ù“–‚ğH‚×‚é
-			while(clock < event->clock) {
+			while(clk < event->clock) {
 				((UINT8 *)pal)[event->color] = event->value;
 				event++;
 				if (event >= eventterm) {
@@ -93,7 +93,7 @@ static UINT8 rasterdraw(SDRAWFN sdrawfn, SDRAW sdraw, int maxy) {
 				}
 			}
 		}
-		clock -= 2 * gdc.rasterclock;
+		clk -= 2 * gdc.rasterclock;
 	}
 	if (nextupdate < maxy) {
 		if (!(np2cfg.LCD_MODE & 1)) {

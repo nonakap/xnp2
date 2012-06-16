@@ -137,5 +137,3 @@ section .data
 
 _randseed	dd		1
 
-	ends
-

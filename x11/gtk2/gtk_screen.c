@@ -1,5 +1,3 @@
-/*	$Id: gtk_screen.c,v 1.9 2007/02/04 11:51:14 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -47,15 +45,15 @@
 typedef struct {
 	UINT8		scrnmode;
 	volatile int	drawing;
-	int		width;		/* drawarea ¤Î width */
-	int		height;		/* drawarea ¤Î height */
+	int		width;		/* drawarea ã® width */
+	int		height;		/* drawarea ã® height */
 	int		extend;
 	int		clipping;
 
 	PAL16MASK	pal16mask;
 
-	RECT_T		scrn;		/* drawarea Æâ¤ÎÉÁ²èÎÎ°è°ÌÃÖ */
-	RECT_T		rect;		/* drawarea ¤ËÉÁ²è¤¹¤ë¥µ¥¤¥º */
+	RECT_T		scrn;		/* drawarea å†…ã®æç”»é ˜åŸŸä½ç½® */
+	RECT_T		rect;		/* drawarea ã«æç”»ã™ã‚‹ã‚µã‚¤ã‚º */
 
 	/* toolkit depend */
 	GdkPixbuf	*drawsurf;
@@ -64,7 +62,7 @@ typedef struct {
 	double		ratio_w, ratio_h;
 	int		interp;
 
-	GdkColor	pal[24];
+	GdkColor	pal[NP2PAL_EXTEND];
 } DRAWMNG;
 
 typedef struct {
@@ -89,7 +87,7 @@ GtkWidget *drawarea;
 #define	BYTES_PER_PIXEL	3
 
 /*
- * drawarea ¤Î¥¢¥¹¥Ú¥¯¥ÈÈæ¤ò 4:3 (640x480) ¤Ë¤¹¤ë¡£
+ * drawarea ã®ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”ã‚’ 4:3 (640x480) ã«ã™ã‚‹ã€‚
  */
 static void
 adapt_aspect(int width, int height, int scrnwidth, int scrnheight)
@@ -468,8 +466,6 @@ void
 scrnmng_setwidth(int posx, int width)
 {
 
-	UNUSED(posx);
-
 	scrnstat.width = width;
 	renewal_client_size();
 }
@@ -477,8 +473,6 @@ scrnmng_setwidth(int posx, int width)
 void
 scrnmng_setheight(int posy, int height)
 {
-
-	UNUSED(posy);
 
 	scrnstat.height = height;
 	renewal_client_size();
@@ -542,8 +536,6 @@ void
 scrnmng_surfunlock(const SCRNSURF *surf)
 {
 
-	UNUSED(surf);
-
 	if (drawmng.drawsurf == drawmng.surface) {
 		gdk_pixbuf_scale(drawmng.backsurf, drawmng.surface,
 		    0, 0, drawmng.rect.right, drawmng.rect.bottom,
@@ -558,7 +550,7 @@ void
 scrnmng_update(void)
 {
 	GdkDrawable *d = drawarea->window;
-	GdkGC *gc = drawarea->style->fg_gc[GTK_WIDGET_STATE(drawarea)];
+	GdkGC *gc = drawarea->style->fg_gc[gtk_widget_get_state(drawarea)];
 
 	if (scrnmng.palchanged) {
 		scrnmng.palchanged = FALSE;

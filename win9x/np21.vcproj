@@ -442,6 +442,9 @@
 							RelativePath="..\I386C\ia32\instructions\flag_ctrl.c">
 						</File>
 						<File
+							RelativePath="..\I386C\ia32\instructions\fpu.c">
+						</File>
+						<File
 							RelativePath="..\I386C\ia32\instructions\fpu\fpdummy.c">
 						</File>
 						<File

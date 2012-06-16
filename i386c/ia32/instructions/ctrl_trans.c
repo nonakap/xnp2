@@ -1,5 +1,3 @@
-/*	$Id: ctrl_trans.c,v 1.23 2008/01/25 18:02:18 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2003 NONAKA Kimihiro
  * All rights reserved.
@@ -43,52 +41,45 @@
 void
 JMP_Jb(void)
 {
-	UINT32 ip;
 
-	CPU_WORKCLOCK(7);
-	GET_PCBYTESD(ip);
-	ADD_EIP(ip);
+	JMPSHORT(7);
 }
 
 void
 JMP_Jw(void)
 {
-	UINT32 ip;
 
-	CPU_WORKCLOCK(7);
-	GET_PCWORDS(ip);
-	ADD_EIP(ip);
+	JMPNEAR(7);
 }
 
 void
 JMP_Jd(void)
 {
-	UINT32 ip;
 
-	CPU_WORKCLOCK(7);
-	GET_PCDWORD(ip);
-	ADD_EIP(ip);
+	JMPNEAR32(7);
 }
 
-void
+void CPUCALL
 JMP_Ew(UINT32 op)
 {
 	UINT32 madr;
-	UINT32 new_ip;
+	UINT16 new_ip;
 
 	if (op >= 0xc0) {
 		CPU_WORKCLOCK(7);
 		new_ip = *(reg16_b20[op]);
-		SET_EIP(new_ip);
 	} else {
 		CPU_WORKCLOCK(11);
 		madr = calc_ea_dst(op);
 		new_ip = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr);
-		SET_EIP(new_ip);
 	}
+	if (new_ip > CPU_STAT_CS_LIMIT) {
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
+	CPU_EIP = new_ip;
 }
 
-void
+void CPUCALL
 JMP_Ed(UINT32 op)
 {
 	UINT32 madr;
@@ -97,28 +88,37 @@ JMP_Ed(UINT32 op)
 	if (op >= 0xc0) {
 		CPU_WORKCLOCK(7);
 		new_ip = *(reg32_b20[op]);
-		SET_EIP(new_ip);
 	} else {
 		CPU_WORKCLOCK(11);
 		madr = calc_ea_dst(op);
 		new_ip = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr);
-		SET_EIP(new_ip);
 	}
+	if (new_ip > CPU_STAT_CS_LIMIT) {
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
+	CPU_EIP = new_ip;
 }
 
 void
 JMP16_Ap(void)
 {
-	UINT32 new_ip;
+	descriptor_t sd;
+	UINT16 new_ip;
 	UINT16 new_cs;
+	UINT16 sreg;
 
 	CPU_WORKCLOCK(11);
 	GET_PCWORD(new_ip);
 	GET_PCWORD(new_cs);
 	if (!CPU_STAT_PM || CPU_STAT_VM86) {
 		/* Real mode or VM86 mode */
-		CPU_SET_SEGREG(CPU_CS_INDEX, new_cs);
-		SET_EIP(new_ip);
+		/* check new instrunction pointer with new code segment */
+		load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+		if (new_ip > sd.u.seg.limit) {
+			EXCEPTION(GP_EXCEPTION, 0);
+		}
+		LOAD_SEGREG(CPU_CS_INDEX, new_cs);
+		CPU_EIP = new_ip;
 	} else {
 		/* Protected mode */
 		JMPfar_pm(new_cs, new_ip);
@@ -128,28 +128,37 @@ JMP16_Ap(void)
 void
 JMP32_Ap(void)
 {
+	descriptor_t sd;
 	UINT32 new_ip;
 	UINT16 new_cs;
+	UINT16 sreg;
 
 	CPU_WORKCLOCK(11);
 	GET_PCDWORD(new_ip);
 	GET_PCWORD(new_cs);
 	if (!CPU_STAT_PM || CPU_STAT_VM86) {
 		/* Real mode or VM86 mode */
-		CPU_SET_SEGREG(CPU_CS_INDEX, new_cs);
-		SET_EIP(new_ip);
+		/* check new instrunction pointer with new code segment */
+		load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+		if (new_ip > sd.u.seg.limit) {
+			EXCEPTION(GP_EXCEPTION, 0);
+		}
+		LOAD_SEGREG(CPU_CS_INDEX, new_cs);
+		CPU_EIP = new_ip;
 	} else {
 		/* Protected mode */
 		JMPfar_pm(new_cs, new_ip);
 	}
 }
 
-void
+void CPUCALL
 JMP16_Ep(UINT32 op)
 {
+	descriptor_t sd;
 	UINT32 madr;
-	UINT32 new_ip;
+	UINT16 new_ip;
 	UINT16 new_cs;
+	UINT16 sreg;
 
 	CPU_WORKCLOCK(11);
 	if (op < 0xc0) {
@@ -158,8 +167,13 @@ JMP16_Ep(UINT32 op)
 		new_cs = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 2);
 		if (!CPU_STAT_PM || CPU_STAT_VM86) {
 			/* Real mode or VM86 mode */
-			CPU_SET_SEGREG(CPU_CS_INDEX, new_cs);
-			SET_EIP(new_ip);
+			/* check new instrunction pointer with new code segment */
+			load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+			if (new_ip > sd.u.seg.limit) {
+				EXCEPTION(GP_EXCEPTION, 0);
+			}
+			LOAD_SEGREG(CPU_CS_INDEX, new_cs);
+			CPU_EIP = new_ip;
 		} else {
 			/* Protected mode */
 			JMPfar_pm(new_cs, new_ip);
@@ -169,12 +183,14 @@ JMP16_Ep(UINT32 op)
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 JMP32_Ep(UINT32 op)
 {
+	descriptor_t sd;
 	UINT32 madr;
 	UINT32 new_ip;
 	UINT16 new_cs;
+	UINT16 sreg;
 
 	CPU_WORKCLOCK(11);
 	if (op < 0xc0) {
@@ -183,8 +199,13 @@ JMP32_Ep(UINT32 op)
 		new_cs = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 4);
 		if (!CPU_STAT_PM || CPU_STAT_VM86) {
 			/* Real mode or VM86 mode */
-			CPU_SET_SEGREG(CPU_CS_INDEX, new_cs);
-			SET_EIP(new_ip);
+			/* check new instrunction pointer with new code segment */
+			load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+			if (new_ip > sd.u.seg.limit) {
+				EXCEPTION(GP_EXCEPTION, 0);
+			}
+			LOAD_SEGREG(CPU_CS_INDEX, new_cs);
+			CPU_EIP = new_ip;
 		} else {
 			/* Protected mode */
 			JMPfar_pm(new_cs, new_ip);
@@ -224,7 +245,7 @@ JO_Jd(void)
 	if (CC_NO) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -258,7 +279,7 @@ JNO_Jd(void)
 	if (CC_O) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -292,7 +313,7 @@ JC_Jd(void)
 	if (CC_NC) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -324,7 +345,7 @@ JNC_Jd(void)
 	if (CC_C) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -358,7 +379,7 @@ JZ_Jd(void)
 	if (CC_NZ) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -392,7 +413,7 @@ JNZ_Jd(void)
 	if (CC_Z) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -426,7 +447,7 @@ JNA_Jd(void)
 	if (CC_A) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -460,7 +481,7 @@ JA_Jd(void)
 	if (CC_NA) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -494,7 +515,7 @@ JS_Jd(void)
 	if (CC_NS) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -528,7 +549,7 @@ JNS_Jd(void)
 	if (CC_S) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -562,7 +583,7 @@ JP_Jd(void)
 	if (CC_NP) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -596,7 +617,7 @@ JNP_Jd(void)
 	if (CC_P) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -630,7 +651,7 @@ JL_Jd(void)
 	if (CC_NL) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -664,7 +685,7 @@ JNL_Jd(void)
 	if (CC_L) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -698,7 +719,7 @@ JLE_Jd(void)
 	if (CC_NLE) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -732,7 +753,7 @@ JNLE_Jd(void)
 	if (CC_LE) {
 		JMPNOP(2, 4);
 	} else {
-		JMPNEAR_4(7);
+		JMPNEAR32(7);
 	}
 }
 
@@ -742,16 +763,16 @@ JeCXZ_Jb(void)
 {
 
 	if (!CPU_INST_AS32) {
-		if (CPU_CX) {
-			JMPNOP(4, 1);
-		} else {
+		if (CPU_CX == 0) {
 			JMPSHORT(8);
+		} else {
+			JMPNOP(4, 1);
 		}
 	} else {
-		if (CPU_ECX) {
-			JMPNOP(4, 1);
-		} else {
+		if (CPU_ECX == 0) {
 			JMPSHORT(8);
+		} else {
+			JMPNOP(4, 1);
 		}
 	}
 }
@@ -763,21 +784,24 @@ JeCXZ_Jb(void)
 void
 LOOPNE_Jb(void)
 {
+	UINT32 cx;
 
 	if (!CPU_INST_AS32) {
+		cx = CPU_CX;
+		if (--cx != 0 && CC_NZ) {
+			JMPSHORT(8);
+		} else {
+			JMPNOP(4, 1);
+		}
 		CPU_CX--;
-		if (CPU_CX == 0 || (CPU_FLAGL & Z_FLAG)) {
-			JMPNOP(4, 1);
-		} else {
-			JMPSHORT(8);
-		}
 	} else {
-		CPU_ECX--;
-		if (CPU_ECX == 0 || (CPU_FLAGL & Z_FLAG)) {
-			JMPNOP(4, 1);
-		} else {
+		cx = CPU_ECX;
+		if (--cx != 0 && CC_NZ) {
 			JMPSHORT(8);
+		} else {
+			JMPNOP(4, 1);
 		}
+		CPU_ECX--;
 	}
 }
 
@@ -785,21 +809,24 @@ LOOPNE_Jb(void)
 void
 LOOPE_Jb(void)
 {
+	UINT32 cx;
 
 	if (!CPU_INST_AS32) {
+		cx = CPU_CX;
+		if (--cx != 0 && CC_Z) {
+			JMPSHORT(8);
+		} else {
+			JMPNOP(4, 1);
+		}
 		CPU_CX--;
-		if (CPU_CX == 0 || !(CPU_FLAGL & Z_FLAG)) {
-			JMPNOP(4, 1);
-		} else {
-			JMPSHORT(8);
-		}
 	} else {
-		CPU_ECX--;
-		if (CPU_ECX == 0 || !(CPU_FLAGL & Z_FLAG)) {
-			JMPNOP(4, 1);
-		} else {
+		cx = CPU_ECX;
+		if (--cx != 0 && CC_Z) {
 			JMPSHORT(8);
+		} else {
+			JMPNOP(4, 1);
 		}
+		CPU_ECX--;
 	}
 }
 
@@ -807,21 +834,24 @@ LOOPE_Jb(void)
 void
 LOOP_Jb(void)
 {
+	UINT32 cx;
 
 	if (!CPU_INST_AS32) {
+		cx = CPU_CX;
+		if (--cx != 0) {
+			JMPSHORT(8);
+		} else {
+			JMPNOP(4, 1);
+		}
 		CPU_CX--;
-		if (CPU_CX == 0) {
-			JMPNOP(4, 1);
-		} else {
-			JMPSHORT(8);
-		}
 	} else {
-		CPU_ECX--;
-		if (CPU_ECX == 0) {
-			JMPNOP(4, 1);
-		} else {
+		cx = CPU_ECX;
+		if (--cx != 0) {
 			JMPSHORT(8);
+		} else {
+			JMPNOP(4, 1);
 		}
+		CPU_ECX--;
 	}
 }
 
@@ -831,31 +861,46 @@ LOOP_Jb(void)
 void
 CALL_Aw(void)
 {
-	SINT32 ip;
+	UINT16 new_ip;
+	SINT16 dest;
 
 	CPU_WORKCLOCK(7);
-	GET_PCWORDS(ip);
+	CPU_SET_PREV_ESP();
+	GET_PCWORDS(dest);
+	new_ip = CPU_EIP + dest;
+	if (new_ip > CPU_STAT_CS_LIMIT) {
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
 	PUSH0_16(CPU_IP);
-	ADD_EIP(ip);
+	CPU_EIP = new_ip;
+	CPU_CLEAR_PREV_ESP();
 }
 
 void
 CALL_Ad(void)
 {
-	UINT32 ip;
+	UINT32 new_ip;
+	UINT32 dest;
 
 	CPU_WORKCLOCK(7);
-	GET_PCDWORD(ip);
+	CPU_SET_PREV_ESP();
+	GET_PCDWORD(dest);
+	new_ip = CPU_EIP + dest;
+	if (new_ip > CPU_STAT_CS_LIMIT) {
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
 	PUSH0_32(CPU_EIP);
-	ADD_EIP(ip);
+	CPU_EIP = new_ip;
+	CPU_CLEAR_PREV_ESP();
 }
 
-void
+void CPUCALL
 CALL_Ew(UINT32 op)
 {
 	UINT32 madr;
-	UINT32 new_ip;
+	UINT16 new_ip;
 
+	CPU_SET_PREV_ESP();
 	if (op >= 0xc0) {
 		CPU_WORKCLOCK(7);
 		new_ip = *(reg16_b20[op]);
@@ -864,16 +909,21 @@ CALL_Ew(UINT32 op)
 		madr = calc_ea_dst(op);
 		new_ip = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr);
 	}
+	if (new_ip > CPU_STAT_CS_LIMIT) {
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
 	PUSH0_16(CPU_IP);
-	SET_EIP(new_ip);
+	CPU_EIP = new_ip;
+	CPU_CLEAR_PREV_ESP();
 }
 
-void
+void CPUCALL
 CALL_Ed(UINT32 op)
 {
 	UINT32 madr;
 	UINT32 new_ip;
 
+	CPU_SET_PREV_ESP();
 	if (op >= 0xc0) {
 		CPU_WORKCLOCK(7);
 		new_ip = *(reg32_b20[op]);
@@ -882,26 +932,39 @@ CALL_Ed(UINT32 op)
 		madr = calc_ea_dst(op);
 		new_ip = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr);
 	}
+	if (new_ip > CPU_STAT_CS_LIMIT) {
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
 	PUSH0_32(CPU_EIP);
-	SET_EIP(new_ip);
+	CPU_EIP = new_ip;
+	CPU_CLEAR_PREV_ESP();
 }
 
 void
 CALL16_Ap(void)
 {
-	UINT32 new_ip;
+	descriptor_t sd;
+	UINT16 new_ip;
 	UINT16 new_cs;
+	UINT16 sreg;
 
 	CPU_WORKCLOCK(13);
 	GET_PCWORD(new_ip);
 	GET_PCWORD(new_cs);
 	if (!CPU_STAT_PM || CPU_STAT_VM86) {
 		/* Real mode or VM86 mode */
+		CPU_SET_PREV_ESP();
+		load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+		if (new_ip > sd.u.seg.limit) {
+			EXCEPTION(GP_EXCEPTION, 0);
+		}
+
 		PUSH0_16(CPU_CS);
 		PUSH0_16(CPU_IP);
 
-		CPU_SET_SEGREG(CPU_CS_INDEX, new_cs);
-		SET_EIP(new_ip);
+		LOAD_SEGREG(CPU_CS_INDEX, new_cs);
+		CPU_EIP = new_ip;
+		CPU_CLEAR_PREV_ESP();
 	} else {
 		/* Protected mode */
 		CALLfar_pm(new_cs, new_ip);
@@ -911,44 +974,62 @@ CALL16_Ap(void)
 void
 CALL32_Ap(void)
 {
+	descriptor_t sd;
 	UINT32 new_ip;
 	UINT16 new_cs;
+	UINT16 sreg;
 
 	CPU_WORKCLOCK(13);
 	GET_PCDWORD(new_ip);
 	GET_PCWORD(new_cs);
 	if (!CPU_STAT_PM || CPU_STAT_VM86) {
 		/* Real mode or VM86 mode */
+		CPU_SET_PREV_ESP();
+		load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+		if (new_ip > sd.u.seg.limit) {
+			EXCEPTION(GP_EXCEPTION, 0);
+		}
+
 		PUSH0_32(CPU_CS);
 		PUSH0_32(CPU_EIP);
 
-		CPU_SET_SEGREG(CPU_CS_INDEX, new_cs);
-		SET_EIP(new_ip);
+		LOAD_SEGREG(CPU_CS_INDEX, new_cs);
+		CPU_EIP = new_ip;
+		CPU_CLEAR_PREV_ESP();
 	} else {
 		/* Protected mode */
 		CALLfar_pm(new_cs, new_ip);
 	}
 }
 
-void
+void CPUCALL
 CALL16_Ep(UINT32 op)
 {
-	UINT32 ad;
-	UINT32 new_ip;
+	descriptor_t sd;
+	UINT32 madr;
+	UINT16 new_ip;
 	UINT16 new_cs;
+	UINT16 sreg;
 
 	CPU_WORKCLOCK(16);
 	if (op < 0xc0) {
-		ad = calc_ea_dst(op);
-		new_ip = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, ad);
-		new_cs = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, ad + 2);
+		madr = calc_ea_dst(op);
+		new_ip = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr);
+		new_cs = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 2);
 		if (!CPU_STAT_PM || CPU_STAT_VM86) {
 			/* Real mode or VM86 mode */
+			CPU_SET_PREV_ESP();
+			load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+			if (new_ip > sd.u.seg.limit) {
+				EXCEPTION(GP_EXCEPTION, 0);
+			}
+
 			PUSH0_16(CPU_CS);
 			PUSH0_16(CPU_IP);
 
-			CPU_SET_SEGREG(CPU_CS_INDEX, new_cs);
-			SET_EIP(new_ip);
+			LOAD_SEGREG(CPU_CS_INDEX, new_cs);
+			CPU_EIP = new_ip;
+			CPU_CLEAR_PREV_ESP();
 		} else {
 			/* Protected mode */
 			CALLfar_pm(new_cs, new_ip);
@@ -958,25 +1039,34 @@ CALL16_Ep(UINT32 op)
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 CALL32_Ep(UINT32 op)
 {
-	UINT32 ad;
+	descriptor_t sd;
+	UINT32 madr;
 	UINT32 new_ip;
 	UINT16 new_cs;
+	UINT16 sreg;
 
 	CPU_WORKCLOCK(16);
 	if (op < 0xc0) {
-		ad = calc_ea_dst(op);
-		new_ip = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, ad);
-		new_cs = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, ad + 4);
+		madr = calc_ea_dst(op);
+		new_ip = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr);
+		new_cs = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 4);
 		if (!CPU_STAT_PM || CPU_STAT_VM86) {
 			/* Real mode or VM86 mode */
+			CPU_SET_PREV_ESP();
+			load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+			if (new_ip > sd.u.seg.limit) {
+				EXCEPTION(GP_EXCEPTION, 0);
+			}
+
 			PUSH0_32(CPU_CS);
 			PUSH0_32(CPU_EIP);
 
-			CPU_SET_SEGREG(CPU_CS_INDEX, new_cs);
-			SET_EIP(new_ip);
+			LOAD_SEGREG(CPU_CS_INDEX, new_cs);
+			CPU_EIP = new_ip;
+			CPU_CLEAR_PREV_ESP();
 		} else {
 			/* Protected mode */
 			CALLfar_pm(new_cs, new_ip);
@@ -992,11 +1082,16 @@ CALL32_Ep(UINT32 op)
 void
 RETnear16(void)
 {
-	UINT32 new_ip;
+	UINT16 new_ip;
 
 	CPU_WORKCLOCK(11);
+	CPU_SET_PREV_ESP();
 	POP0_16(new_ip);
-	SET_EIP(new_ip);
+	if (new_ip > CPU_STAT_CS_LIMIT) {
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
+	CPU_EIP = new_ip;
+	CPU_CLEAR_PREV_ESP();
 }
 
 void
@@ -1005,25 +1100,35 @@ RETnear32(void)
 	UINT32 new_ip;
 
 	CPU_WORKCLOCK(11);
+	CPU_SET_PREV_ESP();
 	POP0_32(new_ip);
-	SET_EIP(new_ip);
+	if (new_ip > CPU_STAT_CS_LIMIT) {
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
+	CPU_EIP = new_ip;
+	CPU_CLEAR_PREV_ESP();
 }
 
 void
 RETnear16_Iw(void)
 {
-	UINT32 new_ip;
+	UINT16 new_ip;
 	UINT16 size;
 
 	CPU_WORKCLOCK(11);
+	CPU_SET_PREV_ESP();
 	GET_PCWORD(size);
 	POP0_16(new_ip);
-	SET_EIP(new_ip);
+	if (new_ip > CPU_STAT_CS_LIMIT) {
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
+	CPU_EIP = new_ip;
 	if (!CPU_STAT_SS32) {
 		CPU_SP += size;
 	} else {
 		CPU_ESP += size;
 	}
+	CPU_CLEAR_PREV_ESP();
 }
 
 void
@@ -1033,30 +1138,45 @@ RETnear32_Iw(void)
 	UINT16 size;
 
 	CPU_WORKCLOCK(11);
+	CPU_SET_PREV_ESP();
 	GET_PCWORD(size);
 	POP0_32(new_ip);
-	SET_EIP(new_ip);
+	if (new_ip > CPU_STAT_CS_LIMIT) {
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
+	CPU_EIP = new_ip;
 	if (!CPU_STAT_SS32) {
 		CPU_SP += size;
 	} else {
 		CPU_ESP += size;
 	}
+	CPU_CLEAR_PREV_ESP();
 }
 
 void
 RETfar16(void)
 {
-	UINT32 new_ip;
+	descriptor_t sd;
+	UINT16 new_ip;
 	UINT16 new_cs;
+	UINT16 sreg;
 
 	CPU_WORKCLOCK(15);
 	if (!CPU_STAT_PM || CPU_STAT_VM86) {
 		/* Real mode or VM86 mode */
+		CPU_SET_PREV_ESP();
 		POP0_16(new_ip);
 		POP0_16(new_cs);
 
-		CPU_SET_SEGREG(CPU_CS_INDEX, new_cs);
-		SET_EIP(new_ip);
+		/* check new instrunction pointer with new code segment */
+		load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+		if (new_ip > sd.u.seg.limit) {
+			EXCEPTION(GP_EXCEPTION, 0);
+		}
+
+		LOAD_SEGREG(CPU_CS_INDEX, new_cs);
+		CPU_EIP = new_ip;
+		CPU_CLEAR_PREV_ESP();
 	} else {
 		/* Protected mode */
 		RETfar_pm(0);
@@ -1066,17 +1186,27 @@ RETfar16(void)
 void
 RETfar32(void)
 {
+	descriptor_t sd;
 	UINT32 new_ip;
 	UINT32 new_cs;
+	UINT16 sreg;
 
 	CPU_WORKCLOCK(15);
 	if (!CPU_STAT_PM || CPU_STAT_VM86) {
 		/* Real mode or VM86 mode */
+		CPU_SET_PREV_ESP();
 		POP0_32(new_ip);
 		POP0_32(new_cs);
 
-		CPU_SET_SEGREG(CPU_CS_INDEX, (UINT16)new_cs);
-		SET_EIP(new_ip);
+		/* check new instrunction pointer with new code segment */
+		load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+		if (new_ip > sd.u.seg.limit) {
+			EXCEPTION(GP_EXCEPTION, 0);
+		}
+
+		LOAD_SEGREG(CPU_CS_INDEX, (UINT16)new_cs);
+		CPU_EIP = new_ip;
+		CPU_CLEAR_PREV_ESP();
 	} else {
 		/* Protected mode */
 		RETfar_pm(0);
@@ -1086,25 +1216,34 @@ RETfar32(void)
 void
 RETfar16_Iw(void)
 {
-	UINT32 new_ip;
+	descriptor_t sd;
+	UINT16 new_ip;
 	UINT16 new_cs;
+	UINT16 sreg;
 	UINT16 size;
 
 	CPU_WORKCLOCK(15);
 	GET_PCWORD(size);
 	if (!CPU_STAT_PM || CPU_STAT_VM86) {
 		/* Real mode or VM86 mode */
+		CPU_SET_PREV_ESP();
 		POP0_16(new_ip);
 		POP0_16(new_cs);
 
-		CPU_SET_SEGREG(CPU_CS_INDEX, new_cs);
-		SET_EIP(new_ip);
+		/* check new instrunction pointer with new code segment */
+		load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+		if (new_ip > sd.u.seg.limit) {
+			EXCEPTION(GP_EXCEPTION, 0);
+		}
 
+		LOAD_SEGREG(CPU_CS_INDEX, new_cs);
+		CPU_EIP = new_ip;
 		if (!CPU_STAT_SS32) {
 			CPU_SP += size;
 		} else {
 			CPU_ESP += size;
 		}
+		CPU_CLEAR_PREV_ESP();
 	} else {
 		/* Protected mode */
 		RETfar_pm(size);
@@ -1114,25 +1253,34 @@ RETfar16_Iw(void)
 void
 RETfar32_Iw(void)
 {
+	descriptor_t sd;
 	UINT32 new_ip;
 	UINT32 new_cs;
+	UINT16 sreg;
 	UINT16 size;
 
 	CPU_WORKCLOCK(15);
 	GET_PCWORD(size);
 	if (!CPU_STAT_PM || CPU_STAT_VM86) {
 		/* Real mode or VM86 mode */
+		CPU_SET_PREV_ESP();
 		POP0_32(new_ip);
 		POP0_32(new_cs);
 
-		CPU_SET_SEGREG(CPU_CS_INDEX, (UINT16)new_cs);
-		SET_EIP(new_ip);
+		/* check new instrunction pointer with new code segment */
+		load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+		if (new_ip > sd.u.seg.limit) {
+			EXCEPTION(GP_EXCEPTION, 0);
+		}
 
+		LOAD_SEGREG(CPU_CS_INDEX, (UINT16)new_cs);
+		CPU_EIP = new_ip;
 		if (!CPU_STAT_SS32) {
 			CPU_SP += size;
 		} else {
 			CPU_ESP += size;
 		}
+		CPU_CLEAR_PREV_ESP();
 	} else {
 		/* Protected mode */
 		RETfar_pm(size);
@@ -1142,14 +1290,17 @@ RETfar32_Iw(void)
 void
 IRET(void)
 {
+	descriptor_t sd;
 	UINT32 new_ip;
 	UINT32 new_flags;
 	UINT32 new_cs;
 	UINT32 mask;
+	UINT16 sreg;
 
+	CPU_WORKCLOCK(22);
 	if (!CPU_STAT_PM) {
 		/* Real mode */
-		CPU_WORKCLOCK(22);
+		CPU_SET_PREV_ESP();
 		mask = I_FLAG|IOPL_FLAG;
 		if (!CPU_INST_OP32) {
 			POP0_16(new_ip);
@@ -1162,19 +1313,21 @@ IRET(void)
 			mask |= RF_FLAG;
 		}
 
-		set_eflags(new_flags, mask);
+		/* check new instrunction pointer with new code segment */
+		load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+		if (new_ip > sd.u.seg.limit) {
+			EXCEPTION(GP_EXCEPTION, 0);
+		}
 
-		CPU_SET_SEGREG(CPU_CS_INDEX, (UINT16)new_cs);
-		SET_EIP(new_ip);
+		LOAD_SEGREG(CPU_CS_INDEX, (UINT16)new_cs);
+		CPU_EIP = new_ip;
+
+		set_eflags(new_flags, mask);
+		CPU_CLEAR_PREV_ESP();
 	} else {
 		/* Protected mode */
 		IRET_pm();
 	}
-#if defined(IA32_SUPPORT_DEBUG_REGISTER)
-	if (CPU_EFLAG & RF_FLAG) {
-		CPU_STAT_BP_EVENT |= CPU_STAT_BP_EVENT_RF;
-	}
-#endif
 	IRQCHECKTERM();
 }
 
@@ -1186,7 +1339,7 @@ INT1(void)
 {
 
 	CPU_WORKCLOCK(33);
-	INTERRUPT(1, 1, 0, 0);
+	INTERRUPT(1, INTR_TYPE_SOFTINTR);
 }
 
 void
@@ -1194,7 +1347,7 @@ INT3(void)
 {
 
 	CPU_WORKCLOCK(33);
-	INTERRUPT(3, 2, 0, 0);
+	INTERRUPT(3, INTR_TYPE_SOFTINTR);
 }
 
 void
@@ -1206,7 +1359,7 @@ INTO(void)
 		return;
 	}
 	CPU_WORKCLOCK(35);
-	INTERRUPT(4, 3, 0, 0);
+	INTERRUPT(4, INTR_TYPE_SOFTINTR);
 }
 
 void
@@ -1220,9 +1373,10 @@ INT_Ib(void)
 #if defined(ENABLE_TRAP)
 		softinttrap(CPU_CS, CPU_EIP - 2, vect);
 #endif
-		INTERRUPT(vect, -1, 0, 0);
+		INTERRUPT(vect, INTR_TYPE_SOFTINTR);
 		return;
 	}
+	VERBOSE(("INT_Ib: VM86 && IOPL < 3 && INTn"));
 	EXCEPTION(GP_EXCEPTION, 0);
 }
 
@@ -1231,7 +1385,6 @@ BOUND_GwMa(void)
 {
 	UINT32 op, madr;
 	UINT16 reg;
-	int vect;
 
 	CPU_WORKCLOCK(13);
 	GET_PCBYTE(op);
@@ -1242,11 +1395,10 @@ BOUND_GwMa(void)
 		    reg <= cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 2)) {
 				return;
 		}
-		vect = BR_EXCEPTION;
-	} else {
-		vect = UD_EXCEPTION;
+		EXCEPTION(BR_EXCEPTION, 0);
+		return;
 	}
-	EXCEPTION(vect, 0);
+	EXCEPTION(UD_EXCEPTION, 0);
 }
 
 void
@@ -1254,7 +1406,6 @@ BOUND_GdMa(void)
 {
 	UINT32 op, madr;
 	UINT32 reg;
-	int vect;
 
 	CPU_WORKCLOCK(13);
 	GET_PCBYTE(op);
@@ -1265,11 +1416,10 @@ BOUND_GdMa(void)
 		    reg <= cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr + 4)) {
 				return;
 		}
-		vect = BR_EXCEPTION;
-	} else {
-		vect = UD_EXCEPTION;
+		EXCEPTION(BR_EXCEPTION, 0);
+		return;
 	}
-	EXCEPTION(vect, 0);
+	EXCEPTION(UD_EXCEPTION, 0);
 }
 
 /*
@@ -1279,26 +1429,16 @@ void
 ENTER16_IwIb(void)
 {
 	UINT32 sp, bp;
-	UINT32 size;
 	UINT32 val;
 	UINT16 dimsize;
+	UINT16 new_bp;
 	UINT8 level;
 
 	GET_PCWORD(dimsize);
 	GET_PCBYTE(level);
 	level &= 0x1f;
 
-	/* check stack room size */
-	if (CPU_STAT_PM && !CPU_STAT_VM86) {
-		size = dimsize + (level + 1) * 2;
-		if (!CPU_STAT_SS32) {
-			sp = CPU_SP;
-		} else {
-			sp = CPU_ESP;
-		}
-		STACK_PUSH_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, size);
-	}
-
+	CPU_SET_PREV_ESP();
 	PUSH0_16(CPU_BP);
 	if (level == 0) {			/* enter level=0 */
 		CPU_WORKCLOCK(11);
@@ -1324,36 +1464,39 @@ ENTER16_IwIb(void)
 			CPU_WORKCLOCK(12 + level * 4);
 			if (!CPU_STAT_SS32) {
 				bp = CPU_BP;
-				CPU_BP = CPU_SP;
+				new_bp = CPU_SP;
 				while (level--) {
 					bp -= 2;
 					CPU_SP -= 2;
 					val = cpu_vmemoryread_w(CPU_SS_INDEX, bp);
 					cpu_vmemorywrite_w(CPU_SS_INDEX, CPU_SP, (UINT16)val);
 				}
-				REGPUSH0(CPU_BP);
+				REGPUSH0(new_bp);
+				CPU_BP = new_bp;
 				CPU_SP -= dimsize;
 			} else {
 				bp = CPU_EBP;
-				CPU_BP = CPU_SP;
+				new_bp = CPU_SP;
 				while (level--) {
 					bp -= 2;
 					CPU_ESP -= 2;
 					val = cpu_vmemoryread_w(CPU_SS_INDEX, bp);
 					cpu_vmemorywrite_w(CPU_SS_INDEX, CPU_ESP, (UINT16)val);
 				}
-				REGPUSH0_16_32(CPU_BP);
+				REGPUSH0_16_32(new_bp);
+				CPU_BP = new_bp;
 				CPU_ESP -= dimsize;
 			}
 		}
 	}
+	CPU_CLEAR_PREV_ESP();
 }
 
 void
 ENTER32_IwIb(void)
 {
 	UINT32 sp, bp;
-	UINT32 size;
+	UINT32 new_bp;
 	UINT32 val;
 	UINT16 dimsize;
 	UINT8 level;
@@ -1362,17 +1505,7 @@ ENTER32_IwIb(void)
 	GET_PCBYTE(level);
 	level &= 0x1f;
 
-	/* check stack room size */
-	if (CPU_STAT_PM && !CPU_STAT_VM86) {
-		size = dimsize + (level + 1) * 4;
-		if (CPU_STAT_SS32) {
-			sp = CPU_ESP;
-		} else {
-			sp = CPU_SP;
-		}
-		STACK_PUSH_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, size);
-	}
-
+	CPU_SET_PREV_ESP();
 	PUSH0_32(CPU_EBP);
 	if (level == 0) {			/* enter level=0 */
 		CPU_WORKCLOCK(11);
@@ -1398,63 +1531,50 @@ ENTER32_IwIb(void)
 			CPU_WORKCLOCK(12 + level * 4);
 			if (CPU_STAT_SS32) {
 				bp = CPU_EBP;
-				CPU_EBP = CPU_ESP;
+				new_bp = CPU_ESP;
 				while (level--) {
 					bp -= 4;
 					CPU_ESP -= 4;
 					val = cpu_vmemoryread_d(CPU_SS_INDEX, bp);
 					cpu_vmemorywrite_d(CPU_SS_INDEX, CPU_ESP, val);
 				}
-				REGPUSH0_32(CPU_EBP);
+				REGPUSH0_32(new_bp);
+				CPU_EBP = new_bp;
 				CPU_ESP -= dimsize;
 			} else {
 				bp = CPU_BP;
-				CPU_EBP = CPU_ESP;
+				new_bp = CPU_ESP;
 				while (level--) {
 					bp -= 4;
 					CPU_SP -= 4;
 					val = cpu_vmemoryread_d(CPU_SS_INDEX, bp);
 					cpu_vmemorywrite_d(CPU_SS_INDEX, CPU_SP, val);
 				}
-				REGPUSH0_32_16(CPU_EBP);
+				REGPUSH0_32_16(new_bp);
+				CPU_EBP = new_bp;
 				CPU_SP -= dimsize;
 			}
 		}
 	}
+	CPU_CLEAR_PREV_ESP();
 }
 
 void
 LEAVE(void)
 {
-	UINT32 sp, bp;
-	UINT s;
 
 	CPU_WORKCLOCK(4);
 
-	if (CPU_STAT_PM && !CPU_STAT_VM86) {
-		if (!CPU_INST_OP32) {
-			s = 2;
-		} else {
-			s = 4;
-		}
-		if (!CPU_STAT_SS32) {
-			sp = CPU_SP;
-			bp = CPU_BP;
-		} else {
-			sp = CPU_ESP;
-			bp = CPU_EBP;
-		}
-		STACK_POP_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, (bp - sp) + s);
-	}
-
+	CPU_SET_PREV_ESP();
 	if (!CPU_STAT_SS32) {
 		CPU_SP = CPU_BP;
 	} else {
 		CPU_ESP = CPU_EBP;
 	}
 	if (!CPU_INST_OP32) {
-		REGPOP0(CPU_BP);
+		POP0_16(CPU_BP);
 	} else {
 		POP0_32(CPU_EBP);
 	}
+	CPU_CLEAR_PREV_ESP();
 }

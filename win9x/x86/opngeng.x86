@@ -7,7 +7,7 @@ SIN_BITS		equ		11
 EVC_BITS		equ		10
 ENV_BITS		equ		16
 KF_BITS			equ		6
-FREQ_BITS		equ		20
+FREQ_BITS		equ		21
 ENVTBL_BIT		equ		14
 SINTBL_BIT		equ		14
 
@@ -50,11 +50,10 @@ EM_OFF			equ		0
 .env_inc_decay1	resd	1		; 3c
 .env_inc_decay2	resd	1		; 40
 .env_inc_rel	resd	1		; 44
-.size
 				endstruc
 
 				struc	ch_t
-.slot			resb	(slot_t.size * 4)
+.slot			resb	(slot_t_size * 4)
 .algorithm		resb	1
 .feedback		resb	1
 .playing		resb	1
@@ -72,7 +71,6 @@ EM_OFF			equ		0
 .extop			resb	1
 .stereo			resb	1
 				resb	1
-.size
 				endstruc
 
 				struc opngen_t
@@ -238,21 +236,21 @@ og_algchk:		cmp		byte [esi + ch_t.algorithm], 5
 				jmp		short og_calcslot3
 og_calcalg5:	mov		ebx, [esi + ch_t.connect1]	; case ALG != 5
 				add		[ebx], eax
-og_calcslot3:	add		edi, byte slot_t.size		; slot3 calculate
+og_calcslot3:	add		edi, byte slot_t_size		; slot3 calculate
 				calcenv	envcalc2, envret2
 				jl		short og_calcslot2
 				mov		eax, [_opngen + opngen_t.feedback2]
 				op_out
 				mov		ebx, [esi + ch_t.connect2]
 				add		[ebx], eax
-og_calcslot2:	add		edi, byte slot_t.size		; slot2 calculate
+og_calcslot2:	add		edi, byte slot_t_size		; slot2 calculate
 				calcenv	envcalc3, envret3
 				jl		short og_calcslot4
 				mov		eax, [_opngen + opngen_t.feedback3]
 				op_out
 				mov		ebx, [esi + ch_t.connect3]
 				add		[ebx], eax
-og_calcslot4:	add		edi, byte slot_t.size		; slot4 calculate
+og_calcslot4:	add		edi, byte slot_t_size		; slot4 calculate
 				calcenv	envcalc4, envret4
 				jl		short og_calcsloted
 				mov		eax, [_opngen + opngen_t.feedback4]
@@ -260,7 +258,7 @@ og_calcslot4:	add		edi, byte slot_t.size		; slot4 calculate
 				mov		ebx, [esi + ch_t.connect4]
 				add		[ebx], eax
 og_calcsloted:	inc		dword [_opngen + opngen_t.playing]
-og_calcch_nt:	add		esi, ch_t.size
+og_calcch_nt:	add		esi, ch_t_size
 				dec		ch
 				jne		near og_calcch_lp
 				mov		eax, [_opngen + opngen_t.outdc]
@@ -370,28 +368,28 @@ ogv_algchk:		cmp		byte [esi + ch_t.algorithm], 5
 				jmp		short ogv_calcslot3
 ogv_calcalg5:	mov		ebx, [esi + ch_t.connect1]	; case ALG != 5
 				add		[ebx], eax
-ogv_calcslot3:	add		edi, byte slot_t.size		; slot3 calculate
+ogv_calcslot3:	add		edi, byte slot_t_size		; slot3 calculate
 				calcenv	vrenvcalc2, vrenvret2
 				jl		short ogv_calcslot2
 				mov		eax, [_opngen + opngen_t.feedback2]
 				op_out
 				mov		ebx, [esi + ch_t.connect2]
 				add		[ebx], eax
-ogv_calcslot2:	add		edi, byte slot_t.size		; slot2 calculate
+ogv_calcslot2:	add		edi, byte slot_t_size		; slot2 calculate
 				calcenv	vrenvcalc3, vrenvret3
 				jl		short ogv_calcslot4
 				mov		eax, [_opngen + opngen_t.feedback3]
 				op_out
 				mov		ebx, [esi + ch_t.connect3]
 				add		[ebx], eax
-ogv_calcslot4:	add		edi, byte slot_t.size		; slot4 calculate
+ogv_calcslot4:	add		edi, byte slot_t_size		; slot4 calculate
 				calcenv	vrenvcalc4, vrenvret4
 				jl		short ogv_calcsloted
 				mov		eax, [_opngen + opngen_t.feedback4]
 				op_out
 				mov		ebx, [esi + ch_t.connect4]
 				add		[ebx], eax
-ogv_calcsloted:	add		edi, byte (ch_t.size - (slot_t.size * 3))
+ogv_calcsloted:	add		edi, byte (ch_t_size - (slot_t_size * 3))
 				dec		ch
 				jne		near ogv_calcch_lp
 				mov		eax, [_opngen + opngen_t.outdl]
@@ -450,6 +448,4 @@ ogv_noupdate:	ret		4
 				setenv	vrenvcalc2, vrenvret2, 2
 				setenv	vrenvcalc3, vrenvret3, 4
 				setenv	vrenvcalc4, vrenvret4, 8
-
-	ends
 

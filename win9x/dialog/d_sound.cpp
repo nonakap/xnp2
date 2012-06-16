@@ -1,24 +1,35 @@
-#include	"compiler.h"
-#include	<commctrl.h>
-#include	<prsht.h>
-#include	"strres.h"
-#include	"resource.h"
-#include	"np2.h"
-#include	"oemtext.h"
-#include	"dosio.h"
-#include	"joymng.h"
-#include	"sysmng.h"
-#include	"menu.h"
-#include	"np2class.h"
-#include	"dialog.h"
-#include	"dialogs.h"
-#include	"pccore.h"
-#include	"iocore.h"
-#include	"sound.h"
-#include	"fmboard.h"
-#include	"s98.h"
-#include	"dipswbmp.h"
+/**
+ * @file	d_sound.cpp
+ * @brief	Sound configure dialog procedure
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/03/07 09:54:11 $
+ */
 
+#include "compiler.h"
+#include <commctrl.h>
+#include <prsht.h>
+#include "strres.h"
+#include "resource.h"
+#include "np2.h"
+#include "oemtext.h"
+#include "dosio.h"
+#include "joymng.h"
+#include "sysmng.h"
+#include "menu.h"
+#include "np2class.h"
+#include "dialog.h"
+#include "dialogs.h"
+#include "pccore.h"
+#include "iocore.h"
+#include "sound.h"
+#include "fmboard.h"
+#include "s98.h"
+#include "dipswbmp.h"
+
+#if !defined(__GNUC__)
+#pragma comment(lib, "comctl32.lib")
+#endif	// !defined(__GNUC__)
 
 static const CBPARAM cpIO26[] =
 {

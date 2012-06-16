@@ -54,8 +54,10 @@ void opngen_initialize(UINT rate) {
 
 	UINT	ratebit;
 	int		i;
+	char	sft;
 	int		j;
 	double	pom;
+	long	detune;
 	double	freq;
 	UINT32	calcrate;
 
@@ -73,7 +75,6 @@ void opngen_initialize(UINT rate) {
 
 	for (i=0; i<EVC_ENT; i++) {
 #ifdef OPNGENX86
-		char sft;
 		sft = ENVTBL_BIT;
 		while(sft < (ENVTBL_BIT + 8)) {
 			pom = (double)(1 << sft) / pow(10.0, EG_STEP*(EVC_ENT-i)/20.0);
@@ -133,15 +134,17 @@ void opngen_initialize(UINT rate) {
 
 	for (i=0; i<4; i++) {
 		for (j=0; j<32; j++) {
-#if (FREQ_BITS >= 21)
-			freq = FREQBASE4096 * dttable[i*32 + j] *
-											(1 << (FREQ_BITS-21));
-#else
-			freq = FREQBASE4096 * dttable[i*32 + j] /
-											(1 << (21-FREQ_BITS));
-#endif
-			detunetable[i][j]   = (long)freq;
-			detunetable[i+4][j] = (long)-freq;
+			detune = dttable[i*32 + j];
+			sft = ratebit + (FREQ_BITS - 21);
+			if (sft >= 0) {
+				detune <<= sft;
+			}
+			else {
+				detune >>= (0 - sft);
+			}
+
+			detunetable[i][j]   = detune;
+			detunetable[i+4][j] = -detune;
 		}
 	}
 	for (i=0; i<4; i++) {
@@ -164,10 +167,10 @@ void opngen_initialize(UINT rate) {
 		decaytable[i] = (long)(freq / OPM_DRRATE);
 #endif
 		if (attacktable[i] >= EC_DECAY) {
-			TRACEOUT(("attacktable %d %d %d", i, attacktable[i], EC_DECAY));
+			TRACEOUT(("attacktable %d %d %ld", i, attacktable[i], EC_DECAY));
 		}
 		if (decaytable[i] >= EC_DECAY) {
-			TRACEOUT(("decaytable %d %d %d", i, decaytable[i], EC_DECAY));
+			TRACEOUT(("decaytable %d %d %ld", i, decaytable[i], EC_DECAY));
 		}
 	}
 	attacktable[62] = EC_DECAY - 1;

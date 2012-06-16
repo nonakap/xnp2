@@ -10,7 +10,7 @@
 
 void bios0x12(void) {
 
-	UINT8	stat;
+	UINT8	status;
 	UINT8	result;
 	UINT8	*p;
 	UINT8	drv;
@@ -22,16 +22,16 @@ void bios0x12(void) {
 		iocore_out8(0x00, 0x20);
 	}
 
-	stat = iocore_inp8(baseport);
+	status = iocore_inp8(baseport);
 	while(1) {
-		if (!(stat & FDCSTAT_CB)) {
-			if ((stat & (FDCSTAT_RQM | FDCSTAT_DIO)) != FDCSTAT_RQM) {
+		if (!(status & FDCSTAT_CB)) {
+			if ((status & (FDCSTAT_RQM | FDCSTAT_DIO)) != FDCSTAT_RQM) {
 				break;
 			}
 			iocore_out8(baseport+2, 0x08);
-			stat = iocore_inp8(baseport);
+			status = iocore_inp8(baseport);
 		}
-		if ((stat & (FDCSTAT_RQM | FDCSTAT_DIO | FDCSTAT_CB))
+		if ((status & (FDCSTAT_RQM | FDCSTAT_DIO | FDCSTAT_CB))
 							!= (FDCSTAT_RQM | FDCSTAT_DIO | FDCSTAT_CB)) {
 			break;
 		}
@@ -52,8 +52,8 @@ void bios0x12(void) {
 		}
 		while(1) {
 			*p++ = result;
-			stat = iocore_inp8(baseport);
-			if ((stat & (FDCSTAT_RQM | FDCSTAT_DIO | FDCSTAT_CB))
+			status = iocore_inp8(baseport);
+			if ((status & (FDCSTAT_RQM | FDCSTAT_DIO | FDCSTAT_CB))
 							!= (FDCSTAT_RQM | FDCSTAT_DIO | FDCSTAT_CB)) {
 				break;
 			}

@@ -10,12 +10,12 @@
 #define RESAMPLING(d, s, p) {									\
 	int		dat1;												\
 	int		dat2;												\
-	int		div;												\
+	int		_div;												\
 	dat1 = (s)[(p) >> FREQ_SHIFT];								\
-	div = (p) & FREQ_MASK;										\
-	if (div) {													\
+	_div = (p) & FREQ_MASK;										\
+	if (_div) {													\
 		dat2 = (s)[((p) >> FREQ_SHIFT) + 1];					\
-		dat1 += ((dat2 - dat1) * div) >> FREQ_SHIFT;			\
+		dat1 += ((dat2 - dat1) * _div) >> FREQ_SHIFT;			\
 	}															\
 	*(d) = (_SAMPLE)dat1;										\
 }

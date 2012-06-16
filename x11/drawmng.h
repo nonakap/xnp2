@@ -1,5 +1,3 @@
-/*	$Id: drawmng.h,v 1.4 2005/03/12 12:36:13 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -32,6 +30,8 @@
 
 #include "cmndraw.h"
 
+G_BEGIN_DECLS
+
 typedef struct {
 	RGB32	mask;
 	BYTE	r16b;
@@ -53,10 +53,6 @@ typedef struct {
 	BOOL		drawing;
 } _DRAWMNG_HDL, *DRAWMNG_HDL;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 DRAWMNG_HDL drawmng_create(void *parent, int width, int height);
 void drawmng_release(DRAWMNG_HDL hdl);
 CMNVRAM *drawmng_surflock(DRAWMNG_HDL hdl);
@@ -69,8 +65,6 @@ void *drawmng_get_widget_handle(DRAWMNG_HDL hdl);
 void drawmng_make16mask(PAL16MASK *pal16, UINT32 bmask, UINT32 rmask, UINT32 gmask);
 RGB16 drawmng_makepal16(PAL16MASK *pal16, RGB32 pal32);
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #endif	/* NP2_X11_DRAWMNG_H__ */

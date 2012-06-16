@@ -1,8 +1,19 @@
-#include	"compiler.h"
-#include	"np2.h"
-#include	"joymng.h"
-#include	"menu.h"
+/**
+ * @file	joymng.cpp
+ * @brief	Joystick manager
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/03/07 09:54:11 $
+ */
 
+#include "compiler.h"
+#include "np2.h"
+#include "joymng.h"
+#include "menu.h"
+
+#if !defined(__GNUC__)
+#pragma comment(lib, "winmm.lib")
+#endif	// !defined(__GNUC__)
 
 enum {
 	JOY_LEFT_BIT	= 0x04,

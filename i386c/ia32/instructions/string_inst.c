@@ -1,5 +1,3 @@
-/*	$Id: string_inst.c,v 1.3 2005/03/12 12:33:47 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.

@@ -423,6 +423,10 @@
 							Name="fpu"
 							>
 							<File
+								RelativePath="..\i386c\ia32\instructions\fpu.c"
+								>
+							</File>
+							<File
 								RelativePath="..\i386c\ia32\instructions\fpu\fpdummy.c"
 								>
 							</File>

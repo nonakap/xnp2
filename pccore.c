@@ -1,3 +1,11 @@
+/**
+ * @file	pccore.c
+ * @brief	emluration core
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/02/23 10:11:44 $
+ */
+
 #include	"compiler.h"
 #include	"strres.h"
 #include	"dosio.h"
@@ -189,7 +197,7 @@ static void pccore_set(const NP2CFG *pConfig)
 // --------------------------------------------------------------------------
 
 #if !defined(DISABLE_SOUND)
-static void sound_init()
+static void sound_init(void)
 {
 	UINT	rate;
 
@@ -247,7 +255,7 @@ void pccore_init(void) {
 	fddfile_initialize();
 
 #if !defined(DISABLE_SOUND)
-	sound_init(&np2cfg);
+	sound_init();
 #endif
 
 	rs232c_construct();
@@ -315,16 +323,20 @@ void pccore_cfgupdate(void) {
 	}
 }
 
+/**
+ * Reset the virtual machine
+ */
 void pccore_reset(void) {
 
 	int		i;
+	BOOL	epson;
 
 	soundmng_stop();
 #if !defined(DISABLE_SOUND)
 	if (soundrenewal) {
 		soundrenewal = 0;
 		sound_term();
-		sound_init(&np2cfg);
+		sound_init();
 	}
 #endif
 	ZeroMemory(mem, 0x110000);
@@ -348,9 +360,13 @@ void pccore_reset(void) {
 	if (pccore.dipsw[2] & 0x80) {
 		CPU_TYPE = CPUTYPE_V30;
 	}
-	if (pccore.model & PCMODEL_EPSON) {			// RAM ctrl
+
+	epson = (pccore.model & PCMODEL_EPSON) ? TRUE : FALSE;
+	if (epson) {
+		/* enable RAM (D0000-DFFFF) */
 		CPU_RAM_D000 = 0xffff;
 	}
+	font_setchargraph(epson);
 
 	// HDDƒZƒbƒg
 	diskdrv_hddbind();
@@ -381,7 +397,7 @@ void pccore_reset(void) {
 	cbuscore_reset(&np2cfg);
 	fmboard_reset(&np2cfg, pccore.sound);
 
-	MEMM_ARCH((pccore.model & PCMODEL_EPSON)?1:0);
+	MEMM_ARCH((epson) ? 1 : 0);
 	iocore_build();
 	iocore_bind();
 	cbuscore_bind();

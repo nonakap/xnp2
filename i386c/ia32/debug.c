@@ -1,5 +1,3 @@
-/*	$Id: debug.c,v 1.13 2005/03/12 12:32:54 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2003 NONAKA Kimihiro
  * All rights reserved.
@@ -34,6 +32,26 @@
 #endif
 
 
+/*
+ * register strings
+ */
+const char *reg8_str[CPU_REG_NUM] = {
+	"al", "cl", "dl", "bl", "ah", "ch", "dh", "bh"
+};
+
+const char *reg16_str[CPU_REG_NUM] = { 
+	"ax", "cx", "dx", "bx", "sp", "bp", "si", "di"
+};
+
+const char *reg32_str[CPU_REG_NUM] = { 
+	"eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi"
+};
+
+const char *sreg_str[CPU_SEGREG_NUM] = {
+	"es", "cs", "ss", "ds", "fs", "gs"
+};
+
+
 char *
 cpu_reg2str(void)
 {
@@ -43,7 +61,7 @@ cpu_reg2str(void)
 	    "eax=%08x ecx=%08x edx=%08x ebx=%08x\n"
 	    "esp=%08x ebp=%08x esi=%08x edi=%08x\n"
 	    "eip=%08x prev_eip=%08x\n"
-	    "es=%04x cs=%04x ss=%04x ds=%04x fs=%04x gs=%04x\n"
+	    "cs=%04x ss=%04x ds=%04x es=%04x fs=%04x gs=%04x\n"
 	    "eflag=%08x "
 	    /* ID VIP VIF AC VM RF NT IOPL OF DF IF TF SF ZF AF PF CF */
 	    "[ ID=%d VIP=%d VIF=%d AC=%d VM=%d RF=%d NT=%d IOPL=%d %s %s %s TF=%d %s %s %s %s %s ]\n"
@@ -103,7 +121,7 @@ put_cpuinfo(void)
 #endif
 	strcat(buf, a20str());
 
-	printf(buf);
+	printf("%s", buf);
 }
 
 void
@@ -117,7 +135,7 @@ dbg_printf(const char *str, ...)
 	va_end(ap);
 	strcat(buf, "\n");
 
-	printf(buf);
+	printf("%s", buf);
 }
 
 void
@@ -136,7 +154,7 @@ memory_dump(int idx, UINT32 madr)
 		size = 0x100;
 		addr = madr - 0x80;
 	}
-	VERBOSE(("memory dump\n-- \n"));
+	VERBOSE(("memory dump\n--"));
 	for (s = 0; s < size; s++) {
 		if ((s % 16) == 0) {
 			VERBOSE(("%08x: ", addr + s));
@@ -208,8 +226,6 @@ tr_dump(UINT16 selector, UINT32 base, UINT limit)
 	UINT32 v;
 	UINT i;
 
-	(void)selector;
-
 	VERBOSE(("TR_DUMP: selector = %04x", selector));
 
 	for (i = 0; i < limit; i += 4) {
@@ -240,10 +256,109 @@ pde_dump(UINT32 base, int idx)
 		v = cpu_memoryread_d(paddr);
 		VERBOSE(("PDE_DUMP: 0x%08x: %08x", paddr, v));
 	} else {
+		VERBOSE(("PDE_DUMP: invalid idx (%d)", idx));
 		paddr = 0;
 	}
 
 	return paddr;
+}
+
+void
+segdesc_dump(descriptor_t *sdp)
+{
+#if defined(DEBUG)
+	const char *s;
+
+	__ASSERT(sdp != NULL);
+
+	VERBOSE(("dump descriptor: %p", sdp));
+
+	VERBOSE(("valid    : %s", SEG_IS_VALID(sdp) ? "true" : "false"));
+	VERBOSE(("present  : %s", SEG_IS_PRESENT(sdp) ? "true" : "false"));
+	VERBOSE(("DPL      : %d", sdp->dpl));
+	VERBOSE(("type     : %d", sdp->type));
+	VERBOSE(("kind     : %s", SEG_IS_SYSTEM(sdp) ? "system" : "code/data"));
+	if (!SEG_IS_SYSTEM(sdp)) {
+		if (SEG_IS_CODE(sdp)) {
+			VERBOSE(("type     : %dbit %sconforming code",
+			    SEG_IS_32BIT(sdp) ? 32 : 16,
+			    SEG_IS_CONFORMING_CODE(sdp) ? "" : "non-"));
+			VERBOSE(("access   : execute%s",
+			    SEG_IS_READABLE_CODE(sdp) ? "/read" : ""));
+		} else {
+			VERBOSE(("type     : %dbit expand-%s data",
+			    SEG_IS_32BIT(sdp) ? 32 : 16,
+			    SEG_IS_EXPANDDOWN_DATA(sdp) ? "down" : "up"));
+			VERBOSE(("access   : read%s",
+			    SEG_IS_WRITABLE_DATA(sdp) ? "/write" : ""));
+		}
+		VERBOSE(("4k scale : %s", sdp->u.seg.g ? "true" : "false"));
+		VERBOSE(("baseadr  : 0x%08x", sdp->u.seg.segbase));
+		VERBOSE(("limit    : 0x%08x", sdp->u.seg.limit));
+	} else {
+		switch (sdp->type) {
+		case CPU_SYSDESC_TYPE_LDT:		/* LDT */
+			VERBOSE(("type     : LDT"));
+			VERBOSE(("4k scale : %s", sdp->u.seg.g ? "true" : "false"));
+			VERBOSE(("baseadr  : 0x%08x", sdp->u.seg.segbase));
+			VERBOSE(("limit    : 0x%08x", sdp->u.seg.limit));
+			break;
+
+		case CPU_SYSDESC_TYPE_TASK:		/* task gate */
+			VERBOSE(("type     : task gate"));
+			VERBOSE(("selector : 0x%04x", sdp->u.gate.selector));
+			break;
+
+		case CPU_SYSDESC_TYPE_TSS_16:		/* 286 TSS */
+		case CPU_SYSDESC_TYPE_TSS_BUSY_16:	/* 286 Busy TSS */
+		case CPU_SYSDESC_TYPE_TSS_32:		/* 386 TSS */
+		case CPU_SYSDESC_TYPE_TSS_BUSY_32:	/* 386 Busy TSS */
+			VERBOSE(("type     : %dbit %sTSS",
+			    (sdp->type & CPU_SYSDESC_TYPE_32BIT) ? 32 : 16,
+			    (sdp->type & CPU_SYSDESC_TYPE_TSS_BUSY_IND) ?
+			      "Busy " : ""));
+			VERBOSE(("4k scale : %s", sdp->u.seg.g ? "true" : "false"));
+			VERBOSE(("baseadr  : 0x%08x", sdp->u.seg.segbase));
+			VERBOSE(("limit    : 0x%08x", sdp->u.seg.limit));
+			break;
+
+		case CPU_SYSDESC_TYPE_CALL_16:		/* 286 call gate */
+		case CPU_SYSDESC_TYPE_INTR_16:		/* 286 interrupt gate */
+		case CPU_SYSDESC_TYPE_TRAP_16:		/* 286 trap gate */
+		case CPU_SYSDESC_TYPE_CALL_32:		/* 386 call gate */
+		case CPU_SYSDESC_TYPE_INTR_32:		/* 386 interrupt gate */
+		case CPU_SYSDESC_TYPE_TRAP_32:		/* 386 trap gate */
+			switch (sdp->type & CPU_SYSDESC_TYPE_MASKBIT) {
+			case CPU_SYSDESC_TYPE_CALL:
+				s = "call";
+				break;
+
+			case CPU_SYSDESC_TYPE_INTR:
+				s = "interrupt";
+				break;
+
+			case CPU_SYSDESC_TYPE_TRAP:
+				s = "trap";
+				break;
+
+			default:
+				s = "unknown";
+				break;
+			}
+			VERBOSE(("type     : %c86 %s gate",
+			    (sdp->type & CPU_SYSDESC_TYPE_32BIT) ? '3':'2', s));
+			VERBOSE(("selector : 0x%04x", sdp->u.gate.selector));
+			VERBOSE(("offset   : 0x%08x", sdp->u.gate.offset));
+			VERBOSE(("count    : %d", sdp->u.gate.count));
+			break;
+
+		case 0: case 8: case 10: case 13: /* reserved */
+		default:
+			VERBOSE(("type     : unknown descriptor"));
+			break;
+		}
+	}
+#endif
 }
 
 UINT32
@@ -278,7 +393,7 @@ convert_vaddr_to_paddr(unsigned int idx, UINT32 offset)
 
 	if (idx < CPU_SEGREG_NUM) {
 		sdp = &CPU_STAT_SREG(idx);
-		if (sdp->valid) {
+		if (SEG_IS_VALID(sdp)) {
 			laddr = CPU_STAT_SREGBASE(idx) + offset;
 			return convert_laddr_to_paddr(laddr);
 		}

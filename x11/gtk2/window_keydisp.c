@@ -1,5 +1,3 @@
-/*	$Id: window_keydisp.c,v 1.3 2004/07/27 17:07:50 monaka Exp $	*/
-
 #include "compiler.h"
 
 #if defined(SUPPORT_KEYDISP)
@@ -42,9 +40,6 @@ static void
 kdispwin_window_destroy(GtkWidget *w, gpointer p)
 {
 
-	UNUSED(w);
-	UNUSED(p);
-
 	if (kdwin.window)
 		kdwin.window = NULL;
 	drawmng_release(kdwin.hdl);
@@ -59,19 +54,12 @@ static void
 close_window(gpointer data, guint action, GtkWidget *w)
 {
 
-	UNUSED(data);
-	UNUSED(action);
-	UNUSED(w);
-
 	xmenu_toggle_item(kdwin.menuhdl, "keydisp", FALSE);
 }
 
 static void
 change_module(gpointer data, guint action, GtkWidget *w)
 {
-
-	UNUSED(data);
-	UNUSED(w);
 
 	if (kdispcfg.mode != action) {
 		kdispcfg.mode = action;
@@ -135,8 +123,6 @@ static gint
 kdispwin_expose(GtkWidget *w, GdkEventExpose *ev)
 {
 
-	UNUSED(w);
-
 	if (ev->type == GDK_EXPOSE) {
 		if (ev->count == 0) {
 			drawkeys();
@@ -154,8 +140,6 @@ static UINT8
 getpal8(CMNPALFN *self, UINT num)
 {
 
-	UNUSED(self);
-
 	if (num < KEYDISP_PALS) {
 		return kdwinpal[num] >> 24;
 	}
@@ -166,8 +150,6 @@ static UINT32
 getpal32(CMNPALFN *self, UINT num)
 {
 
-	UNUSED(self);
-
 	if (num < KEYDISP_PALS) {
 		return kdwinpal[num] & 0xffffff;
 	}
@@ -177,8 +159,6 @@ getpal32(CMNPALFN *self, UINT num)
 static UINT16
 cnvpal16(CMNPALFN *self, RGB32 pal32)
 {
-
-	UNUSED(self);
 
 	return (UINT16)drawmng_makepal16(&kdwin.hdl->pal16mask, pal32);
 }
@@ -249,7 +229,7 @@ kdispwin_create(void)
 	gtk_window_set_title(GTK_WINDOW(kdwin.window), "Key Display");
 	gtk_window_set_resizable(GTK_WINDOW(kdwin.window), FALSE);
 	g_signal_connect(GTK_OBJECT(kdwin.window), "destroy",
-	    GTK_SIGNAL_FUNC(kdispwin_window_destroy), NULL);
+	    G_CALLBACK(kdispwin_window_destroy), NULL);
 	gtk_widget_realize(kdwin.window);
 
 	main_widget = gtk_vbox_new(FALSE, 2);
@@ -271,7 +251,7 @@ kdispwin_create(void)
 	gtk_box_pack_start(GTK_BOX(main_widget), da, FALSE, TRUE, 0);
 	gtk_widget_show(da);
 	g_signal_connect(GTK_OBJECT(da), "expose_event",
-	    GTK_SIGNAL_FUNC(kdispwin_expose), NULL);
+	    G_CALLBACK(kdispwin_expose), NULL);
 
 	mode = kdispwin_getmode(kdispcfg.mode);
 	setkeydispmode(mode);

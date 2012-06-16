@@ -140,7 +140,7 @@ VEXTERN void VEXPORT midimod_loadprogram(MIDIMOD mod, UINT num);
 VEXTERN void VEXPORT midimod_loadrhythm(MIDIMOD mod, UINT num);
 VEXTERN void VEXPORT midimod_loadgm(MIDIMOD mod);
 VEXTERN void VEXPORT midimod_loadall(MIDIMOD mod);
-VEXTERN void VEXPORT midimod_loadallex(MIDIMOD mod, FNMIDIOUTLAEXCB cb,
+VEXTERN int VEXPORT midimod_loadallex(MIDIMOD mod, FNMIDIOUTLAEXCB cb,
 															void *userdata);
 
 #ifdef __cplusplus

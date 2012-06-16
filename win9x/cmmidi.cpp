@@ -1,18 +1,29 @@
-#include	"compiler.h"
-#include	"np2.h"
-#include	"mimpidef.h"
-#include	"commng.h"
+/**
+ * @file	cmmidi.cpp
+ * @brief	Communication port manager (MIDI)
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/03/07 09:54:11 $
+ */
+
+#include "compiler.h"
+#include "np2.h"
+#include "mimpidef.h"
+#include "commng.h"
 #if defined(VERMOUTH_LIB) || defined(MT32SOUND_DLL)
-#include	"sound.h"
+#include "sound.h"
 #endif
 #if defined(VERMOUTH_LIB)
-#include	"vermouth.h"
+#include "vermouth.h"
 #endif
 #if defined(MT32SOUND_DLL)
-#include	"mt32snd.h"
+#include "mt32snd.h"
 #endif
-#include	"keydisp.h"
+#include "keydisp.h"
 
+#if !defined(__GNUC__)
+#pragma comment(lib, "winmm.lib")
+#endif	// !defined(__GNUC__)
 
 #if defined(VERMOUTH_LIB)
 extern	MIDIMOD	vermouth_module;

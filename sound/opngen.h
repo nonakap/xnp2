@@ -25,7 +25,7 @@ enum {
 #define EVC_BITS		10
 #define ENV_BITS		16
 #define KF_BITS			6
-#define FREQ_BITS		20
+#define FREQ_BITS		21
 #define ENVTBL_BIT		14
 #define SINTBL_BIT		14
 
@@ -57,7 +57,7 @@ enum {
 #define	EVC_BITS		10
 #define	ENV_BITS		16
 #define	KF_BITS			6
-#define	FREQ_BITS		20
+#define	FREQ_BITS		21
 #define	ENVTBL_BIT		14
 #define	SINTBL_BIT		15
 

@@ -192,7 +192,7 @@ static const UINT8 xkeyconv_misc[256] = {
 		  NC,  NC,  NC,  NC,  NC,  NC,  NC,  NC,
 	/*	    ,    ,    ,    ,    ,    ,    ,   		; 0x48 */
 		  NC,  NC,  NC,  NC,  NC,  NC,  NC,  NC,
-	/*	HOME,  ¢´,  ¢¨,  ¢™,  ¢≠,RLDN,RLUP, END		; 0x50 */
+	/*	HOME,  ‚Üê,  ‚Üë,  ‚Üí,  ‚Üì,RLDN,RLUP, END		; 0x50 */
 		0x3e,0x3b,0x3a,0x3c,0x3d,0x37,0x36,0x3f,
 	/*	    ,    ,    ,    ,    ,    ,    ,   		; 0x58 */
 		  NC,  NC,  NC,  NC,  NC,  NC,  NC,  NC,
@@ -208,9 +208,9 @@ static const UINT8 xkeyconv_misc[256] = {
 		0x34,  NC,  NC,  NC,  NC,  NC,  NC,  NC,
 	/*	    ,<TAB,    ,    ,    ,<ENT,    ,  		; 0x88 */
 		  NC,0x0f,  NC,  NC,  NC,0x1c,  NC,  NC,
-	/*	    ,    ,    ,    ,    ,<HOM,<¢´>,<¢¨>		; 0x90 */
+	/*	    ,    ,    ,    ,    ,<HOM,<‚Üê>,<‚Üë>		; 0x90 */
 		  NC,  NC,  NC,  NC,  NC,0x3e,0x3b,0x3a,
-	/*	<¢™>,<¢≠>,<RDN,<RUP,<END,    ,<INS,<DEL		; 0x98 */
+	/*	<‚Üí>,<‚Üì>,<RDN,<RUP,<END,    ,<INS,<DEL		; 0x98 */
 		0x3c,0x3d,0x37,0x36,0x3f,  NC,0x38,0x39,
 	/*	    ,    ,    ,    ,    ,    ,    ,    		; 0xa0 */
 		  NC,  NC,  NC,  NC,  NC,  NC,  NC,  NC,

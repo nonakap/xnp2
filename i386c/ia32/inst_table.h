@@ -1,5 +1,3 @@
-/*	$Id: inst_table.h,v 1.5 2005/03/12 12:32:54 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2003 NONAKA Kimihiro
  * All rights reserved.
@@ -45,51 +43,51 @@ extern void (*insttable_2byte[2][256])(void);
  */
 
 /* group 1 */
-extern void (*insttable_G1EbIb[])(UINT8 *, UINT32);
-extern void (*insttable_G1EwIx[])(UINT16 *, UINT32);
-extern void (*insttable_G1EdIx[])(UINT32 *, UINT32);
-extern void (*insttable_G1EbIb_ext[])(UINT32, UINT32);
-extern void (*insttable_G1EwIx_ext[])(UINT32, UINT32);
-extern void (*insttable_G1EdIx_ext[])(UINT32, UINT32);
+extern void (CPUCALL *insttable_G1EbIb[])(UINT8 *, UINT32);
+extern void (CPUCALL *insttable_G1EwIx[])(UINT16 *, UINT32);
+extern void (CPUCALL *insttable_G1EdIx[])(UINT32 *, UINT32);
+extern void (CPUCALL *insttable_G1EbIb_ext[])(UINT32, UINT32);
+extern void (CPUCALL *insttable_G1EwIx_ext[])(UINT32, UINT32);
+extern void (CPUCALL *insttable_G1EdIx_ext[])(UINT32, UINT32);
 
 /* group 2 */
-extern void (*insttable_G2Eb[])(UINT8 *);
-extern void (*insttable_G2Ew[])(UINT16 *);
-extern void (*insttable_G2Ed[])(UINT32 *);
-extern void (*insttable_G2EbCL[])(UINT8 *, UINT);
-extern void (*insttable_G2EwCL[])(UINT16 *, UINT);
-extern void (*insttable_G2EdCL[])(UINT32 *, UINT);
-extern void (*insttable_G2Eb_ext[])(UINT32);
-extern void (*insttable_G2Ew_ext[])(UINT32);
-extern void (*insttable_G2Ed_ext[])(UINT32);
-extern void (*insttable_G2EbCL_ext[])(UINT32, UINT);
-extern void (*insttable_G2EwCL_ext[])(UINT32, UINT);
-extern void (*insttable_G2EdCL_ext[])(UINT32, UINT);
+extern void (CPUCALL *insttable_G2Eb[])(UINT8 *);
+extern void (CPUCALL *insttable_G2Ew[])(UINT16 *);
+extern void (CPUCALL *insttable_G2Ed[])(UINT32 *);
+extern void (CPUCALL *insttable_G2EbCL[])(UINT8 *, UINT);
+extern void (CPUCALL *insttable_G2EwCL[])(UINT16 *, UINT);
+extern void (CPUCALL *insttable_G2EdCL[])(UINT32 *, UINT);
+extern void (CPUCALL *insttable_G2Eb_ext[])(UINT32);
+extern void (CPUCALL *insttable_G2Ew_ext[])(UINT32);
+extern void (CPUCALL *insttable_G2Ed_ext[])(UINT32);
+extern void (CPUCALL *insttable_G2EbCL_ext[])(UINT32, UINT);
+extern void (CPUCALL *insttable_G2EwCL_ext[])(UINT32, UINT);
+extern void (CPUCALL *insttable_G2EdCL_ext[])(UINT32, UINT);
 
 /* group 3 */
-extern void (*insttable_G3Eb[])(UINT32);
-extern void (*insttable_G3Ew[])(UINT32);
-extern void (*insttable_G3Ed[])(UINT32);
+extern void (CPUCALL *insttable_G3Eb[])(UINT32);
+extern void (CPUCALL *insttable_G3Ew[])(UINT32);
+extern void (CPUCALL *insttable_G3Ed[])(UINT32);
 
 /* group 4 */
-extern void (*insttable_G4[])(UINT32);
+extern void (CPUCALL *insttable_G4[])(UINT32);
 
 /* group 5 */
-extern void (*insttable_G5Ew[])(UINT32);
-extern void (*insttable_G5Ed[])(UINT32);
+extern void (CPUCALL *insttable_G5Ew[])(UINT32);
+extern void (CPUCALL *insttable_G5Ed[])(UINT32);
 
 /* group 6 */
-extern void (*insttable_G6[])(UINT32);
+extern void (CPUCALL *insttable_G6[])(UINT32);
 
 /* group 7 */
-extern void (*insttable_G7[])(UINT32);
+extern void (CPUCALL *insttable_G7[])(UINT32);
 
 /* group 8 */
-extern void (*insttable_G8EwIb[])(UINT32);
-extern void (*insttable_G8EdIb[])(UINT32);
+extern void (CPUCALL *insttable_G8EwIb[])(UINT32);
+extern void (CPUCALL *insttable_G8EdIb[])(UINT32);
 
 /* group 9 */
-extern void (*insttable_G9[])(UINT32);
+extern void (CPUCALL *insttable_G9[])(UINT32);
 
 #ifdef __cplusplus
 }

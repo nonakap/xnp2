@@ -1259,12 +1259,12 @@ void hostdrv_reset(void) {
 void hostdrv_mount(const void *arg1, long arg2) {
 
 	if ((np2cfg.hdrvroot[0] == '\0') || (hostdrv.stat.is_mount)) {
-		np2sysp_outstr("ng", 0);
+		np2sysp_outstr(OEMTEXT("ng"), 0);
 		return;
 	}
 	hostdrv.stat.is_mount = TRUE;
 	fetch_if4dos();
-	np2sysp_outstr("ok", 0);
+	np2sysp_outstr(OEMTEXT("ok"), 0);
 	(void)arg1;
 	(void)arg2;
 }

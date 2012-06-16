@@ -41,11 +41,10 @@
 .sreq			resb	1		; 19
 .ready			resb	1		; 1a
 .mask			resb	1		; 1b
-.size							; 1c
-				endstruc
+				endstruc		; 1c
 
 				struc	dmac_t
-.dmach			resb	(dmach_t.size * 4)
+.dmach			resb	(dmach_t_size * 4)
 .lh				resd	1
 .work			resb	1
 .working		resb	1

@@ -32,7 +32,7 @@ skbdwin_deinitialize(void)
 
 static const char ini_title[] = "NP2 software keyboard";
 
-static const INITBL iniitem[] = {
+static INITBL iniitem[] = {
 	{"WindposX", INITYPE_SINT32,	&skbdcfg.posx,		0},
 	{"WindposY", INITYPE_SINT32,	&skbdcfg.posy,		0},
 };

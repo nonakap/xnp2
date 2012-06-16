@@ -1,5 +1,3 @@
-/*	$Id: logic_arith.h,v 1.4 2005/03/12 12:33:48 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -44,12 +42,12 @@ void AND_GdEd(void);
 void AND_ALIb(void);
 void AND_AXIw(void);
 void AND_EAXId(void);
-void AND_EbIb(UINT8 *, UINT32);
-void AND_EwIx(UINT16 *, UINT32);
-void AND_EdIx(UINT32 *, UINT32);
-void AND_EbIb_ext(UINT32, UINT32);
-void AND_EwIx_ext(UINT32, UINT32);
-void AND_EdIx_ext(UINT32, UINT32);
+void CPUCALL AND_EbIb(UINT8 *, UINT32);
+void CPUCALL AND_EwIx(UINT16 *, UINT32);
+void CPUCALL AND_EdIx(UINT32 *, UINT32);
+void CPUCALL AND_EbIb_ext(UINT32, UINT32);
+void CPUCALL AND_EwIx_ext(UINT32, UINT32);
+void CPUCALL AND_EdIx_ext(UINT32, UINT32);
 
 /*
  * OR
@@ -63,12 +61,12 @@ void OR_GdEd(void);
 void OR_ALIb(void);
 void OR_AXIw(void);
 void OR_EAXId(void);
-void OR_EbIb(UINT8 *, UINT32);
-void OR_EwIx(UINT16 *, UINT32);
-void OR_EdIx(UINT32 *, UINT32);
-void OR_EbIb_ext(UINT32, UINT32);
-void OR_EwIx_ext(UINT32, UINT32);
-void OR_EdIx_ext(UINT32, UINT32);
+void CPUCALL OR_EbIb(UINT8 *, UINT32);
+void CPUCALL OR_EwIx(UINT16 *, UINT32);
+void CPUCALL OR_EdIx(UINT32 *, UINT32);
+void CPUCALL OR_EbIb_ext(UINT32, UINT32);
+void CPUCALL OR_EwIx_ext(UINT32, UINT32);
+void CPUCALL OR_EdIx_ext(UINT32, UINT32);
 
 /*
  * XOR
@@ -82,19 +80,19 @@ void XOR_GdEd(void);
 void XOR_ALIb(void);
 void XOR_AXIw(void);
 void XOR_EAXId(void);
-void XOR_EbIb(UINT8 *, UINT32);
-void XOR_EwIx(UINT16 *, UINT32);
-void XOR_EdIx(UINT32 *, UINT32);
-void XOR_EbIb_ext(UINT32, UINT32);
-void XOR_EwIx_ext(UINT32, UINT32);
-void XOR_EdIx_ext(UINT32, UINT32);
+void CPUCALL XOR_EbIb(UINT8 *, UINT32);
+void CPUCALL XOR_EwIx(UINT16 *, UINT32);
+void CPUCALL XOR_EdIx(UINT32 *, UINT32);
+void CPUCALL XOR_EbIb_ext(UINT32, UINT32);
+void CPUCALL XOR_EwIx_ext(UINT32, UINT32);
+void CPUCALL XOR_EdIx_ext(UINT32, UINT32);
 
 /*
  * NOT
  */
-void NOT_Eb(UINT32);
-void NOT_Ew(UINT32);
-void NOT_Ed(UINT32);
+void CPUCALL NOT_Eb(UINT32);
+void CPUCALL NOT_Ew(UINT32);
+void CPUCALL NOT_Ed(UINT32);
 
 #ifdef __cplusplus
 }

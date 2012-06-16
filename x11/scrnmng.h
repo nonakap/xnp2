@@ -1,6 +1,8 @@
 #ifndef	NP2_X11_SCRNMNG_H__
 #define	NP2_X11_SCRNMNG_H__
 
+G_BEGIN_DECLS
+
 enum {
 	RGB24_B	= 2,
 	RGB24_G	= 1,
@@ -39,11 +41,6 @@ typedef struct {
 	BYTE	allflash;
 	BYTE	palchanged;
 } SCRNMNG;
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 extern SCRNMNG *scrnmngp;
 
@@ -86,8 +83,6 @@ BOOL scrnmng_entermenu(SCRNMENU *smenu);
 void scrnmng_leavemenu(void);
 void scrnmng_menudraw(const RECT_T *rct);
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #endif	/* NP2_X11_SCRNMNG_H__ */

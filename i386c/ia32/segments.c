@@ -1,5 +1,3 @@
-/*	$Id: segments.c,v 1.18 2008/01/25 17:53:27 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -29,36 +27,31 @@
 #include "cpu.h"
 #include "ia32.mcr"
 
+static void CPUCALL segdesc_set_default(int, UINT16, descriptor_t *);
 
-void
-load_segreg(int idx, UINT16 selector, int exc)
+void CPUCALL
+load_segreg(int idx, UINT16 selector, UINT16 *sregp, descriptor_t *sdp, int exc)
 {
 	selector_t sel;
 	int rv;
 
 	__ASSERT((unsigned int)idx < CPU_SEGREG_NUM);
+	__ASSERT((sregp != NULL));
+	__ASSERT((sdp != NULL));
 
 	if (!CPU_STAT_PM || CPU_STAT_VM86) {
-		descriptor_t sd;
-
 		/* real-mode or vm86 mode */
-		CPU_REGS_SREG(idx) = selector;
-
-		memset(&sd, 0, sizeof(sd));
-		if (idx == CPU_CS_INDEX) {
-			sd.rpl = CPU_STAT_CPL;
-		}
-		sd.u.seg.limit = CPU_STAT_SREGLIMIT(idx);
-		CPU_SET_SEGDESC_DEFAULT(&sd, idx, selector);
-		CPU_STAT_SREG(idx) = sd;
+		*sregp = selector;
+		segdesc_set_default(idx, selector, &sel.desc);
+		*sdp = sel.desc;
 		return;
 	}
+
+	VERBOSE(("load_segreg: EIP = %04x:%08x, idx = %d, selector = %04x, sregp = %p, dp = %p, exc = %d", CPU_CS, CPU_PREV_EIP, idx, selector, sregp, sdp, exc));
 
 	/*
 	 * protected mode
 	 */
-	VERBOSE(("load_segreg: EIP = %04x:%08x, idx = %d, selector = %04x, exc = %d", CPU_CS, CPU_PREV_EIP, idx, selector, exc));
-
 	if (idx == CPU_CS_INDEX) {
 		ia32_panic("load_segreg: CS");
 	}
@@ -68,8 +61,9 @@ load_segreg(int idx, UINT16 selector, int exc)
 		if ((rv != -2) || (idx == CPU_SS_INDEX)) {
 			EXCEPTION(exc, sel.idx);
 		}
-		CPU_REGS_SREG(idx) = sel.selector;
-		CPU_STAT_SREG_CLEAR(idx);
+		/* null selector */
+		*sregp = sel.selector;
+		memset(sdp, 0, sizeof(*sdp));
 		return;
 	}
 
@@ -77,9 +71,9 @@ load_segreg(int idx, UINT16 selector, int exc)
 	case CPU_SS_INDEX:
 		if ((CPU_STAT_CPL != sel.rpl)
 		 || (CPU_STAT_CPL != sel.desc.dpl)
-		 || !sel.desc.s
-		 || sel.desc.u.seg.c
-		 || !sel.desc.u.seg.wr) {
+		 || SEG_IS_SYSTEM(&sel.desc)
+		 || SEG_IS_CODE(&sel.desc)
+		 || !SEG_IS_WRITABLE_DATA(&sel.desc)) {
 			EXCEPTION(exc, sel.idx);
 		}
 
@@ -89,22 +83,22 @@ load_segreg(int idx, UINT16 selector, int exc)
 			EXCEPTION(SS_EXCEPTION, sel.idx);
 		}
 
-		load_ss(sel.selector, &sel.desc, sel.selector & 3);
+		load_ss(sel.selector, &sel.desc, CPU_STAT_CPL);
 		break;
 
 	case CPU_ES_INDEX:
 	case CPU_DS_INDEX:
 	case CPU_FS_INDEX:
 	case CPU_GS_INDEX:
-		/* !(system segment || non-readable code segment) */
-		if (!sel.desc.s
-		 || (sel.desc.u.seg.c && !sel.desc.u.seg.wr)) {
+		if (SEG_IS_SYSTEM(&sel.desc)
+		 || (SEG_IS_CODE(&sel.desc) && !SEG_IS_READABLE_CODE(&sel.desc))) {
 			EXCEPTION(exc, sel.idx);
 		}
-		/* data segment || non-conforming code segment */
-		if (!sel.desc.u.seg.c || !sel.desc.u.seg.ec) {
+		if (SEG_IS_DATA(&sel.desc)
+		 || !SEG_IS_CONFORMING_CODE(&sel.desc)) {
 			/* check privilege level */
-			if ((sel.rpl > sel.desc.dpl) || (CPU_STAT_CPL > sel.desc.dpl)) {
+			if ((sel.rpl > sel.desc.dpl)
+			 || (CPU_STAT_CPL > sel.desc.dpl)) {
 				EXCEPTION(exc, sel.idx);
 			}
 		}
@@ -115,8 +109,8 @@ load_segreg(int idx, UINT16 selector, int exc)
 			EXCEPTION(NP_EXCEPTION, sel.idx);
 		}
 
-		CPU_REGS_SREG(idx) = sel.selector;
-		CPU_STAT_SREG(idx) = sel.desc;
+		*sregp = sel.selector;
+		*sdp = sel.desc;
 		break;
 	
 	default:
@@ -128,43 +122,47 @@ load_segreg(int idx, UINT16 selector, int exc)
 /*
  * load SS register
  */
-void
-load_ss(UINT16 selector, const descriptor_t *sd, UINT cpl)
+void CPUCALL
+load_ss(UINT16 selector, const descriptor_t *sdp, int cpl)
 {
 
-	CPU_STAT_SS32 = sd->d;
-	CPU_REGS_SREG(CPU_SS_INDEX) = (UINT16)((selector & ~3) | (cpl & 3));
-	CPU_STAT_SREG(CPU_SS_INDEX) = *sd;
+	CPU_STAT_SS32 = sdp->d;
+	CPU_SS = (UINT16)((selector & ~3) | (cpl & 3));
+	CPU_SS_DESC = *sdp;
 }
 
 /*
  * load CS register
  */
-void
-load_cs(UINT16 selector, const descriptor_t *sd, UINT cpl)
+void CPUCALL
+load_cs(UINT16 selector, const descriptor_t *sdp, int new_cpl)
 {
+	int cpl = new_cpl & 3;
 
 	CPU_INST_OP32 = CPU_INST_AS32 =
 	    CPU_STATSAVE.cpu_inst_default.op_32 =
-	    CPU_STATSAVE.cpu_inst_default.as_32 = sd->d;
-	CPU_REGS_SREG(CPU_CS_INDEX) = (UINT16)((selector & ~3) | (cpl & 3));
-	CPU_STAT_SREG(CPU_CS_INDEX) = *sd;
-	CPU_SET_CPL(cpl & 3);
+	    CPU_STATSAVE.cpu_inst_default.as_32 = sdp->d;
+	CPU_CS = (UINT16)((selector & ~3) | cpl);
+	CPU_CS_DESC = *sdp;
+	set_cpl(cpl);
 }
 
 /*
  * load LDT register
  */
-void
+void CPUCALL
 load_ldtr(UINT16 selector, int exc)
 {
 	selector_t sel;
 	int rv;
 
+	memset(&sel, 0, sizeof(sel));
+
 	rv = parse_selector(&sel, selector);
 	if (rv < 0 || sel.ldt) {
 		if (rv == -2) {
 			/* null segment */
+			VERBOSE(("load_ldtr: null segment"));
 			CPU_LDTR = 0;
 			memset(&CPU_LDTR_DESC, 0, sizeof(CPU_LDTR_DESC));
 			return;
@@ -173,22 +171,10 @@ load_ldtr(UINT16 selector, int exc)
 	}
 
 	/* check descriptor type */
-	if (sel.desc.s || (sel.desc.type != CPU_SYSDESC_TYPE_LDT)) {
+	if (!SEG_IS_SYSTEM(&sel.desc)
+	 || (sel.desc.type != CPU_SYSDESC_TYPE_LDT)) {
 		EXCEPTION(exc, sel.selector);
 	}
-
-#if 0
-	/*
-	 * LEMM の挙動より LDT セグメントのリミットチェック処理を無効化
-	 *
-	 * 症状１:リミット 0 の LDT セレクタを LLDT は駄目っぽい。
-	 * 対策１:リミット 0 の LDT セレクタの代わりにヌルセレクタを LLDT。
-	 */
-	/* check limit */
-	if (sel.desc.u.seg.limit < 7) {
-		ia32_panic("load_ldtr: LDTR descriptor limit < 7 (limit = %d)", sel.desc.u.seg.limit);
-	}
-#endif
 
 	/* not present */
 	rv = selector_is_not_present(&sel);
@@ -204,101 +190,88 @@ load_ldtr(UINT16 selector, int exc)
 	CPU_LDTR_DESC = sel.desc;
 }
 
-void
-load_descriptor(descriptor_t *descp, UINT32 addr)
+void CPUCALL
+load_descriptor(descriptor_t *sdp, UINT32 addr)
 {
 	UINT32 l, h;
 
-	memset(descp, 0, sizeof(*descp));
+	__ASSERT(sdp != NULL);
+
+	VERBOSE(("load_descriptor: address = 0x%08x", addr));
 
 	l = cpu_kmemoryread_d(addr);
 	h = cpu_kmemoryread_d(addr + 4);
-	VERBOSE(("load_descriptor: descriptor address = 0x%08x, h = 0x%08x, l = %08x", addr, h, l));
+	VERBOSE(("descriptor value = 0x%08x%08x", h, l));
 
-	descp->flag = 0;
+	memset(sdp, 0, sizeof(*sdp));
+	sdp->flag = 0;
 
-	descp->p = (h & CPU_DESC_H_P) == CPU_DESC_H_P;
-	descp->type = (UINT8)((h & CPU_DESC_H_TYPE) >> 8);
-	descp->dpl = (UINT8)((h & CPU_DESC_H_DPL) >> 13);
-	descp->s = (h & CPU_DESC_H_S) == CPU_DESC_H_S;
+	sdp->p = (h & CPU_DESC_H_P) ? 1 : 0;
+	sdp->type = (UINT8)((h & CPU_DESC_H_TYPE) >> CPU_DESC_H_TYPE_SHIFT);
+	sdp->dpl = (UINT8)((h & CPU_DESC_H_DPL) >> CPU_DESC_H_DPL_SHIFT);
+	sdp->s = (h & CPU_DESC_H_S) ? 1 : 0;
 
-	VERBOSE(("load_descriptor: present = %s, type = %d, DPL = %d", descp->p ? "true" : "false", descp->type, descp->dpl));
-
-	if (descp->s) {
+	if (!SEG_IS_SYSTEM(sdp)) {
 		/* code/data */
-		descp->valid = 1;
-		descp->d = (h & CPU_SEGDESC_H_D) ? 1 : 0;
+		sdp->valid = 1;
+		sdp->d = (h & CPU_SEGDESC_H_D) ? 1 : 0;
 
-		descp->u.seg.c = (h & CPU_SEGDESC_H_D_C) ? 1 : 0;
-		descp->u.seg.g = (h & CPU_SEGDESC_H_G) ? 1 : 0;
-		descp->u.seg.wr = (descp->type & CPU_SEGDESC_TYPE_WR) ? 1 : 0;
-		descp->u.seg.ec = (descp->type & CPU_SEGDESC_TYPE_EC) ? 1 : 0;
+		sdp->u.seg.c = (h & CPU_SEGDESC_H_D_C) ? 1 : 0;
+		sdp->u.seg.g = (h & CPU_SEGDESC_H_G) ? 1 : 0;
+		sdp->u.seg.wr = (sdp->type & CPU_SEGDESC_TYPE_WR) ? 1 : 0;
+		sdp->u.seg.ec = (sdp->type & CPU_SEGDESC_TYPE_EC) ? 1 : 0;
 
-		descp->u.seg.segbase  = (l >> 16) & 0xffff;
-		descp->u.seg.segbase |= (h & 0xff) << 16;
-		descp->u.seg.segbase |= h & 0xff000000;
-		descp->u.seg.limit = (h & 0xf0000) | (l & 0xffff);
-		if (descp->u.seg.g) {
-			descp->u.seg.limit <<= 12;
-			descp->u.seg.limit |= 0xfff;
+		sdp->u.seg.segbase  = (l >> 16) & 0xffff;
+		sdp->u.seg.segbase |= (h & 0xff) << 16;
+		sdp->u.seg.segbase |= h & 0xff000000;
+		sdp->u.seg.limit = (h & 0xf0000) | (l & 0xffff);
+		if (sdp->u.seg.g) {
+			sdp->u.seg.limit <<= 12;
+			if (SEG_IS_CODE(sdp) || !SEG_IS_EXPANDDOWN_DATA(sdp)) {
+				/* expand-up segment */
+				sdp->u.seg.limit |= 0xfff;
+			}
 		}
-		descp->u.seg.segend = descp->u.seg.segbase + descp->u.seg.limit;
-
-		VERBOSE(("load_descriptor: %s segment descriptor", descp->u.seg.c ? "code" : "data"));
-		VERBOSE(("load_descriptor: segment base address = 0x%08x, segment limit = 0x%08x", descp->u.seg.segbase, descp->u.seg.limit));
-		VERBOSE(("load_descriptor: d = %s, g = %s", descp->d ? "on" : "off", descp->u.seg.g ? "on" : "off"));
-		VERBOSE(("load_descriptor: %s, %s", descp->u.seg.c ? (descp->u.seg.wr ? "executable/readable" : "execute-only") : (descp->u.seg.wr ? "writable" : "read-only"), (descp->u.seg.c ? (descp->u.seg.ec ? "conforming" : "non-conforming") : (descp->u.seg.ec ? "expand-down" : "expand-up"))));
 	} else {
 		/* system */
-		switch (descp->type) {
+		switch (sdp->type) {
 		case CPU_SYSDESC_TYPE_LDT:		/* LDT */
-			descp->valid = 1;
-			descp->u.seg.g = (h & CPU_SEGDESC_H_G) ? 1 : 0;
+			sdp->valid = 1;
+			sdp->u.seg.g = (h & CPU_SEGDESC_H_G) ? 1 : 0;
 
-			descp->u.seg.segbase  = h & 0xff000000;
-			descp->u.seg.segbase |= (h & 0xff) << 16;
-			descp->u.seg.segbase |= l >> 16;
-			descp->u.seg.limit  = h & 0xf0000;
-			descp->u.seg.limit |= l & 0xffff;
-			if (descp->u.seg.g) {
-				descp->u.seg.limit <<= 12;
-				descp->u.seg.limit |= 0xfff;
+			sdp->u.seg.segbase  = h & 0xff000000;
+			sdp->u.seg.segbase |= (h & 0xff) << 16;
+			sdp->u.seg.segbase |= l >> 16;
+			sdp->u.seg.limit  = h & 0xf0000;
+			sdp->u.seg.limit |= l & 0xffff;
+			if (sdp->u.seg.g) {
+				sdp->u.seg.limit <<= 12;
+				sdp->u.seg.limit |= 0xfff;
 			}
-			descp->u.seg.segend = descp->u.seg.segbase + descp->u.seg.limit;
-
-			VERBOSE(("load_descriptor: LDT descriptor"));
-			VERBOSE(("load_descriptor: LDT base address = 0x%08x, limit size = 0x%08x", descp->u.seg.segbase, descp->u.seg.limit));
 			break;
 
 		case CPU_SYSDESC_TYPE_TASK:		/* task gate */
-			descp->valid = 1;
-			descp->u.gate.selector = (UINT16)(l >> 16);
-
-			VERBOSE(("load_descriptor: task descriptor: selector = 0x%04x", descp->u.gate.selector));
+			sdp->valid = 1;
+			sdp->u.gate.selector = (UINT16)(l >> 16);
 			break;
 
 		case CPU_SYSDESC_TYPE_TSS_16:		/* 286 TSS */
 		case CPU_SYSDESC_TYPE_TSS_BUSY_16:	/* 286 TSS Busy */
 		case CPU_SYSDESC_TYPE_TSS_32:		/* 386 TSS */
 		case CPU_SYSDESC_TYPE_TSS_BUSY_32:	/* 386 TSS Busy */
-			descp->valid = 1;
-			descp->d = (h & CPU_GATEDESC_H_D) ? 1 : 0;
-			descp->u.seg.g = (h & CPU_SEGDESC_H_G) ? 1 : 0;
+			sdp->valid = 1;
+			sdp->d = (h & CPU_GATEDESC_H_D) ? 1 : 0;
+			sdp->u.seg.g = (h & CPU_SEGDESC_H_G) ? 1 : 0;
 
-			descp->u.seg.segbase  = h & 0xff000000;
-			descp->u.seg.segbase |= (h & 0xff) << 16;
-			descp->u.seg.segbase |= l >> 16;
-			descp->u.seg.limit  = h & 0xf0000;
-			descp->u.seg.limit |= l & 0xffff;
-			if (descp->u.seg.g) {
-				descp->u.seg.limit <<= 12;
-				descp->u.seg.limit |= 0xfff;
+			sdp->u.seg.segbase  = h & 0xff000000;
+			sdp->u.seg.segbase |= (h & 0xff) << 16;
+			sdp->u.seg.segbase |= l >> 16;
+			sdp->u.seg.limit  = h & 0xf0000;
+			sdp->u.seg.limit |= l & 0xffff;
+			if (sdp->u.seg.g) {
+				sdp->u.seg.limit <<= 12;
+				sdp->u.seg.limit |= 0xfff;
 			}
-			descp->u.seg.segend = descp->u.seg.segbase + descp->u.seg.limit;
-
-			VERBOSE(("load_descriptor: %dbit %sTSS descriptor", descp->d ? 32 : 16, (descp->type & CPU_SYSDESC_TYPE_TSS_BUSY_IND) ? "busy " : ""));
-			VERBOSE(("load_descriptor: TSS base address = 0x%08x, limit = 0x%08x", descp->u.seg.segbase, descp->u.seg.limit));
-			VERBOSE(("load_descriptor: d = %s, g = %s", descp->d ? "on" : "off", descp->u.seg.g ? "on" : "off"));
 			break;
 
 		case CPU_SYSDESC_TYPE_CALL_16:		/* 286 call gate */
@@ -308,29 +281,30 @@ load_descriptor(descriptor_t *descp, UINT32 addr)
 		case CPU_SYSDESC_TYPE_INTR_32:		/* 386 interrupt gate */
 		case CPU_SYSDESC_TYPE_TRAP_32:		/* 386 trap gate */
 			if ((h & 0x0000000e0) == 0) {
-				descp->valid = 1;
-				descp->d = (h & CPU_GATEDESC_H_D) ? 1:0;
-				descp->u.gate.selector = (UINT16)(l >> 16);
-				descp->u.gate.offset  = h & 0xffff0000;
-				descp->u.gate.offset |= l & 0xffff;
-				descp->u.gate.count = (BYTE)(h & 0x1f);
-
-				VERBOSE(("load_descriptor: %dbit %s gate descriptor", descp->d ? 32 : 16, ((descp->type & CPU_SYSDESC_TYPE_MASKBIT) == CPU_SYSDESC_TYPE_CALL) ? "call" : (((descp->type & CPU_SYSDESC_TYPE_MASKBIT) == CPU_SYSDESC_TYPE_INTR) ? "interrupt" : "trap")));
-				VERBOSE(("load_descriptor: selector = 0x%04x, offset = 0x%08x, count = %d, d = %s", descp->u.gate.selector, descp->u.gate.offset, descp->u.gate.count, descp->d ? "on" : "off"));
+				sdp->valid = 1;
+				sdp->d = (h & CPU_GATEDESC_H_D) ? 1 : 0;
+				sdp->u.gate.selector = (UINT16)(l >> 16);
+				sdp->u.gate.offset  = h & 0xffff0000;
+				sdp->u.gate.offset |= l & 0xffff;
+				sdp->u.gate.count = (UINT8)(h & 0x1f);
 			} else {
-				ia32_panic("load_descriptor: 386 gate is invalid");
+				sdp->valid = 0;
+				VERBOSE(("load_descriptor: gate is invalid"));
 			}
 			break;
 
 		case 0: case 8: case 10: case 13: /* reserved */
 		default:
-			descp->valid = 0;
+			sdp->valid = 0;
 			break;
 		}
 	}
+#if defined(DEBUG)
+	segdesc_dump(sdp);
+#endif
 }
 
-int
+int CPUCALL
 parse_selector(selector_t *ssp, UINT16 selector)
 {
 	UINT32 base;
@@ -348,7 +322,7 @@ parse_selector(selector_t *ssp, UINT16 selector)
 	idx = selector & CPU_SEGMENT_SELECTOR_INDEX_MASK;
 	if (ssp->ldt) {
 		/* LDT */
-		if (!CPU_LDTR_DESC.valid) {
+		if (!SEG_IS_VALID(&CPU_LDTR_DESC)) {
 			VERBOSE(("parse_selector: LDT is invalid"));
 			return -1;
 		}
@@ -364,14 +338,14 @@ parse_selector(selector_t *ssp, UINT16 selector)
 		limit = CPU_GDTR_LIMIT;
 	}
 	if (idx + 7 > limit) {
-		VERBOSE(("parse_selector: segment limit check failed"));
+		VERBOSE(("parse_selector: segment limit check failed: 0x%08x > 0x%08x", idx + 7, limit));
 		return -3;
 	}
 
 	/* load descriptor */
 	ssp->addr = base + idx;
 	load_descriptor(&ssp->desc, ssp->addr);
-	if (!ssp->desc.valid) {
+	if (!SEG_IS_VALID(&ssp->desc)) {
 		VERBOSE(("parse_selector: segment descriptor is invalid"));
 		return -4;
 	}
@@ -379,19 +353,19 @@ parse_selector(selector_t *ssp, UINT16 selector)
 	return 0;
 }
 
-int
+int CPUCALL
 selector_is_not_present(const selector_t *ssp)
 {
 	UINT32 h;
 
 	/* not present */
-	if (!ssp->desc.p) {
+	if (!SEG_IS_PRESENT(&ssp->desc)) {
 		VERBOSE(("selector_is_not_present: not present"));
 		return -1;
 	}
 
 	/* set access bit if code/data segment descriptor */
-	if (ssp->desc.s) {
+	if (!SEG_IS_SYSTEM(&ssp->desc)) {
 		h = cpu_kmemoryread_d(ssp->addr + 4);
 		if (!(h & CPU_SEGDESC_H_A)) {
 			h |= CPU_SEGDESC_H_A;
@@ -400,4 +374,40 @@ selector_is_not_present(const selector_t *ssp)
 	}
 
 	return 0;
+}
+
+void CPUCALL
+segdesc_init(int idx, UINT16 sreg, descriptor_t *sdp)
+{
+
+	__ASSERT(((unsigned int)idx < CPU_SEGREG_NUM));
+	__ASSERT((sdp != NULL));
+
+	CPU_REGS_SREG(idx) = sreg;
+	segdesc_set_default(idx, sreg, sdp);
+}
+
+static void CPUCALL
+segdesc_set_default(int idx, UINT16 selector, descriptor_t *sdp)
+{
+
+	__ASSERT(((unsigned int)idx < CPU_SEGREG_NUM));
+	__ASSERT((sdp != NULL));
+
+	sdp->u.seg.segbase = (UINT32)selector << 4;
+	sdp->u.seg.limit = 0xffff;
+	sdp->u.seg.c = (idx == CPU_CS_INDEX) ? 1 : 0;	/* code or data */
+	sdp->u.seg.g = 0;	/* non 4k factor scale */
+	sdp->u.seg.wr = 1;	/* execute/read(CS) or read/write(others) */
+	sdp->u.seg.ec = 0;	/* nonconforming(CS) or expand-up(others) */
+	sdp->valid = 1;		/* valid */
+	sdp->p = 1;		/* present */
+	sdp->type = (CPU_SEGDESC_TYPE_WR << CPU_DESC_H_TYPE_SHIFT)
+	            | ((idx == CPU_CS_INDEX) ? CPU_SEGDESC_H_D_C : 0);
+				/* readable code/writable data segment */
+	sdp->dpl = CPU_STAT_VM86 ? 3 : 0; /* descriptor privilege level */
+	sdp->rpl = CPU_STAT_VM86 ? 3 : 0; /* request privilege level */
+	sdp->s = 1;		/* code/data */
+	sdp->d = 0;		/* 16bit */
+	sdp->flag = CPU_DESC_FLAG_READABLE|CPU_DESC_FLAG_WRITABLE;
 }

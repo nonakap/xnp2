@@ -1,5 +1,3 @@
-/*	$Id: xnp2.h,v 1.5 2007/02/04 11:51:14 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -28,23 +26,10 @@
 #ifndef	NP2_GTK2_XNP2_H__
 #define	NP2_GTK2_XNP2_H__
 
-#ifndef	GLIB_DISABLE_DEPRECATED
-#define	GLIB_DISABLE_DEPRECATED
-#endif
-
-#ifndef	GDK_DISABLE_DEPRECATED
-#define	GDK_DISABLE_DEPRECATED
-#endif
-#ifndef	GTK_DISABLE_DEPRECATED
-#define	GTK_DISABLE_DEPRECATED
-#endif
-
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+G_BEGIN_DECLS
 
 extern GtkWidget *main_window;
 extern GtkWidget *drawarea;
@@ -65,8 +50,6 @@ gboolean gtk_window_init_fullscreen(GtkWidget *widget);
 void gtk_window_fullscreen_mode(GtkWidget *widget);
 void gtk_window_restore_mode(GtkWidget *widget);
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #endif /* NP2_GTK2_XNP2_H__ */

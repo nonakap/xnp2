@@ -1343,5 +1343,3 @@ memxwrite_lp:		mov		dl, [esi]
 memxwrite_ed:		pop		ebx
 					ret		4
 
-	ends
-

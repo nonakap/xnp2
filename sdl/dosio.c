@@ -345,7 +345,7 @@ struct stat		sb;
 			fli->size = 0;
 			fli->attr = 0;
 		}
-		mileuc_ncpy(fli->path, de->d_name, sizeof(fli->path));
+		milstr_ncpy(fli->path, de->d_name, sizeof(fli->path));
 	}
 	return(SUCCESS);
 }

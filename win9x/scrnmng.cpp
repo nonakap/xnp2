@@ -1,23 +1,36 @@
-#include	"compiler.h"
-#include	<ddraw.h>
+/**
+ * @file	scrnmng.cpp
+ * @brief	Screen Manager (DirectDraw2)
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/03/07 09:54:11 $
+ */
+
+#include "compiler.h"
+#include <ddraw.h>
 #ifndef __GNUC__
-#include	<winnls32.h>
+#include <winnls32.h>
 #endif
-#include	"resource.h"
-#include	"np2.h"
-#include	"winloc.h"
-#include	"mousemng.h"
-#include	"scrnmng.h"
-#include	"sysmng.h"
-#include	"menu.h"
-#include	"np2class.h"
-#include	"pccore.h"
-#include	"scrndraw.h"
-#include	"palettes.h"
+#include "resource.h"
+#include "np2.h"
+#include "winloc.h"
+#include "mousemng.h"
+#include "scrnmng.h"
+#include "sysmng.h"
+#include "menu.h"
+#include "np2class.h"
+#include "pccore.h"
+#include "scrndraw.h"
+#include "palettes.h"
 
 #if defined(SUPPORT_DCLOCK)
-#include	"dclock.h"
+#include "dclock.h"
 #endif
+
+#if !defined(__GNUC__)
+#pragma comment(lib, "ddraw.lib")
+#pragma comment(lib, "dxguid.lib")
+#endif	// !defined(__GNUC__)
 
 extern WINLOCEX np2_winlocexallwin(HWND base);
 

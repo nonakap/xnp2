@@ -321,7 +321,13 @@ const TCHAR		*ext;
 	if (!dlgs_selectwritefile(hWnd, &newdiskui, path, NELEMENTS(path))) {
 		return;
 	}
-	hinst = (HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE);
+
+#if defined(_WIN64)
+	hinst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
+#else
+	hinst = reinterpret_cast<HINSTANCE>(::GetWindowLong(hWnd, GWL_HINSTANCE));
+#endif
+
 	ext = file_getext(path);
 	if (!file_cmpname(ext, str_thd)) {
 		hddsize = 0;

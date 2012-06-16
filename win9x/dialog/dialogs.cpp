@@ -1,17 +1,27 @@
-#include	"compiler.h"
-#include	"resource.h"
-#include	"strres.h"
-#include	"bmpdata.h"
-#include	"oemtext.h"
-#include	"dosio.h"
-#include	"commng.h"
-#include	"dialogs.h"
-#include	"np2.h"
+/**
+ * @file	dialogs.cpp
+ * @brief	Dialog subroutines
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/03/07 09:54:11 $
+ */
+
+#include "compiler.h"
+#include "resource.h"
+#include "strres.h"
+#include "bmpdata.h"
+#include "oemtext.h"
+#include "dosio.h"
+#include "commng.h"
+#include "dialogs.h"
+#include "np2.h"
 #if defined(MT32SOUND_DLL)
-#include	"mt32snd.h"
+#include "mt32snd.h"
 #endif
 
-
+#if !defined(__GNUC__)
+#pragma comment(lib, "winmm.lib")
+#endif	// !defined(__GNUC__)
 
 // ---- enable
 

@@ -1,7 +1,5 @@
-/*	$Id: joymng.c,v 1.3 2007/01/23 15:48:20 monaka Exp $	*/
-
 /*-
- * Copyright (c) 2004 NONAKA Kimihiro <aw9k-nnk@asahi-net.or.jp>,
+ * Copyright (C) 2004 NONAKA Kimihiro <nonakap@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,17 +11,16 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "compiler.h"
@@ -38,7 +35,7 @@ static struct {
 	void *hdl;
 	BOOL inited;
 
-	const joymng_devinfo_t **devlist;
+	joymng_devinfo_t **devlist;
 
 	BYTE pad1btn[NELEMENTS(np2oscfg.JOY1BTN)];
 	REG8 flag;
@@ -57,7 +54,7 @@ typedef struct {
 	BYTE	button[JOY_NBUTTON];
 } JOYINFO_T;
 
-static const joymng_devinfo_t **joydrv_initialize(void);
+static joymng_devinfo_t **joydrv_initialize(void);
 static void joydrv_terminate(void);
 static void *joydrv_open(const char *dev);
 static void joydrv_close(void *hdl);
@@ -109,7 +106,7 @@ joymng_deinitialize(void)
 	np2oscfg.JOYPAD1 &= 1;
 }
 
-const joymng_devinfo_t **
+joymng_devinfo_t **
 joymng_get_devinfo_list(void)
 {
 
@@ -171,7 +168,7 @@ typedef struct {
 	SDL_Joystick		*joyhdl;
 } joydrv_sdl_hdl_t;
 
-const joymng_devinfo_t **
+static joymng_devinfo_t **
 joydrv_initialize(void)
 {
 	char str[32];
@@ -200,7 +197,7 @@ joydrv_initialize(void)
 	memset(devlist, 0, allocsize);
 
 	for (n = 0, i = 0; i < ndrv; ++i) {
-		sprintf(str, "%d", i);
+		g_snprintf(str, sizeof(str), "%d", i);
 		devlist[n] = joydrv_open(str);
 		if (devlist[n] == NULL) {
 			continue;
@@ -210,14 +207,15 @@ joydrv_initialize(void)
 		shdl->joyhdl = NULL;
 		n++;
 	}
+	devlist[n] = NULL;
 
-	return (const joymng_devinfo_t **)devlist;
+	return devlist;
 
 sdl_err:
 	if (devlist) {
 		for (i = 0; i < ndrv; ++i) {
 			if (devlist[i]) {
-				joydrv_sdl_close(devlist[i]);
+				joydrv_close(devlist[i]);
 			}
 		}
 		_MFREE(devlist);
@@ -228,15 +226,15 @@ sdl_err:
 	return NULL;
 }
 
-void
+static void
 joydrv_terminate(void)
 {
 
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 }
 
-void *
-joydrv_open(const char *devname)
+static void *
+joydrv_open(const char *dvname)
 {
 	joydrv_sdl_hdl_t *shdl = NULL;
 	joymng_devinfo_t *dev;
@@ -250,13 +248,13 @@ joydrv_open(const char *devname)
 	int nbutton;
 	int i;
 
-	if (devname == NULL) {
+	if (dvname == NULL) {
 		goto sdl_err;
 	}
 
 	errno = 0;
-	lval = strtol(devname, &endptr, 10);
-	if (devname[0] == '\0' || *endptr != '\0') {
+	lval = strtol(dvname, &endptr, 10);
+	if (dvname[0] == '\0' || *endptr != '\0') {
 		goto sdl_err;
 	}
 	if (errno == ERANGE && (lval == LONG_MAX || lval == LONG_MIN)) {
@@ -331,7 +329,7 @@ sdl_err:
 	return NULL;
 }
 
-void
+static void
 joydrv_close(void *hdl)
 {
 	joydrv_sdl_hdl_t *shdl = (joydrv_sdl_hdl_t *)hdl;
@@ -348,7 +346,7 @@ joydrv_close(void *hdl)
 	_MFREE(shdl);
 }
 
-BOOL
+static BOOL
 joydrv_getstat(void *hdl, JOYINFO_T *ji)
 {
 	joydrv_sdl_hdl_t *shdl = (joydrv_sdl_hdl_t *)hdl;

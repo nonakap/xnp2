@@ -49,8 +49,13 @@ BEGIN
 #ifdef _USRDLL
             VALUE "FileDescription", "PC-98x1 系列模擬器資源檔\0"
             VALUE "ProductName", "Neko Project II 資源檔\0"
+#ifdef _WIN64
+            VALUE "InternalName", "np2x64_950\0"
+            VALUE "OriginalFilename", "np2x64_950.dll\0"
+#else
             VALUE "InternalName", "np2_950\0"
             VALUE "OriginalFilename", "np2_950.dll\0"
+#endif
 #else
 #ifdef SUPPORT_PC9821
             VALUE "FileDescription", "PC-9821 系列模擬器\0"

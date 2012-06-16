@@ -1,6 +1,8 @@
 #ifndef	NP2_X11_MOUSEMNG_H__
 #define	NP2_X11_MOUSEMNG_H__
 
+G_BEGIN_DECLS
+
 #define	MOUSE_MASK	0x07
 
 #define	M_RES		0x00
@@ -22,10 +24,6 @@
 #define	MOUSE_RIGHTDOWN	2
 #define	MOUSE_RIGHTUP	3
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 BYTE mousemng_getstat(short *x, short *y, int clear);
 void mousemng_callback(void);
@@ -49,8 +47,6 @@ enum {
 	MOUSE_RATIO_100 = 0
 };
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #endif	/* NP2_X11_MOUSEMNG_H__ */

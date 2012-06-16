@@ -1,5 +1,3 @@
-/*	$Id: inst_table.c,v 1.10 2005/03/12 12:32:54 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2003 NONAKA Kimihiro
  * All rights reserved.
@@ -44,7 +42,7 @@
 #include "string_inst.h"
 #include "system_inst.h"
 
-#include "fp.h"
+#include "instructions/fpu/fp.h"
 
 
 /*
@@ -57,11 +55,10 @@ undef_op(void)
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-static void
+static void CPUCALL
 undef_op2(UINT32 v)
 {
 
-	(void)v;
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
@@ -1450,7 +1447,7 @@ void (*insttable_2byte[2][256])(void) = {
  */
 
 /* group 1 */
-void (*insttable_G1EbIb[])(UINT8 *, UINT32) = {
+void (CPUCALL *insttable_G1EbIb[])(UINT8 *, UINT32) = {
 	ADD_EbIb,
 	OR_EbIb,
 	ADC_EbIb,
@@ -1460,7 +1457,7 @@ void (*insttable_G1EbIb[])(UINT8 *, UINT32) = {
 	XOR_EbIb,
 	CMP_EbIb,
 };
-void (*insttable_G1EbIb_ext[])(UINT32, UINT32) = {
+void (CPUCALL *insttable_G1EbIb_ext[])(UINT32, UINT32) = {
 	ADD_EbIb_ext,
 	OR_EbIb_ext,
 	ADC_EbIb_ext,
@@ -1471,7 +1468,7 @@ void (*insttable_G1EbIb_ext[])(UINT32, UINT32) = {
 	CMP_EbIb_ext,
 };
 
-void (*insttable_G1EwIx[])(UINT16 *, UINT32) = {
+void (CPUCALL *insttable_G1EwIx[])(UINT16 *, UINT32) = {
 	ADD_EwIx,
 	OR_EwIx,
 	ADC_EwIx,
@@ -1481,7 +1478,7 @@ void (*insttable_G1EwIx[])(UINT16 *, UINT32) = {
 	XOR_EwIx,
 	CMP_EwIx,
 };
-void (*insttable_G1EwIx_ext[])(UINT32, UINT32) = {
+void (CPUCALL *insttable_G1EwIx_ext[])(UINT32, UINT32) = {
 	ADD_EwIx_ext,
 	OR_EwIx_ext,
 	ADC_EwIx_ext,
@@ -1492,7 +1489,7 @@ void (*insttable_G1EwIx_ext[])(UINT32, UINT32) = {
 	CMP_EwIx_ext,
 };
 
-void (*insttable_G1EdIx[])(UINT32 *, UINT32) = {
+void (CPUCALL *insttable_G1EdIx[])(UINT32 *, UINT32) = {
 	ADD_EdIx,
 	OR_EdIx,
 	ADC_EdIx,
@@ -1502,7 +1499,7 @@ void (*insttable_G1EdIx[])(UINT32 *, UINT32) = {
 	XOR_EdIx,
 	CMP_EdIx,
 };
-void (*insttable_G1EdIx_ext[])(UINT32, UINT32) = {
+void (CPUCALL *insttable_G1EdIx_ext[])(UINT32, UINT32) = {
 	ADD_EdIx_ext,
 	OR_EdIx_ext,
 	ADC_EdIx_ext,
@@ -1515,7 +1512,7 @@ void (*insttable_G1EdIx_ext[])(UINT32, UINT32) = {
 
 
 /* group 2 */
-void (*insttable_G2Eb[])(UINT8 *) = {
+void (CPUCALL *insttable_G2Eb[])(UINT8 *) = {
 	ROL_Eb,
 	ROR_Eb,
 	RCL_Eb,
@@ -1525,7 +1522,7 @@ void (*insttable_G2Eb[])(UINT8 *) = {
 	SHL_Eb,
 	SAR_Eb,
 };
-void (*insttable_G2Eb_ext[])(UINT32) = {
+void (CPUCALL *insttable_G2Eb_ext[])(UINT32) = {
 	ROL_Eb_ext,
 	ROR_Eb_ext,
 	RCL_Eb_ext,
@@ -1536,7 +1533,7 @@ void (*insttable_G2Eb_ext[])(UINT32) = {
 	SAR_Eb_ext,
 };
 
-void (*insttable_G2Ew[])(UINT16 *) = {
+void (CPUCALL *insttable_G2Ew[])(UINT16 *) = {
 	ROL_Ew,
 	ROR_Ew,
 	RCL_Ew,
@@ -1546,7 +1543,7 @@ void (*insttable_G2Ew[])(UINT16 *) = {
 	SHL_Ew,
 	SAR_Ew,
 };
-void (*insttable_G2Ew_ext[])(UINT32) = {
+void (CPUCALL *insttable_G2Ew_ext[])(UINT32) = {
 	ROL_Ew_ext,
 	ROR_Ew_ext,
 	RCL_Ew_ext,
@@ -1557,7 +1554,7 @@ void (*insttable_G2Ew_ext[])(UINT32) = {
 	SAR_Ew_ext,
 };
 
-void (*insttable_G2Ed[])(UINT32 *) = {
+void (CPUCALL *insttable_G2Ed[])(UINT32 *) = {
 	ROL_Ed,
 	ROR_Ed,
 	RCL_Ed,
@@ -1567,7 +1564,7 @@ void (*insttable_G2Ed[])(UINT32 *) = {
 	SHL_Ed,
 	SAR_Ed,
 };
-void (*insttable_G2Ed_ext[])(UINT32) = {
+void (CPUCALL *insttable_G2Ed_ext[])(UINT32) = {
 	ROL_Ed_ext,
 	ROR_Ed_ext,
 	RCL_Ed_ext,
@@ -1578,7 +1575,7 @@ void (*insttable_G2Ed_ext[])(UINT32) = {
 	SAR_Ed_ext,
 };
 
-void (*insttable_G2EbCL[])(UINT8 *, UINT) = {
+void (CPUCALL *insttable_G2EbCL[])(UINT8 *, UINT) = {
 	ROL_EbCL,
 	ROR_EbCL,
 	RCL_EbCL,
@@ -1588,7 +1585,7 @@ void (*insttable_G2EbCL[])(UINT8 *, UINT) = {
 	SHL_EbCL,
 	SAR_EbCL,
 };
-void (*insttable_G2EbCL_ext[])(UINT32, UINT) = {
+void (CPUCALL *insttable_G2EbCL_ext[])(UINT32, UINT) = {
 	ROL_EbCL_ext,
 	ROR_EbCL_ext,
 	RCL_EbCL_ext,
@@ -1599,7 +1596,7 @@ void (*insttable_G2EbCL_ext[])(UINT32, UINT) = {
 	SAR_EbCL_ext,
 };
 
-void (*insttable_G2EwCL[])(UINT16 *, UINT) = {
+void (CPUCALL *insttable_G2EwCL[])(UINT16 *, UINT) = {
 	ROL_EwCL,
 	ROR_EwCL,
 	RCL_EwCL,
@@ -1609,7 +1606,7 @@ void (*insttable_G2EwCL[])(UINT16 *, UINT) = {
 	SHL_EwCL,
 	SAR_EwCL,
 };
-void (*insttable_G2EwCL_ext[])(UINT32, UINT) = {
+void (CPUCALL *insttable_G2EwCL_ext[])(UINT32, UINT) = {
 	ROL_EwCL_ext,
 	ROR_EwCL_ext,
 	RCL_EwCL_ext,
@@ -1620,7 +1617,7 @@ void (*insttable_G2EwCL_ext[])(UINT32, UINT) = {
 	SAR_EwCL_ext,
 };
 
-void (*insttable_G2EdCL[])(UINT32 *, UINT) = {
+void (CPUCALL *insttable_G2EdCL[])(UINT32 *, UINT) = {
 	ROL_EdCL,
 	ROR_EdCL,
 	RCL_EdCL,
@@ -1630,7 +1627,7 @@ void (*insttable_G2EdCL[])(UINT32 *, UINT) = {
 	SHL_EdCL,
 	SAR_EdCL,
 };
-void (*insttable_G2EdCL_ext[])(UINT32, UINT) = {
+void (CPUCALL *insttable_G2EdCL_ext[])(UINT32, UINT) = {
 	ROL_EdCL_ext,
 	ROR_EdCL_ext,
 	RCL_EdCL_ext,
@@ -1642,7 +1639,7 @@ void (*insttable_G2EdCL_ext[])(UINT32, UINT) = {
 };
 
 /* group 3 */
-void (*insttable_G3Eb[])(UINT32) = {
+void (CPUCALL *insttable_G3Eb[])(UINT32) = {
 	TEST_EbIb,
 	TEST_EbIb,
 	NOT_Eb,
@@ -1653,7 +1650,7 @@ void (*insttable_G3Eb[])(UINT32) = {
 	IDIV_ALEb,
 };
 
-void (*insttable_G3Ew[])(UINT32) = {
+void (CPUCALL *insttable_G3Ew[])(UINT32) = {
 	TEST_EwIw,
 	TEST_EwIw,
 	NOT_Ew,
@@ -1664,7 +1661,7 @@ void (*insttable_G3Ew[])(UINT32) = {
 	IDIV_AXEw,
 };
 
-void (*insttable_G3Ed[])(UINT32) = {
+void (CPUCALL *insttable_G3Ed[])(UINT32) = {
 	TEST_EdId,
 	TEST_EdId,
 	NOT_Ed,
@@ -1676,7 +1673,7 @@ void (*insttable_G3Ed[])(UINT32) = {
 };
 
 /* group 4 */
-void (*insttable_G4[])(UINT32) = {
+void (CPUCALL *insttable_G4[])(UINT32) = {
 	INC_Eb,
 	DEC_Eb,
 	undef_op2,
@@ -1688,7 +1685,7 @@ void (*insttable_G4[])(UINT32) = {
 };
 
 /* group 5 */
-void (*insttable_G5Ew[])(UINT32) = {
+void (CPUCALL *insttable_G5Ew[])(UINT32) = {
 	INC_Ew,
 	DEC_Ew,
 	CALL_Ew,
@@ -1699,7 +1696,7 @@ void (*insttable_G5Ew[])(UINT32) = {
 	undef_op2,	/* POP_Ew_G5 */
 };
 
-void (*insttable_G5Ed[])(UINT32) = {
+void (CPUCALL *insttable_G5Ed[])(UINT32) = {
 	INC_Ed,
 	DEC_Ed,
 	CALL_Ed,
@@ -1711,7 +1708,7 @@ void (*insttable_G5Ed[])(UINT32) = {
 };
 
 /* group 6 */
-void (*insttable_G6[])(UINT32) = {
+void (CPUCALL *insttable_G6[])(UINT32) = {
 	SLDT_Ew,
 	STR_Ew,
 	LLDT_Ew,
@@ -1723,7 +1720,7 @@ void (*insttable_G6[])(UINT32) = {
 };
 
 /* group 7 */
-void (*insttable_G7[])(UINT32) = {
+void (CPUCALL *insttable_G7[])(UINT32) = {
 	SGDT_Ms,
 	SIDT_Ms,
 	LGDT_Ms,
@@ -1735,7 +1732,7 @@ void (*insttable_G7[])(UINT32) = {
 };
 
 /* group 8 */
-void (*insttable_G8EwIb[])(UINT32) = {
+void (CPUCALL *insttable_G8EwIb[])(UINT32) = {
 	undef_op2,
 	undef_op2,
 	undef_op2,
@@ -1746,7 +1743,7 @@ void (*insttable_G8EwIb[])(UINT32) = {
 	BTC_EwIb,
 };
 
-void (*insttable_G8EdIb[])(UINT32) = {
+void (CPUCALL *insttable_G8EdIb[])(UINT32) = {
 	undef_op2,
 	undef_op2,
 	undef_op2,
@@ -1758,7 +1755,7 @@ void (*insttable_G8EdIb[])(UINT32) = {
 };
 
 /* group 9 */
-void (*insttable_G9[])(UINT32) = {
+void (CPUCALL *insttable_G9[])(UINT32) = {
 	undef_op2,
 	CMPXCHG8B,
 	undef_op2,

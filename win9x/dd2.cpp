@@ -1,7 +1,19 @@
-#include	"compiler.h"
-#include	<ddraw.h>
-#include	"dd2.h"
+/**
+ * @file	dd2.cpp
+ * @brief	DirectDraw 2 surface
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/03/07 09:54:11 $
+ */
 
+#include "compiler.h"
+#include <ddraw.h>
+#include "dd2.h"
+
+#if !defined(__GNUC__)
+#pragma comment(lib, "ddraw.lib")
+#pragma comment(lib, "dxguid.lib")
+#endif	// !defined(__GNUC__)
 
 typedef struct {
 	HWND					hwnd;

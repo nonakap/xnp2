@@ -1,19 +1,30 @@
-#include	"compiler.h"
-#include	<prsht.h>
-#include	"strres.h"
-#include	"resource.h"
-#include	"np2.h"
-#include	"dosio.h"
-#include	"commng.h"
-#include	"sysmng.h"
-#include	"np2class.h"
-#include	"dialog.h"
-#include	"dialogs.h"
-#include	"pccore.h"
-#include	"iocore.h"
-#include	"pc9861k.h"
-#include	"dipswbmp.h"
+/**
+ * @file	d_serial.cpp
+ * @brief	Serial configure dialog procedure
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/03/07 09:54:11 $
+ */
 
+#include "compiler.h"
+#include <prsht.h>
+#include "strres.h"
+#include "resource.h"
+#include "np2.h"
+#include "dosio.h"
+#include "commng.h"
+#include "sysmng.h"
+#include "np2class.h"
+#include "dialog.h"
+#include "dialogs.h"
+#include "pccore.h"
+#include "iocore.h"
+#include "pc9861k.h"
+#include "dipswbmp.h"
+
+#if !defined(__GNUC__)
+#pragma comment(lib, "comctl32.lib")
+#endif	// !defined(__GNUC__)
 
 static const CBPARAM cpPort[] =
 {

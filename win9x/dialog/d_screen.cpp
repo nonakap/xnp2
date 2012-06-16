@@ -1,20 +1,31 @@
-#include	"compiler.h"
-#include	<commctrl.h>
-#include	<prsht.h>
-#include	"strres.h"
-#include	"resource.h"
-#include	"np2.h"
-#include	"oemtext.h"
-#include	"scrnmng.h"
-#include	"sysmng.h"
-#include	"np2class.h"
-#include	"dialog.h"
-#include	"dialogs.h"
-#include	"pccore.h"
-#include	"iocore.h"
-#include	"scrndraw.h"
-#include	"palettes.h"
+/**
+ * @file	d_screen.cpp
+ * @brief	Screen configure dialog procedure
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/03/07 09:54:11 $
+ */
 
+#include "compiler.h"
+#include <commctrl.h>
+#include <prsht.h>
+#include "strres.h"
+#include "resource.h"
+#include "np2.h"
+#include "oemtext.h"
+#include "scrnmng.h"
+#include "sysmng.h"
+#include "np2class.h"
+#include "dialog.h"
+#include "dialogs.h"
+#include "pccore.h"
+#include "iocore.h"
+#include "scrndraw.h"
+#include "palettes.h"
+
+#if !defined(__GNUC__)
+#pragma comment(lib, "comctl32.lib")
+#endif	// !defined(__GNUC__)
 
 static LRESULT CALLBACK Scropt1DlgProc(HWND hWnd, UINT msg,
 													WPARAM wp, LPARAM lp) {

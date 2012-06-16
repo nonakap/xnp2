@@ -219,6 +219,10 @@ SOURCE=..\I386C\ia32\instructions\flag_ctrl.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\I386C\ia32\instructions\fpu.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\I386C\ia32\instructions\fpu\fpdummy.c
 # End Source File
 # Begin Source File

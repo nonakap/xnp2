@@ -168,13 +168,13 @@ void rs232c_open(void) {
 
 void rs232c_callback(void) {
 
-	BOOL	interrupt;
+	BOOL	intr;
 
-	interrupt = FALSE;
+	intr = FALSE;
 	if ((cm_rs232c) && (cm_rs232c->read(cm_rs232c, &rs232c.data))) {
 		rs232c.result |= 2;
 		if (sysport.c & 1) {
-			interrupt = TRUE;
+			intr = TRUE;
 		}
 	}
 	else {
@@ -183,10 +183,10 @@ void rs232c_callback(void) {
 	if (sysport.c & 4) {
 		if (rs232c.send) {
 			rs232c.send = 0;
-			interrupt = TRUE;
+			intr = TRUE;
 		}
 	}
-	if (interrupt) {
+	if (intr) {
 		pic_setirq(4);
 	}
 }

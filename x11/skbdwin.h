@@ -1,11 +1,11 @@
-/*	$Id: skbdwin.h,v 1.2 2004/06/18 12:32:51 monaka Exp $	*/
-
 #ifndef	NP2_X11_SKBDWIN_H__
 #define	NP2_X11_SKBDWIN_H__
 
 #if defined(SUPPORT_SOFTKBD)
 
 #include "softkbd.h"
+
+G_BEGIN_DECLS
 
 typedef struct {
 	int	posx;
@@ -22,6 +22,8 @@ void skbdwin_destroy(void);
 void skbdwin_process(void);
 void skbdwin_readini(void);
 void skbdwin_writeini(void);
+
+G_END_DECLS
 
 #else	/* !SUPPORT_SOFTKBD */
 

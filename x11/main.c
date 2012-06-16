@@ -27,7 +27,12 @@
 
 #include <sys/stat.h>
 #include <getopt.h>
+#include <locale.h>
 #include <signal.h>
+
+#if defined(USE_SDLAUDIO) || defined(USE_SDLMIXER)
+#include <SDL.h>
+#endif
 
 #include "np2.h"
 #include "diskdrv.h"
@@ -42,7 +47,6 @@
 #include "toolkit.h"
 
 #include "kdispwin.h"
-#include "sysmenu.h"
 #include "toolwin.h"
 #include "viewer.h"
 #include "debugwin.h"
@@ -50,7 +54,6 @@
 
 #include "commng.h"
 #include "fontmng.h"
-#include "inputmng.h"
 #include "joymng.h"
 #include "kbdmng.h"
 #include "mousemng.h"
@@ -58,12 +61,6 @@
 #include "soundmng.h"
 #include "sysmng.h"
 #include "taskmng.h"
-
-
-/*
- * resume
- */
-static const char np2resumeext[] = "sav";
 
 
 /*
@@ -88,8 +85,6 @@ static void
 sighandler(int signo)
 {
 
-	UNUSED(signo);
-
 	toolkit_widget_quit();
 }
 
@@ -100,9 +95,6 @@ sighandler(int signo)
 static struct option longopts[] = {
 	{ "config",		required_argument,	0,	'c' },
 	{ "timidity-config",	required_argument,	0,	'C' },
-#if defined(USE_SDL) || defined(USE_SYSMENU)
-	{ "ttfont",		required_argument,	0,	't' },
-#endif
 	{ "help",		no_argument,		0,	'h' },
 	{ 0,			0,			0,	0   },
 };
@@ -113,14 +105,11 @@ static void
 usage(void)
 {
 
-	printf("Usage: %s [options] [[FD1 image] [[FD2 image] [[FD3 image] [FD4 image]]]]\n\n", progname);
-	printf("options:\n");
-	printf("\t--help            [-h]        : print this message\n");
-	printf("\t--config          [-c] <file> : specify config file\n");
-	printf("\t--timidity-config [-C] <file> : specify timidity config file\n");
-#if defined(USE_SDL) || defined(USE_SYSMENU)
-	printf("\t--ttfont          [-t] <file> : specify TrueType font\n");
-#endif
+	g_printerr("Usage: %s [options] [[FD1 image] [[FD2 image] [[FD3 image] [FD4 image]]]]\n\n", progname);
+	g_printerr("options:\n");
+	g_printerr("\t--help            [-h]        : print this message\n");
+	g_printerr("\t--config          [-c] <file> : specify config file\n");
+	g_printerr("\t--timidity-config [-C] <file> : specify timidity config file\n");
 	exit(1);
 }
 
@@ -139,6 +128,11 @@ main(int argc, char *argv[])
 
 	progname = argv[0];
 
+	setlocale(LC_ALL, "");
+	(void) bindtextdomain(np2appname, NP2LOCALEDIR);
+	(void) bind_textdomain_codeset(np2appname, "UTF-8");
+	(void) textdomain(np2appname);
+
 	toolkit_initialize();
 	toolkit_arginit(&argc, &argv);
 
@@ -146,31 +140,19 @@ main(int argc, char *argv[])
 		switch (ch) {
 		case 'c':
 			if (stat(optarg, &sb) < 0 || !S_ISREG(sb.st_mode)) {
-				fprintf(stderr, "Can't access %s.\n", optarg);
+				g_printerr("Can't access %s.\n", optarg);
 				exit(1);
 			}
 			milstr_ncpy(modulefile, optarg, sizeof(modulefile));
-
-			/* resume/statsave dir */
-			file_cpyname(statpath, modulefile, sizeof(statpath));
-			file_cutname(statpath);
 			break;
 
 		case 'C':
 			if (stat(optarg, &sb) < 0 || !S_ISREG(sb.st_mode)) {
-				fprintf(stderr, "Can't access %s.\n", optarg);
+				g_printerr("Can't access %s.\n", optarg);
 				exit(1);
 			}
 			milstr_ncpy(timidity_cfgfile_path, optarg,
 			    sizeof(timidity_cfgfile_path));
-			break;
-
-		case 't':
-			if (stat(optarg, &sb) < 0 || !S_ISREG(sb.st_mode)) {
-				fprintf(stderr, "Can't access %s.\n", optarg);
-				exit(1);
-			}
-			milstr_ncpy(fontfilename, optarg, sizeof(fontfilename));
 			break;
 
 		case 'v':
@@ -191,34 +173,16 @@ main(int argc, char *argv[])
 		char *env = getenv("HOME");
 		if (env) {
 			/* base dir */
-			snprintf(modulefile, sizeof(modulefile),
-			    "%s/.np2", env);
+			g_snprintf(modulefile, sizeof(modulefile),
+			    "%s/.%s", env, np2appname);
 			if (stat(modulefile, &sb) < 0) {
 				if (mkdir(modulefile, 0700) < 0) {
 					perror(modulefile);
 					exit(1);
 				}
 			} else if (!S_ISDIR(sb.st_mode)) {
-				fprintf(stderr, "%s isn't directory.\n",
+				g_printerr("%s isn't directory.\n",
 				    modulefile);
-				exit(1);
-			}
-
-			/* font file */
-			snprintf(np2cfg.fontfile, sizeof(np2cfg.fontfile),
-			    "%s/font.bmp", modulefile);
-
-			/* resume/statsave dir */
-			file_cpyname(statpath, modulefile, sizeof(statpath));
-			file_catname(statpath, "/sav/", sizeof(statpath));
-			if (stat(statpath, &sb) < 0) {
-				if (mkdir(statpath, 0700) < 0) {
-					perror(statpath);
-					exit(1);
-				}
-			} else if (!S_ISDIR(sb.st_mode)) {
-				fprintf(stderr, "%s isn't directory.\n",
-				    statpath);
 				exit(1);
 			}
 
@@ -226,10 +190,35 @@ main(int argc, char *argv[])
 			milstr_ncat(modulefile, "/np2rc", sizeof(modulefile));
 			if ((stat(modulefile, &sb) >= 0)
 			 && !S_ISREG(sb.st_mode)) {
-				fprintf(stderr, "%s isn't regular file.\n",
+				g_printerr("%s isn't regular file.\n",
 				    modulefile);
 			}
 		}
+	}
+	if (modulefile[0] != '\0') {
+		/* font file */
+		file_cpyname(np2cfg.fontfile, modulefile,
+		    sizeof(np2cfg.fontfile));
+		file_cutname(np2cfg.fontfile);
+		file_setseparator(np2cfg.fontfile, sizeof(np2cfg.fontfile));
+		file_catname(np2cfg.fontfile, "font.bmp",
+		    sizeof(np2cfg.fontfile));
+
+		/* resume/statsave dir */
+		file_cpyname(statpath, modulefile, sizeof(statpath));
+		file_cutname(statpath);
+		file_catname(statpath, "/sav/", sizeof(statpath));
+		if (stat(statpath, &sb) < 0) {
+			if (mkdir(statpath, 0700) < 0) {
+				perror(statpath);
+				exit(1);
+			}
+		} else if (!S_ISDIR(sb.st_mode)) {
+			g_printerr("%s isn't directory.\n",
+			    statpath);
+			exit(1);
+		}
+		file_catname(statpath, np2appname, sizeof(statpath));
 	}
 	if (timidity_cfgfile_path[0] == '\0') {
 		file_cpyname(timidity_cfgfile_path, modulefile,
@@ -248,12 +237,14 @@ main(int argc, char *argv[])
 
 	rand_setseed((SINT32)time(NULL));
 
-#if defined(GCC_CPU_ARCH_IA32)
 	mmxflag = havemmx() ? 0 : MMXFLAG_NOTSUPPORT;
 	mmxflag += np2oscfg.disablemmx ? MMXFLAG_DISABLE : 0;
-#endif
 
 	TRACEINIT();
+
+#if defined(USE_SDLAUDIO) || defined(USE_SDLMIXER)
+	SDL_Init(0);
+#endif
 
 	if (fontmng_init() != SUCCESS)
 		goto fontmng_failure;
@@ -265,15 +256,12 @@ main(int argc, char *argv[])
 	toolkit_widget_create();
 	scrnmng_initialize();
 	kbdmng_init();
-	inputmng_init();
 	keystat_initialize();
 
 	scrnmode = 0;
 	if (np2cfg.RASTER) {
 		scrnmode |= SCRNMODE_HIGHCOLOR;
 	}
-	if (sysmenu_create() != SUCCESS)
-		goto sysmenu_failure;
 	if (scrnmng_create(scrnmode) != SUCCESS)
 		goto scrnmng_failure;
 
@@ -325,7 +313,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-#if !defined(CPUCORE_IA32)
+#if defined(SUPPORT_RESUME)
 	if (np2oscfg.resume) {
 		flagload(np2resumeext, "Resume", FALSE);
 	}
@@ -368,13 +356,11 @@ main(int argc, char *argv[])
 	scrnmng_destroy();
 
 scrnmng_failure:
-	sysmenu_destroy();
-
-sysmenu_failure:
 	fontmng_terminate();
 
 fontmng_failure:
-	if (sys_updates & (SYS_UPDATECFG|SYS_UPDATEOSCFG)) {
+	if (!np2oscfg.cfgreadonly
+	 && (sys_updates & (SYS_UPDATECFG|SYS_UPDATEOSCFG))) {
 		initsave();
 		toolwin_writeini();
 		kdispwin_writeini();
@@ -382,6 +368,10 @@ fontmng_failure:
 	}
 
 	skbdwin_deinitialize();
+
+#if defined(USE_SDLAUDIO) || defined(USE_SDLMIXER)
+	SDL_Quit();
+#endif
 
 	TRACETERM();
 	dosio_term();

@@ -1,5 +1,3 @@
-/*	$Id: bit_byte.c,v 1.11 2005/03/12 12:33:47 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2003 NONAKA Kimihiro
  * All rights reserved.
@@ -81,7 +79,7 @@ BT_EdGd(void)
 	CPU_FLAGL |= (dst >> BIT_INDEX32(src)) & 1;
 }
 
-void
+void CPUCALL
 BT_EwIb(UINT32 op)
 {
 	UINT32 src, dst, madr;
@@ -100,7 +98,7 @@ BT_EwIb(UINT32 op)
 	CPU_FLAGL |= (dst >> BIT_INDEX16(src)) & 1;
 }
 
-void
+void CPUCALL
 BT_EdIb(UINT32 op)
 {
 	UINT32 src, dst, madr;
@@ -192,7 +190,7 @@ BTS_EdGd(void)
 	}
 }
 
-void
+void CPUCALL
 BTS_EwIb(UINT32 op)
 {
 	UINT16 *out;
@@ -228,7 +226,7 @@ BTS_EwIb(UINT32 op)
 	}
 }
 
-void
+void CPUCALL
 BTS_EdIb(UINT32 op)
 {
 	UINT32 *out;
@@ -337,7 +335,7 @@ BTR_EdGd(void)
 	}
 }
 
-void
+void CPUCALL
 BTR_EwIb(UINT32 op)
 {
 	UINT16 *out;
@@ -373,7 +371,7 @@ BTR_EwIb(UINT32 op)
 	}
 }
 
-void
+void CPUCALL
 BTR_EdIb(UINT32 op)
 {
 	UINT32 *out;
@@ -482,7 +480,7 @@ BTC_EdGd(void)
 	}
 }
 
-void
+void CPUCALL
 BTC_EwIb(UINT32 op)
 {
 	UINT16 *out;
@@ -518,7 +516,7 @@ BTC_EwIb(UINT32 op)
 	}
 }
 
-void
+void CPUCALL
 BTC_EdIb(UINT32 op)
 {
 	UINT32 *out;
@@ -1006,7 +1004,7 @@ TEST_EAXId(void)
 	DWORD_AND(tmp, src);
 }
 
-void
+void CPUCALL
 TEST_EbIb(UINT32 op)
 {
 	UINT32 src, tmp, madr;
@@ -1023,7 +1021,7 @@ TEST_EbIb(UINT32 op)
 	BYTE_AND(tmp, src);
 }
 
-void
+void CPUCALL
 TEST_EwIw(UINT32 op)
 {
 	UINT32 src, tmp, madr;
@@ -1040,7 +1038,7 @@ TEST_EwIw(UINT32 op)
 	WORD_AND(tmp, src);
 }
 
-void
+void CPUCALL
 TEST_EdId(UINT32 op)
 {
 	UINT32 src, tmp, madr;

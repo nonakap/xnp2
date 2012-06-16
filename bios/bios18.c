@@ -766,7 +766,7 @@ void bios0x18(void) {
 	}		tmp;
 	int		i;
 
-#if 1
+#if 0
 	TRACEOUT(("int18 AX=%.4x %.4x:%.4x", CPU_AX,
 							MEMR_READ16(CPU_SS, CPU_SP+2),
 							MEMR_READ16(CPU_SS, CPU_SP)));

@@ -1,6 +1,12 @@
+/**
+ * @file	font.h
+ * @brief	CGROM and font loader
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/02/23 10:11:44 $
+ */
 
 #define	FONTMEMORYBIND				// 520KBÇ≠ÇÁÇ¢ÉÅÉÇÉäçÌèú(ÇßÇ°
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,6 +20,7 @@ extern	UINT8	__font[0x84000];
 #endif
 
 void font_initialize(void);
+void font_setchargraph(BOOL epson);
 UINT8 font_load(const OEMCHAR *filename, BOOL force);
 
 #ifdef __cplusplus

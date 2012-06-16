@@ -1,5 +1,3 @@
-/*	$Id: paging.h,v 1.21 2007/02/06 14:20:57 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -33,23 +31,23 @@ extern "C" {
 #endif
 
 /*
- * �ڡ������ǥ��쥯�ȥꡦ����ȥ� (4K �Х��ȥڡ������ѻ�)
+ * ページ・ディレクトリ・エントリ (4K バイトページ使用時)
  *
  *  31                                    12 11   9 8  7 6 5  4   3   2   1  0 
  * +----------------------------------------+------+-+--+-+-+---+---+---+---+-+
- * |   �ڡ������ơ��֥�Υ١��������ɥ쥹   |���Ѳ�|G|PS|-|A|PCD|PWT|U/S|R/W|P|
+ * |   ページ・テーブルのベース・アドレス   |使用可|G|PS|-|A|PCD|PWT|U/S|R/W|P|
  * +----------------------------------------+------+-+--+-+-+---+---+---+---+-+
  *                                              |   |  | | |  |   |   |   |  |
- * 9-11: �����ƥࡦ�ץ�����ޤ����Ѳ�ǽ --------+   |  | | |  |   |   |   |  |
- *    8: �������Х롦�ڡ���(̵�뤵���) ------------+  | | |  |   |   |   |  |
- *    7: �ڡ����������� (0 = 4k �Х��ȥڡ���) ---------+ | |  |   |   |   |  |
- *    6: ͽ�� (-) ---------------------------------------+ |  |   |   |   |  |
- *    5: �������� -----------------------------------------+  |   |   |   |  |
- *    4: ����å���̵�� --------------------------------------+   |   |   |  |
- *    3: �饤�ȥ��롼 --------------------------------------------+   |   |  |
- *    2: �桼���������ѥХ��� (0 = �����ѥХ���) ---------------------+   |  |
- *    1: �ɤ߼�꡿�񤭹��� (0 = �ɤ߼��Τ�) ---------------------------+  |
- *    0: �ڡ���¸�� ---------------------------------------------------------+
+ * 9-11: システム・プログラマが使用可能 --------+   |  | | |  |   |   |   |  |
+ *    8: グローバル・ページ(無視される) ------------+  | | |  |   |   |   |  |
+ *    7: ページ・サイズ (0 = 4k バイトページ) ---------+ | |  |   |   |   |  |
+ *    6: 予約 (-) ---------------------------------------+ |  |   |   |   |  |
+ *    5: アクセス -----------------------------------------+  |   |   |   |  |
+ *    4: キャッシュ無効 --------------------------------------+   |   |   |  |
+ *    3: ライトスルー --------------------------------------------+   |   |  |
+ *    2: ユーザ／スーパバイザ (0 = スーパバイザ) ---------------------+   |  |
+ *    1: 読み取り／書き込み (0 = 読み取りのみ) ---------------------------+  |
+ *    0: ページ存在 ---------------------------------------------------------+
  */
 #define	CPU_PDE_BASEADDR_MASK	0xfffff000
 #define	CPU_PDE_GLOBAL_PAGE	(1 << 8)
@@ -63,23 +61,23 @@ extern "C" {
 #define	CPU_PDE_PRESENT		(1 << 0)
 
 /*
- * �ڡ������ǥ��쥯�ȥꡦ����ȥ� (4M �Х��ȥڡ������ѻ�)
+ * ページ・ディレクトリ・エントリ (4M バイトページ使用時)
  * 
  *  31                        22 21       12 11   9 8  7 6 5  4   3   2   1  0 
  * +----------------------------+-----------+------+-+--+-+-+---+---+---+---+-+
- * |�ڡ����ơ��֥��ʪ�����ɥ쥹|  ͽ��Ѥ� |���Ѳ�|G|PS|D|A|PCD|PWT|U/S|R/W|P|
+ * |ページテーブルの物理アドレス|  予約済み |使用可|G|PS|D|A|PCD|PWT|U/S|R/W|P|
  * +----------------------------+-----------+------+-+--+-+-+---+---+---+---+-+
  *                                              |   |  | | |  |   |   |   |  |
- * 9-11: �����ƥࡦ�ץ�����ޤ����Ѳ�ǽ --------+   |  | | |  |   |   |   |  |
- *    8: �������Х롦�ڡ��� ------------------------+  | | |  |   |   |   |  |
- *    7: �ڡ����������� (1 = 4M �Х��ȥڡ���) ---------+ | |  |   |   |   |  |
- *    6: �����ƥ� ---------------------------------------+ |  |   |   |   |  |
- *    5: �������� -----------------------------------------+  |   |   |   |  |
- *    4: ����å���̵�� --------------------------------------+   |   |   |  |
- *    3: �饤�ȥ��롼 --------------------------------------------+   |   |  |
- *    2: �桼���������ѥХ��� (0 = �����ѥХ���) ---------------------+   |  |
- *    1: �ɤ߼�꡿�񤭹��� (0 = �ɤ߼��Τ�) ---------------------------+  |
- *    0: �ڡ���¸�� ---------------------------------------------------------+
+ * 9-11: システム・プログラマが使用可能 --------+   |  | | |  |   |   |   |  |
+ *    8: グローバル・ページ ------------------------+  | | |  |   |   |   |  |
+ *    7: ページ・サイズ (1 = 4M バイトページ) ---------+ | |  |   |   |   |  |
+ *    6: ダーティ ---------------------------------------+ |  |   |   |   |  |
+ *    5: アクセス -----------------------------------------+  |   |   |   |  |
+ *    4: キャッシュ無効 --------------------------------------+   |   |   |  |
+ *    3: ライトスルー --------------------------------------------+   |   |  |
+ *    2: ユーザ／スーパバイザ (0 = スーパバイザ) ---------------------+   |  |
+ *    1: 読み取り／書き込み (0 = 読み取りのみ) ---------------------------+  |
+ *    0: ページ存在 ---------------------------------------------------------+
  */
 #define	CPU_PDE_4M_BASEADDR_MASK	0xffc00000
 #define	CPU_PDE_4M_GLOBAL_PAGE		(1 << 8)
@@ -93,23 +91,23 @@ extern "C" {
 #define	CPU_PDE_4M_PRESENT		(1 << 0)
 
 /*
- * �ڡ������ơ��֥롦����ȥ� (4k �Х��ȡ��ڡ���)
+ * ページ・テーブル・エントリ (4k バイト・ページ)
  *
  *  31                                    12 11   9 8 7 6 5  4   3   2   1  0 
  * +----------------------------------------+------+-+-+-+-+---+---+---+---+-+
- * |        �ڡ����Υ١��������ɥ쥹        |���Ѳ�|G|-|D|A|PCD|PWT|U/S|R/W|P|
+ * |        ページのベース・アドレス        |使用可|G|-|D|A|PCD|PWT|U/S|R/W|P|
  * +----------------------------------------+------+-+-+-+-+---+---+---+---+-+
  *                                              |   | | | |  |   |   |   |  |
- *  9-11: �����ƥࡦ�ץ�����ޤ����Ѳ�ǽ -------+   | | | |  |   |   |   |  |
- *     8: �������Х롦�ڡ��� -----------------------+ | | |  |   |   |   |  |
- *     7: ͽ�� (-) -----------------------------------+ | |  |   |   |   |  |
- *     6: �����ƥ� -------------------------------------+ |  |   |   |   |  |
- *     5: �������� ---------------------------------------+  |   |   |   |  |
- *     4: ����å���̵�� ------------------------------------+   |   |   |  |
- *     3: �饤�ȥ��롼 ------------------------------------------+   |   |  |
- *     2: �桼���������ѥХ��� (0 = �����ѥХ���) -------------------+   |  |
- *     1: �ɤ߼�꡿�񤭹��� (0 = �ɤ߼��Τ�) -------------------------+  |
- *     0: �ڡ���¸�� -------------------------------------------------------+
+ *  9-11: システム・プログラマが使用可能 -------+   | | | |  |   |   |   |  |
+ *     8: グローバル・ページ -----------------------+ | | |  |   |   |   |  |
+ *     7: 予約 (-) -----------------------------------+ | |  |   |   |   |  |
+ *     6: ダーティ -------------------------------------+ |  |   |   |   |  |
+ *     5: アクセス ---------------------------------------+  |   |   |   |  |
+ *     4: キャッシュ無効 ------------------------------------+   |   |   |  |
+ *     3: ライトスルー ------------------------------------------+   |   |  |
+ *     2: ユーザ／スーパバイザ (0 = スーパバイザ) -------------------+   |  |
+ *     1: 読み取り／書き込み (0 = 読み取りのみ) -------------------------+  |
+ *     0: ページ存在 -------------------------------------------------------+
  */
 #define	CPU_PTE_BASEADDR_MASK	0xfffff000
 #define	CPU_PTE_GLOBAL_PAGE	(1 << 8)
@@ -122,12 +120,8 @@ extern "C" {
 #define	CPU_PTE_WRITABLE	(1 << 1)
 #define	CPU_PTE_PRESENT		(1 << 0)
 
-
-/*
- * linear address memory access function
- */
-void MEMCALL cpu_memory_access_la_region(UINT32 address, UINT length, const int ucrw, BYTE *data);
-void MEMCALL paging_check(UINT32 laddr, UINT length, const int ucrw);
+#define CPU_PAGE_SIZE      	 0x1000
+#define CPU_PAGE_MASK       	(CPU_PAGE_SIZE - 1)
 
 /* ucrw */
 #define	CPU_PAGE_WRITE		(1 << 0)
@@ -138,104 +132,213 @@ void MEMCALL paging_check(UINT32 laddr, UINT length, const int ucrw);
 #define	CPU_PAGE_READ_DATA	(CPU_PAGE_DATA)
 #define	CPU_PAGE_WRITE_DATA	(CPU_PAGE_WRITE|CPU_PAGE_DATA)
 
-UINT8 MEMCALL cpu_memory_access_la_RMW_b(UINT32 laddr, UINT32 (*func)(UINT32, void *), void *arg);
-UINT16 MEMCALL cpu_memory_access_la_RMW_w(UINT32 laddr, UINT32 (*func)(UINT32, void *), void *arg);
-UINT32 MEMCALL cpu_memory_access_la_RMW_d(UINT32 laddr, UINT32 (*func)(UINT32, void *), void *arg);
-UINT8 MEMCALL cpu_linear_memory_read_b(UINT32 laddr, const int ucrw);
-UINT16 MEMCALL cpu_linear_memory_read_w(UINT32 laddr, const int ucrw);
-UINT32 MEMCALL cpu_linear_memory_read_d(UINT32 laddr, const int ucrw);
-UINT64 MEMCALL cpu_linear_memory_read_q(UINT32 laddr, const int ucrw);
-REG80 MEMCALL cpu_linear_memory_read_f(UINT32 laddr, const int ucrw);
-void MEMCALL cpu_linear_memory_write_b(UINT32 laddr, UINT8 value, const int user_mode);
-void MEMCALL cpu_linear_memory_write_w(UINT32 laddr, UINT16 value, const int user_mode);
-void MEMCALL cpu_linear_memory_write_d(UINT32 laddr, UINT32 value, const int user_mode);
-void MEMCALL cpu_linear_memory_write_q(UINT32 laddr, UINT64 value, const int user_mode);
-void MEMCALL cpu_linear_memory_write_f(UINT32 laddr, const REG80 *value, const int user_mode);
+UINT8 MEMCALL cpu_memory_access_la_RMW_b(UINT32 laddr, UINT32 (CPUCALL *func)(UINT32, void *), void *arg);
+UINT16 MEMCALL cpu_memory_access_la_RMW_w(UINT32 laddr, UINT32 (CPUCALL *func)(UINT32, void *), void *arg);
+UINT32 MEMCALL cpu_memory_access_la_RMW_d(UINT32 laddr, UINT32 (CPUCALL *func)(UINT32, void *), void *arg);
+UINT8 MEMCALL cpu_linear_memory_read_b(UINT32 laddr, int ucrw);
+UINT16 MEMCALL cpu_linear_memory_read_w(UINT32 laddr, int ucrw);
+UINT32 MEMCALL cpu_linear_memory_read_d(UINT32 laddr, int ucrw);
+UINT64 MEMCALL cpu_linear_memory_read_q(UINT32 laddr, int ucrw);
+REG80 MEMCALL cpu_linear_memory_read_f(UINT32 laddr, int ucrw);
+void MEMCALL cpu_linear_memory_write_b(UINT32 laddr, UINT8 value, int ucrw);
+void MEMCALL cpu_linear_memory_write_w(UINT32 laddr, UINT16 value, int ucrw);
+void MEMCALL cpu_linear_memory_write_d(UINT32 laddr, UINT32 value, int ucrw);
+void MEMCALL cpu_linear_memory_write_q(UINT32 laddr, UINT64 value, int ucrw);
+void MEMCALL cpu_linear_memory_write_f(UINT32 laddr, const REG80 *value, int ucrw);
 
-#define	cpu_lmemoryread(a,pl) \
-	(!CPU_STAT_PAGING) ? \
-	 cpu_memoryread(a) : \
-	 cpu_linear_memory_read_b(a,CPU_PAGE_READ_DATA | (pl))
-#define	cpu_lmemoryread_b(a,pl) cpu_lmemoryread(a,pl)
-#define	cpu_lmemoryread_w(a,pl) \
-	(!CPU_STAT_PAGING) ? \
-	 cpu_memoryread_w(a) : \
-	 cpu_linear_memory_read_w(a,CPU_PAGE_READ_DATA | (pl))
-#define	cpu_lmemoryread_d(a,pl) \
-	(!CPU_STAT_PAGING) ? \
-	 cpu_memoryread_d(a) : \
-	 cpu_linear_memory_read_d(a,CPU_PAGE_READ_DATA | (pl))
-#define	cpu_lmemoryread_q(a,pl) \
-	(!CPU_STAT_PAGING) ? \
-	 cpu_memoryread_q(a) : \
-	 cpu_linear_memory_read_q(a,CPU_PAGE_READ_DATA | (pl))
+/*
+ * linear address memory access function with TLB
+ */
+/* RMW */
+STATIC_INLINE UINT8 MEMCALL
+cpu_lmemory_RMW_b(UINT32 laddr, UINT32 (CPUCALL *func)(UINT32, void *), void *arg)
+{
+	UINT32 result;
+	UINT8 value;
 
-#define	cpu_lmemorywrite(a,v,pl) \
-	(!CPU_STAT_PAGING) ? \
-	 cpu_memorywrite(a,v) : cpu_linear_memory_write_b(a,v,pl)
-#define	cpu_lmemorywrite_b(a,v,pl) cpu_lmemorywrite(a,v,pl)
-#define	cpu_lmemorywrite_w(a,v,pl) \
-	(!CPU_STAT_PAGING) ? \
-	 cpu_memorywrite_w(a,v) : cpu_linear_memory_write_w(a,v,pl)
-#define	cpu_lmemorywrite_d(a,v,pl) \
-	(!CPU_STAT_PAGING) ? \
-	 cpu_memorywrite_d(a,v) : cpu_linear_memory_write_d(a,v,pl)
-#define	cpu_lmemorywrite_q(a,v,pl) \
-	(!CPU_STAT_PAGING) ? \
-	 cpu_memorywrite_q(a,v) : cpu_linear_memory_write_q(a,v,pl)
+	if (!CPU_STAT_PAGING) {
+		value = cpu_memoryread_b(laddr);
+		result = (*func)(value, arg);
+		cpu_memorywrite_b(laddr, result);
+		return value;
+	}
+	return cpu_memory_access_la_RMW_b(laddr, func, arg);
+}
+
+STATIC_INLINE UINT16 MEMCALL
+cpu_lmemory_RMW_w(UINT32 laddr, UINT32 (CPUCALL *func)(UINT32, void *), void *arg)
+{
+	UINT32 result;
+	UINT16 value;
+
+	if (!CPU_STAT_PAGING) {
+		value = cpu_memoryread_w(laddr);
+		result = (*func)(value, arg);
+		cpu_memorywrite_w(laddr, result);
+		return value;
+	}
+	return cpu_memory_access_la_RMW_w(laddr, func, arg);
+}
+
+STATIC_INLINE UINT32 MEMCALL
+cpu_lmemory_RMW_d(UINT32 laddr, UINT32 (CPUCALL *func)(UINT32, void *), void *arg)
+{
+	UINT32 result;
+	UINT32 value;
+
+	if (!CPU_STAT_PAGING) {
+		value = cpu_memoryread_d(laddr);
+		result = (*func)(value, arg);
+		cpu_memorywrite_d(laddr, result);
+		return value;
+	}
+	return cpu_memory_access_la_RMW_d(laddr, func, arg);
+}
+
+/* read */
+STATIC_INLINE UINT8 MEMCALL
+cpu_lmemoryread_b(UINT32 laddr, int ucrw)
+{
+
+	if (!CPU_STAT_PAGING)
+		return cpu_memoryread_b(laddr);
+	return cpu_linear_memory_read_b(laddr, ucrw);
+}
+#define	cpu_lmemoryread(a,ucrw) cpu_lmemoryread_b((a),(ucrw))
+
+STATIC_INLINE UINT16 MEMCALL
+cpu_lmemoryread_w(UINT32 laddr, int ucrw)
+{
+
+	if (!CPU_STAT_PAGING)
+		return cpu_memoryread_w(laddr);
+	return cpu_linear_memory_read_w(laddr, ucrw);
+}
+
+STATIC_INLINE UINT32 MEMCALL
+cpu_lmemoryread_d(UINT32 laddr, int ucrw)
+{
+
+	if (!CPU_STAT_PAGING)
+		return cpu_memoryread_d(laddr);
+	return cpu_linear_memory_read_d(laddr, ucrw);
+}
+
+STATIC_INLINE UINT64
+cpu_lmemoryread_q(UINT32 laddr, int ucrw)
+{
+
+	if (!CPU_STAT_PAGING)
+		return cpu_memoryread_q(laddr);
+	return cpu_linear_memory_read_q(laddr, ucrw);
+}
+
+STATIC_INLINE REG80
+cpu_lmemoryread_f(UINT32 laddr, int ucrw)
+{
+
+	if (!CPU_STAT_PAGING)
+		return cpu_memoryread_f(laddr);
+	return cpu_linear_memory_read_f(laddr, ucrw);
+}
+
+/* write */
+STATIC_INLINE void MEMCALL
+cpu_lmemorywrite_b(UINT32 laddr, UINT8 value, int ucrw)
+{
+
+	if (!CPU_STAT_PAGING) {
+		cpu_memorywrite_b(laddr, value);
+		return;
+	}
+	cpu_linear_memory_write_b(laddr, value, ucrw);
+}
+#define	cpu_lmemorywrite(a,v,ucrw) cpu_lmemorywrite_b((a),(v),(ucrw))
+
+STATIC_INLINE void MEMCALL
+cpu_lmemorywrite_w(UINT32 laddr, UINT16 value, int ucrw)
+{
+
+	if (!CPU_STAT_PAGING) {
+		cpu_memorywrite_w(laddr, value);
+		return;
+	}
+	cpu_linear_memory_write_w(laddr, value, ucrw);
+}
+
+STATIC_INLINE void MEMCALL
+cpu_lmemorywrite_d(UINT32 laddr, UINT32 value, int ucrw)
+{
+
+	if (!CPU_STAT_PAGING) {
+		cpu_memorywrite_d(laddr, value);
+		return;
+	}
+	cpu_linear_memory_write_d(laddr, value, ucrw);
+}
+
+STATIC_INLINE void MEMCALL
+cpu_lmemorywrite_q(UINT32 laddr, UINT64 value, int ucrw)
+{
+
+	if (!CPU_STAT_PAGING) {
+		cpu_memorywrite_q(laddr, value);
+		return;
+	}
+	cpu_linear_memory_write_q(laddr, value, ucrw);
+}
+
+STATIC_INLINE void MEMCALL
+cpu_lmemorywrite_f(UINT32 laddr, const REG80 *value, int ucrw)
+{
+
+	if (!CPU_STAT_PAGING) {
+		cpu_memorywrite_f(laddr, value);
+		return;
+	}
+	cpu_linear_memory_write_f(laddr, value, ucrw);
+}
+
 
 /*
  * linear address memory access with superviser mode
  */
-#define	cpu_kmemoryread(a)	cpu_lmemoryread(a,CPU_MODE_SUPERVISER)
-#define	cpu_kmemoryread_w(a)	cpu_lmemoryread_w(a,CPU_MODE_SUPERVISER)
-#define	cpu_kmemoryread_d(a)	cpu_lmemoryread_d(a,CPU_MODE_SUPERVISER)
-#define	cpu_kmemorywrite(a,v)	cpu_lmemorywrite(a,v,CPU_MODE_SUPERVISER)
-#define	cpu_kmemorywrite_w(a,v)	cpu_lmemorywrite_w(a,v,CPU_MODE_SUPERVISER)
-#define	cpu_kmemorywrite_d(a,v)	cpu_lmemorywrite_d(a,v,CPU_MODE_SUPERVISER)
-
+#define	cpu_kmemoryread(a) \
+	cpu_lmemoryread((a),CPU_PAGE_READ_DATA|CPU_MODE_SUPERVISER)
+#define	cpu_kmemoryread_w(a) \
+	cpu_lmemoryread_w((a),CPU_PAGE_READ_DATA|CPU_MODE_SUPERVISER)
+#define	cpu_kmemoryread_d(a) \
+	cpu_lmemoryread_d((a),CPU_PAGE_READ_DATA|CPU_MODE_SUPERVISER)
+#define	cpu_kmemorywrite(a,v) \
+	cpu_lmemorywrite((a),(v),CPU_PAGE_WRITE_DATA|CPU_MODE_SUPERVISER)
+#define	cpu_kmemorywrite_w(a,v) \
+	cpu_lmemorywrite_w((a),(v),CPU_PAGE_WRITE_DATA|CPU_MODE_SUPERVISER)
+#define	cpu_kmemorywrite_d(a,v) \
+	cpu_lmemorywrite_d((a),(v),CPU_PAGE_WRITE_DATA|CPU_MODE_SUPERVISER)
 
 /*
- * CR3 (Page Directory Entry base physical address)
+ * linear address memory access function
  */
-#define	set_CR3(cr3) \
-do { \
-	VERBOSE(("set_CR3: old = %08x, new = 0x%08x", CPU_CR3, (cr3) & CPU_CR3_MASK)); \
-	CPU_CR3 = (cr3) & CPU_CR3_MASK; \
-	CPU_STAT_PDE_BASE = CPU_CR3 & CPU_CR3_PD_MASK; \
-	tlb_flush(FALSE); \
-} while (/*CONSTCOND*/ 0)
+void MEMCALL cpu_memory_access_la_region(UINT32 address, UINT length, int ucrw, UINT8 *data);
+UINT32 MEMCALL laddr2paddr(UINT32 laddr, int ucrw);
 
+STATIC_INLINE UINT32 MEMCALL
+laddr_to_paddr(UINT32 laddr, int ucrw)
+{
+
+	if (!CPU_STAT_PAGING)
+		return laddr;
+	return laddr2paddr(laddr, ucrw);
+}
 
 /*
  * TLB function
  */
-typedef struct {
-	UINT32	tag;	/* linear address */
-#define	TLB_ENTRY_TAG_VALID		(1 << 0)
-/*	pde & pte & CPU_PTE_WRITABLE	(1 << 1)	*/
-/*	pde & pte & CPU_PTE_USER_MODE	(1 << 2)	*/
-#define	TLB_ENTRY_TAG_DIRTY		CPU_PTE_DIRTY		/* (1 << 6) */
-#define	TLB_ENTRY_TAG_GLOBAL		CPU_PTE_GLOBAL_PAGE	/* (1 << 8) */
-#define	TLB_ENTRY_TAG_MAX_SHIFT		12
-
-	UINT32	paddr;	/* physical address */
-
-	UINT8	*memp;	/* shortcut for pre-fetch queue */
-} TLB_ENTRY_T;
-
-
-#if defined(IA32_SUPPORT_TLB)
+struct tlb_entry;
 void tlb_init(void);
 void MEMCALL tlb_flush(BOOL allflush);
 void MEMCALL tlb_flush_page(UINT32 laddr);
-TLB_ENTRY_T* MEMCALL tlb_lookup(const UINT32 laddr, const int ucrw);
-#else
-#define	tlb_init()
-#define	tlb_flush(allflush)	(void)(allflush)
-#define	tlb_flush_page(la)	(void)(la)
-#define	tlb_lookup(la, ucrw)	NULL
-#endif
+struct tlb_entry *MEMCALL tlb_lookup(UINT32 laddr, int ucrw);
 
 #ifdef __cplusplus
 }

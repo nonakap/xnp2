@@ -653,15 +653,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		case WM_PAINT:
 			hdc = BeginPaint(hWnd, &ps);
 			if (np2opening) {
-			    HINSTANCE	hinst;
+				HINSTANCE	hinst;
 				RECT		rect;
 				int			width;
 				int			height;
-			    HBITMAP		hbmp;
-			    BITMAP		bmp;
-			    HDC			hmdc;
+				HBITMAP		hbmp;
+				BITMAP		bmp;
+				HDC			hmdc;
 				HBRUSH		hbrush;
-			    hinst = (HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE);
+
+#if defined(_WIN64)
+				hinst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
+#else
+				hinst = reinterpret_cast<HINSTANCE>(::GetWindowLong(hWnd, GWL_HINSTANCE));
+#endif
 				GetClientRect(hWnd, &rect);
 				width = rect.right - rect.left;
 				height = rect.bottom - rect.top;
@@ -1133,6 +1138,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPreInst,
 	_MEM_USED("report.txt");
 	dosio_term();
 
-	return(msg.wParam);
+	return static_cast<int>(msg.wParam);
 }
 

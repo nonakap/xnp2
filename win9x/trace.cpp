@@ -1,11 +1,12 @@
 #include	"compiler.h"
 #include	<stdarg.h>
+#include	"resource.h"
 #include	"strres.h"
 #include	"textfile.h"
 #include	"oemtext.h"
 #include	"dosio.h"
 #include	"ini.h"
-
+#include	"menu.h"
 
 #ifdef TRACE
 
@@ -22,7 +23,8 @@
 #define	VIEW_TEXT		"ÇlÇr ÉSÉVÉbÉN"
 #define	VIEW_SIZE		12
 
-typedef struct {
+typedef struct
+{
 	UINT8		en;
 	TEXTFILEH	tf;
 	HWND		hwnd;
@@ -37,29 +39,17 @@ typedef struct {
 
 extern	HINSTANCE	g_hInstance;
 
-enum {
-	IDM_TRACE1		= 3300,
-	IDM_TRACE2,
-	IDM_TRACEEN,
-	IDM_TRACEFH,
-	IDM_TRACECL
-};
-
 static const TCHAR ProgTitle[] = _T("console");
 static const TCHAR ClassName[] = _T("TRACE-console");
 static const TCHAR ClassEdit[] = _T("EDIT");
 static const TCHAR viewfont[] = _T(VIEW_TEXT);
-static const TCHAR trace1[] = _T("TRACE");
-static const TCHAR trace2[] = _T("VERBOSE");
-static const TCHAR traceen[] = _T("Enable");
-static const TCHAR tracefh[] = _T("File out");
-static const TCHAR tracecl[] = _T("Clear");
+
 static const OEMCHAR crlf[] = OEMTEXT("\r\n");
 
 static	TRACEWIN	tracewin;
-static	HWND		hView = NULL;
-static	HFONT		hfView = NULL;
-static	HBRUSH		hBrush = NULL;
+static	HWND		s_hView = NULL;
+static	HFONT		s_hfView = NULL;
+static	HBRUSH		s_hBrush = NULL;
 static	int			viewpos;
 static	int			viewleng;
 static	TCHAR		viewbuf[VIEW_BUFFERSIZE * 2];
@@ -89,7 +79,7 @@ static void View_ClrString(void) {
 	viewpos = 0;
 	viewleng = 0;
 	viewbuf[0] = '\0';
-	SetWindowText(hView, viewbuf);
+	SetWindowText(s_hView, viewbuf);
 }
 
 static void View_AddString(const OEMCHAR *string) {
@@ -135,114 +125,119 @@ static void View_AddString(const OEMCHAR *string) {
 	viewbuf[vpos + vlen + 1] = '\n';
 	viewbuf[vpos + vlen + 2] = '\0';
 	viewleng = vlen + 2;
-	SetWindowText(hView, viewbuf + vpos);
-	View_ScrollToBottom(hView);
+	SetWindowText(s_hView, viewbuf + vpos);
+	View_ScrollToBottom(s_hView);
 }
 
 
 // ----
 
-static LRESULT CALLBACK traceproc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
-
+static LRESULT onCreate(HWND hWnd)
+{
+	HMENU	hMenu;
 	RECT	rc;
-	HMENU	hmenu;
 
-	switch (msg) {
-		case WM_CREATE:
-			hmenu = GetSystemMenu(hWnd, FALSE);
-			InsertMenu(hmenu, 0, MF_BYPOSITION | MF_STRING,
-														IDM_TRACE1, trace1);
-			InsertMenu(hmenu, 1, MF_BYPOSITION | MF_STRING,
-														IDM_TRACE2, trace2);
-			InsertMenu(hmenu, 2, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-			InsertMenu(hmenu, 3, MF_BYPOSITION | MF_STRING,
-														IDM_TRACEEN, traceen);
-			InsertMenu(hmenu, 4, MF_BYPOSITION | MF_STRING,
-														IDM_TRACEFH, tracefh);
-			InsertMenu(hmenu, 5, MF_BYPOSITION | MF_STRING,
-														IDM_TRACECL, tracecl);
-			InsertMenu(hmenu, 6, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+	hMenu = GetSystemMenu(hWnd, FALSE);
+	menu_addmenures(hMenu, 0, IDR_TRACE, FALSE);
 
-			CheckMenuItem(hmenu, IDM_TRACE1,
+	CheckMenuItem(hMenu, IDM_TRACE_TRACE,
 								(tracewin.en & 1)?MF_CHECKED:MF_UNCHECKED);
-			CheckMenuItem(hmenu, IDM_TRACE2,
+	CheckMenuItem(hMenu, IDM_TRACE_VERBOSE,
 								(tracewin.en & 2)?MF_CHECKED:MF_UNCHECKED);
-			CheckMenuItem(hmenu, IDM_TRACEEN,
+	CheckMenuItem(hMenu, IDM_TRACE_ENABLE,
 								(tracewin.en & 4)?MF_CHECKED:MF_UNCHECKED);
 
-			GetClientRect(hWnd, &rc);
-			hView = CreateWindowEx(WS_EX_CLIENTEDGE,
+	GetClientRect(hWnd, &rc);
+	s_hView = CreateWindowEx(WS_EX_CLIENTEDGE,
 							ClassEdit, NULL,
 							WS_CHILD | WS_VISIBLE | ES_READONLY | ES_LEFT |
 							ES_MULTILINE | WS_VSCROLL | ES_AUTOVSCROLL,
 							0, 0, rc.right, rc.bottom,
 							hWnd, (HMENU)IDC_VIEW, g_hInstance, NULL);
-			if (!hView) {
-				break;
-			}
-			SendMessage(hView, EM_SETLIMITTEXT, (WPARAM)VIEW_BUFFERSIZE, 0);
+	SendMessage(s_hView, EM_SETLIMITTEXT, (WPARAM)VIEW_BUFFERSIZE, 0);
 
-			hfView = CreateFont(VIEW_SIZE, 0, 0, 0, 0, 0, 0, 0, 
+	s_hfView = CreateFont(VIEW_SIZE, 0, 0, 0, 0, 0, 0, 0, 
 					SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
 					DEFAULT_QUALITY, FIXED_PITCH, viewfont);
-			if (!hfView) {
-				break;
-			}
-			SendMessage(hView, WM_SETFONT, (WPARAM)hfView,
+	if (s_hfView)
+	{
+		SendMessage(s_hView, WM_SETFONT, (WPARAM)s_hfView,
 												MAKELPARAM(TRUE, 0));
-			hBrush = CreateSolidBrush(VIEW_BGCOLOR);
-			SetFocus(hView);
-			return(TRUE);
+	}
+
+	s_hBrush = CreateSolidBrush(VIEW_BGCOLOR);
+	SetFocus(s_hView);
+
+	return TRUE;
+}
+
+static LRESULT onSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	HMENU	hMenu;
+
+	hMenu = GetSystemMenu(hWnd, FALSE);
+	switch(wParam)
+	{
+		case IDM_TRACE_TRACE:
+			tracewin.en ^= 1;
+			CheckMenuItem(hMenu, IDM_TRACE_TRACE,
+								(tracewin.en & 1)?MF_CHECKED:MF_UNCHECKED);
+			break;
+
+		case IDM_TRACE_VERBOSE:
+			tracewin.en ^= 2;
+			CheckMenuItem(hMenu, IDM_TRACE_VERBOSE,
+								(tracewin.en & 2)?MF_CHECKED:MF_UNCHECKED);
+			break;
+
+		case IDM_TRACE_ENABLE:
+			tracewin.en ^= 4;
+			CheckMenuItem(hMenu, IDM_TRACE_ENABLE,
+								(tracewin.en & 4)?MF_CHECKED:MF_UNCHECKED);
+			break;
+
+		case IDM_TRACE_FILEOUT:
+			if (tracewin.tf != NULL)
+			{
+				textfile_close(tracewin.tf);
+				tracewin.tf = NULL;
+			}
+			else
+			{
+				tracewin.tf = textfile_create(OEMTEXT("traceout.txt"),
+																0x800);
+			}
+			CheckMenuItem(hMenu, IDM_TRACE_FILEOUT,
+									(tracewin.tf)?MF_CHECKED:MF_UNCHECKED);
+			break;
+
+		case IDM_TRACE_CLEAR:
+			View_ClrString();
+			break;
+
+		default:
+			return DefWindowProc(hWnd, WM_SYSCOMMAND, wParam, lParam);
+	}
+	return FALSE;
+}
+
+static LRESULT CALLBACK traceproc(HWND hWnd, UINT uMsg,
+												WPARAM wParam, LPARAM lParam)
+{
+	RECT	rc;
+
+	switch(uMsg)
+	{
+		case WM_CREATE:
+			return onCreate(hWnd);
 
 		case WM_SYSCOMMAND:
-			switch(wp) {
-				case IDM_TRACE1:
-					tracewin.en ^= 1;
-					hmenu = GetSystemMenu(hWnd, FALSE);
-					CheckMenuItem(hmenu, IDM_TRACE1,
-								(tracewin.en & 1)?MF_CHECKED:MF_UNCHECKED);
-					break;
-
-				case IDM_TRACE2:
-					tracewin.en ^= 2;
-					hmenu = GetSystemMenu(hWnd, FALSE);
-					CheckMenuItem(hmenu, IDM_TRACE2,
-								(tracewin.en & 2)?MF_CHECKED:MF_UNCHECKED);
-					break;
-
-				case IDM_TRACEEN:
-					tracewin.en ^= 4;
-					hmenu = GetSystemMenu(hWnd, FALSE);
-					CheckMenuItem(hmenu, IDM_TRACEEN,
-								(tracewin.en & 4)?MF_CHECKED:MF_UNCHECKED);
-					break;
-
-				case IDM_TRACEFH:
-					if (tracewin.tf != NULL) {
-						textfile_close(tracewin.tf);
-						tracewin.tf = NULL;
-					}
-					else {
-						tracewin.tf = textfile_create(OEMTEXT("traceout.txt"),
-																		0x800);
-					}
-					hmenu = GetSystemMenu(hWnd, FALSE);
-					CheckMenuItem(hmenu, IDM_TRACEFH,
-									(tracewin.tf)?MF_CHECKED:MF_UNCHECKED);
-					break;
-
-				case IDM_TRACECL:
-					View_ClrString();
-					break;
-
-				default:
-					return(DefWindowProc(hWnd, msg, wp, lp));
-			}
-			break;
+			return onSysCommand(hWnd, wParam, lParam);
 
 		case WM_MOVE:
 			if (!(GetWindowLong(hWnd, GWL_STYLE) &
-											(WS_MAXIMIZE | WS_MINIMIZE))) {
+											(WS_MAXIMIZE | WS_MINIMIZE)))
+			{
 				GetWindowRect(hWnd, &rc);
 				tracecfg.posx = rc.left;
 				tracecfg.posy = rc.top;
@@ -251,34 +246,37 @@ static LRESULT CALLBACK traceproc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 
 		case WM_SIZE:							// window resize
 			if (!(GetWindowLong(hWnd, GWL_STYLE) &
-										(WS_MAXIMIZE | WS_MINIMIZE))) {
+										(WS_MAXIMIZE | WS_MINIMIZE)))
+			{
 				GetWindowRect(hWnd, &rc);
 				tracecfg.width = rc.right - rc.left;
 				tracecfg.height = rc.bottom - rc.top;
 			}
-			MoveWindow(hView, 0, 0, LOWORD(lp), HIWORD(lp), TRUE);
-			View_ScrollToBottom(hView);
+			MoveWindow(s_hView, 0, 0, LOWORD(lParam), HIWORD(lParam), TRUE);
+			View_ScrollToBottom(s_hView);
 			break;
 
 		case WM_SETFOCUS:
-			SetFocus(hView);
+			SetFocus(s_hView);
 			return(0L);
 
 		case WM_CTLCOLORSTATIC:
 		case WM_CTLCOLOREDIT:
-			SetTextColor((HDC)wp, VIEW_FGCOLOR);
-			SetBkColor((HDC)wp, VIEW_BGCOLOR);
-			return((LRESULT)hBrush);
+			SetTextColor((HDC)wParam, VIEW_FGCOLOR);
+			SetBkColor((HDC)wParam, VIEW_BGCOLOR);
+			return((LRESULT)s_hBrush);
 
 		case WM_CLOSE:
 			break;
 
 		case WM_DESTROY:
-			if (hBrush) {
-				DeleteObject(hBrush);
+			if (s_hBrush)
+			{
+				DeleteObject(s_hBrush);
 			}
-			if (hfView) {
-				DeleteObject(hfView);
+			if (s_hfView)
+			{
+				DeleteObject(s_hfView);
 			}
 			break;
 #if 0
@@ -287,16 +285,16 @@ static LRESULT CALLBACK traceproc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 			break;
 
 		case WM_MOVING:
-			winloc_movingproc((RECT *)lp);
+			winloc_movingproc((RECT *)lParam);
 			break;
 
 		case WM_ERASEBKGND:
-			return(FALSE);
+			return FALSE;
 #endif
 		default:
-			return(DefWindowProc(hWnd, msg, wp, lp));
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
-	return(0L);
+	return FALSE;
 }
 
 
@@ -381,7 +379,7 @@ void trace_fmt(const char *fmt, ...) {
 		vsprintf(buf, fmt, ap);
 #endif
 		va_end(ap);
-		if ((tracewin.en & 4) && (hView)) {
+		if ((tracewin.en & 4) && (s_hView)) {
 			View_AddString(buf);
 		}
 		if (tracewin.tf != NULL) {
@@ -410,7 +408,7 @@ void trace_fmt2(const char *fmt, ...) {
 		vsprintf(buf, fmt, ap);
 #endif
 		va_end(ap);
-		if ((tracewin.en & 4) && (hView)) {
+		if ((tracewin.en & 4) && (s_hView)) {
 			View_AddString(buf);
 		}
 		if (tracewin.tf != FILEH_INVALID) {
@@ -432,7 +430,8 @@ void trace_char(char c) {
 #else
 			const OEMCHAR *pdevstr = devstr;
 #endif
-			if ((tracewin.en & 4) && (hView)) {
+			if ((tracewin.en & 4) && (s_hView))
+			{
 				View_AddString(pdevstr);
 			}
 			if (tracewin.tf != NULL) {

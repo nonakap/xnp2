@@ -1,5 +1,3 @@
-/*	$Id: bin_arith.c,v 1.12 2005/03/12 12:33:47 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2004 NONAKA Kimihiro
  * All rights reserved.
@@ -45,7 +43,7 @@ ARITH_INSTRUCTION_3(SBB)
 /*
  * IMUL
  */
-void
+void CPUCALL
 IMUL_ALEb(UINT32 op)
 {
 	UINT32 madr;
@@ -65,7 +63,7 @@ IMUL_ALEb(UINT32 op)
 	CPU_AX = (UINT16)res;
 }
 
-void
+void CPUCALL
 IMUL_AXEw(UINT32 op)
 {
 	UINT32 madr;
@@ -86,7 +84,7 @@ IMUL_AXEw(UINT32 op)
 	CPU_DX = (UINT16)(res >> 16);
 }
 
-void
+void CPUCALL
 IMUL_EAXEd(UINT32 op)
 {
 	UINT32 madr;
@@ -195,7 +193,7 @@ IMUL_GdEdId(void)
 /*
  * MUL
  */
-void
+void CPUCALL
 MUL_ALEb(UINT32 op)
 {
 	UINT32 res, madr;
@@ -214,7 +212,7 @@ MUL_ALEb(UINT32 op)
 	CPU_AX = (UINT16)res;
 }
 
-void
+void CPUCALL
 MUL_AXEw(UINT32 op)
 {
 	UINT32 res, madr;
@@ -234,7 +232,7 @@ MUL_AXEw(UINT32 op)
 	CPU_DX = (UINT16)(res >> 16);
 }
 
-void
+void CPUCALL
 MUL_EAXEd(UINT32 op)
 {
 	UINT32 res, madr;
@@ -258,7 +256,7 @@ MUL_EAXEd(UINT32 op)
 /*
  * IDIV
  */
-void
+void CPUCALL
 IDIV_ALEb(UINT32 op)
 {
 	UINT32 madr;
@@ -288,7 +286,7 @@ IDIV_ALEb(UINT32 op)
 	EXCEPTION(DE_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 IDIV_AXEw(UINT32 op)
 {
 	SINT32 tmp, r;
@@ -318,7 +316,7 @@ IDIV_AXEw(UINT32 op)
 	EXCEPTION(DE_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 IDIV_EAXEd(UINT32 op)
 {
 	SINT64 tmp, r;
@@ -352,7 +350,7 @@ IDIV_EAXEd(UINT32 op)
 /*
  * DIV
  */
-void
+void CPUCALL
 DIV_ALEb(UINT32 op)
 {
 	UINT32 madr;
@@ -381,7 +379,7 @@ DIV_ALEb(UINT32 op)
 	EXCEPTION(DE_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 DIV_AXEw(UINT32 op)
 {
 	UINT32 madr;
@@ -410,7 +408,7 @@ DIV_AXEw(UINT32 op)
 	EXCEPTION(DE_EXCEPTION, 0);
 }
 
-void
+void CPUCALL
 DIV_EAXEd(UINT32 op)
 {
 	UINT32 madr;
@@ -492,34 +490,31 @@ void DEC_EDI(void) { DWORD_DEC(CPU_EDI); CPU_WORKCLOCK(2); }
 /*
  * NEG
  */
-static UINT32
+static UINT32 CPUCALL
 NEG1(UINT32 src, void *arg)
 {
 	UINT32 dst;
-	(void)arg;
 	BYTE_NEG(dst, src);
 	return dst;
 }
 
-static UINT32
+static UINT32 CPUCALL
 NEG2(UINT32 src, void *arg)
 {
 	UINT32 dst;
-	(void)arg;
 	WORD_NEG(dst, src);
 	return dst;
 }
 
-static UINT32
+static UINT32 CPUCALL
 NEG4(UINT32 src, void *arg)
 {
 	UINT32 dst;
-	(void)arg;
 	DWORD_NEG(dst, src);
 	return dst;
 }
 
-void
+void CPUCALL
 NEG_Eb(UINT32 op)
 {
 	UINT8 *out;
@@ -534,11 +529,11 @@ NEG_Eb(UINT32 op)
 	} else {
 		CPU_WORKCLOCK(7);
 		madr = calc_ea_dst(op);
-		cpu_memory_access_va_RMW(CPU_INST_SEGREG_INDEX, madr, NEG1, 0);
+		cpu_vmemory_RMW_b(CPU_INST_SEGREG_INDEX, madr, NEG1, 0);
 	}
 }
 
-void
+void CPUCALL
 NEG_Ew(UINT32 op)
 {
 	UINT16 *out;
@@ -553,11 +548,11 @@ NEG_Ew(UINT32 op)
 	} else {
 		CPU_WORKCLOCK(7);
 		madr = calc_ea_dst(op);
-		cpu_memory_access_va_RMW_w(CPU_INST_SEGREG_INDEX, madr, NEG2, 0);
+		cpu_vmemory_RMW_w(CPU_INST_SEGREG_INDEX, madr, NEG2, 0);
 	}
 }
 
-void
+void CPUCALL
 NEG_Ed(UINT32 op)
 {
 	UINT32 *out;
@@ -572,7 +567,7 @@ NEG_Ed(UINT32 op)
 	} else {
 		CPU_WORKCLOCK(7);
 		madr = calc_ea_dst(op);
-		cpu_memory_access_va_RMW_d(CPU_INST_SEGREG_INDEX, madr, NEG4, 0);
+		cpu_vmemory_RMW_d(CPU_INST_SEGREG_INDEX, madr, NEG4, 0);
 	}
 }
 
@@ -703,7 +698,7 @@ CMP_EAXId(void)
 	DWORD_SUB(res, dst, src);
 }
 
-void
+void CPUCALL
 CMP_EbIb(UINT8 *regp, UINT32 src)
 {
 	UINT32 dst, res;
@@ -712,7 +707,7 @@ CMP_EbIb(UINT8 *regp, UINT32 src)
 	BYTE_SUB(res, dst, src);
 }
 
-void
+void CPUCALL
 CMP_EbIb_ext(UINT32 madr, UINT32 src)
 {
 	UINT32 dst, res;
@@ -721,7 +716,7 @@ CMP_EbIb_ext(UINT32 madr, UINT32 src)
 	BYTE_SUB(res, dst, src);
 }
 
-void
+void CPUCALL
 CMP_EwIx(UINT16 *regp, UINT32 src)
 {
 	UINT32 dst, res;
@@ -730,7 +725,7 @@ CMP_EwIx(UINT16 *regp, UINT32 src)
 	WORD_SUB(res, dst, src);
 }
 
-void
+void CPUCALL
 CMP_EwIx_ext(UINT32 madr, UINT32 src)
 {
 	UINT32 dst, res;
@@ -739,7 +734,7 @@ CMP_EwIx_ext(UINT32 madr, UINT32 src)
 	WORD_SUB(res, dst, src);
 }
 
-void
+void CPUCALL
 CMP_EdIx(UINT32 *regp, UINT32 src)
 {
 	UINT32 dst, res;
@@ -748,7 +743,7 @@ CMP_EdIx(UINT32 *regp, UINT32 src)
 	DWORD_SUB(res, dst, src);
 }
 
-void
+void CPUCALL
 CMP_EdIx_ext(UINT32 madr, UINT32 src)
 {
 	UINT32 dst, res;

@@ -91,20 +91,20 @@ OPNA rythm sound source (Tamm)
 .B $(HOME)/.np2/2608_rim.wav
 OPNA rythm sound source (Rim shor)
 .TP
-.B /usr/X11R6/lib/X11/xnp2/np2tool.d88
+.B @PKGDATADIR@/np2tool.d88
 disk image for hostdrv.
 .TP
-.B /usr/X11R6/lib/X11/xnp2/fddseek.wav
+.B @PKGDATADIR@/fddseek.wav
 floppy disk seek sound file
 .TP
-.B /usr/X11R6/lib/X11/xnp2/fddseek1.wav
+.B @PKGDATADIR@/fddseek1.wav
 another floppy disk seek sound file
 .SH AUTHOR
 Yui <np2@yui.ne.jp>, is
 .B Neko Project II
 main developer, who is maintained for MS-Windows, MacOS 8.x and MacOS 9 version.
 .br
-NONAKA Kimihiro <aw9k-nnk@asahi-net.or.jp>, he is ported
+NONAKA Kimihiro <nonakap@gmail.com>, he is ported
 .B Neko Project II
 for UNIX platform.
 .br

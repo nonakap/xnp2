@@ -60,11 +60,11 @@ static void info_cpu(OEMCHAR *str, int maxlen, const NP2INFOEX *ex) {
 
 static void info_clock(OEMCHAR *str, int maxlen, const NP2INFOEX *ex) {
 
-	UINT32	clock;
+	UINT32	clk;
 	OEMCHAR	clockstr[16];
 
-	clock = (pccore.realclock + 50000) / 100000;
-	OEMSPRINTF(clockstr, str_clockfmt, clock/10, clock % 10);
+	clk = (pccore.realclock + 50000) / 100000;
+	OEMSPRINTF(clockstr, str_clockfmt, clk/10, clk % 10);
 	milstr_ncpy(str, clockstr, maxlen);
 	(void)ex;
 }

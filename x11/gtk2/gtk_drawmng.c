@@ -1,5 +1,3 @@
-/*	$Id: gtk_drawmng.c,v 1.5 2007/01/10 15:58:58 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -94,7 +92,7 @@ drawmng_create(void *parent, int width, int height)
 	}
 	bytes_per_pixel = fmt.bits_per_pixel / 8;
 
-	hdl->d.dest.x = hdl->d.dest.x = 0;
+	hdl->d.dest.x = hdl->d.dest.y = 0;
 	hdl->d.src.left = hdl->d.src.top = 0;
 	hdl->d.src.right = width;
 	hdl->d.src.bottom = height;
@@ -130,7 +128,7 @@ destroy:
 		GtkWidget *da = hdl->drawarea;
 		drawmng_release((DRAWMNG_HDL)hdl);
 		if (da) {
-			gtk_widget_unref(da);
+			g_object_unref(da);
 		}
 	}
 	return NULL;
@@ -176,7 +174,7 @@ drawmng_surfunlock(DRAWMNG_HDL dhdl)
 	GdkGC *gc;
 
 	if (hdl) {
-		gc = hdl->drawarea->style->fg_gc[GTK_WIDGET_STATE(hdl->drawarea)];
+		gc = hdl->drawarea->style->fg_gc[gtk_widget_get_state(hdl->drawarea)];
 		gdk_draw_image(hdl->backsurf, gc, hdl->surface,
 		    0, 0, 0, 0, hdl->d.width, hdl->d.height);
 		hdl->d.drawing = FALSE;
@@ -193,7 +191,7 @@ drawmng_blt(DRAWMNG_HDL dhdl, RECT_T *sr, POINT_T *dp)
 	int width, height;
 
 	if (hdl) {
-		gc = hdl->drawarea->style->fg_gc[GTK_WIDGET_STATE(hdl->drawarea)];
+		gc = hdl->drawarea->style->fg_gc[gtk_widget_get_state(hdl->drawarea)];
 		if (sr || dp) {
 
 			if (sr) {
@@ -270,7 +268,7 @@ gtkdrawmng_getformat(GtkWidget *w, GtkWidget *pw, pixmap_format_t *fmtp)
 		break;
 
 	default:
-		fprintf(stderr, "No support visual class.\n");
+		g_printerr("No support visual class.\n");
 		return FALSE;
 	}
 
@@ -292,9 +290,9 @@ gtkdrawmng_getformat(GtkWidget *w, GtkWidget *pw, pixmap_format_t *fmtp)
 
 	default:
 		if (visual->depth < 8) {
-			fprintf(stderr, "Too few allocable color.\n");
+			g_printerr("Too few allocable color.\n");
 		}
-		fprintf(stderr, "No support depth.\n");
+		g_printerr("No support depth.\n");
 		return FALSE;
 	}
 

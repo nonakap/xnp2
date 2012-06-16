@@ -1,5 +1,3 @@
-/*	$Id: ctrlxfer.c,v 1.19 2008/01/25 17:49:46 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -35,12 +33,12 @@
 /*------------------------------------------------------------------------------
  * JMPfar_pm
  */
-static void JMPfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip);
-static void JMPfar_pm_call_gate(const selector_t *callgate_sel);
-static void JMPfar_pm_task_gate(selector_t *taskgate_sel);
-static void JMPfar_pm_tss(selector_t *tss_sel);
+static void CPUCALL JMPfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip);
+static void CPUCALL JMPfar_pm_call_gate(const selector_t *callgate_sel);
+static void CPUCALL JMPfar_pm_task_gate(selector_t *taskgate_sel);
+static void CPUCALL JMPfar_pm_tss(selector_t *tss_sel);
 
-void
+void CPUCALL
 JMPfar_pm(UINT16 selector, UINT32 new_ip)
 {
 	selector_t jmp_sel;
@@ -55,11 +53,11 @@ JMPfar_pm(UINT16 selector, UINT32 new_ip)
 		EXCEPTION(GP_EXCEPTION, jmp_sel.idx);
 	}
 
-	if (jmp_sel.desc.s) {
+	if (!SEG_IS_SYSTEM(&jmp_sel.desc)) {
 		VERBOSE(("JMPfar_pm: code or data segment descriptor"));
 
 		/* check segment type */
-		if (!jmp_sel.desc.u.seg.c) {
+		if (SEG_IS_DATA(&jmp_sel.desc)) {
 			/* data segment */
 			VERBOSE(("JMPfar_pm: data segment"));
 			EXCEPTION(GP_EXCEPTION, jmp_sel.idx);
@@ -103,16 +101,16 @@ JMPfar_pm(UINT16 selector, UINT32 new_ip)
 /*---
  * JMPfar: code segment
  */
-static void
+static void CPUCALL
 JMPfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip)
 {
 
 	VERBOSE(("JMPfar_pm: CODE-SEGMENT"));
 
 	/* check privilege level */
-	if (!cs_sel->desc.u.seg.ec) {
+	if (!SEG_IS_CONFORMING_CODE(&cs_sel->desc)) {
 		VERBOSE(("JMPfar_pm: NON-CONFORMING-CODE-SEGMENT"));
-		/* ²¼´¬ p.119 4.8.1.1. */
+		/* ä¸‹å·» p.119 4.8.1.1. */
 		if (cs_sel->rpl > CPU_STAT_CPL) {
 			VERBOSE(("JMPfar_pm: RPL(%d) > CPL(%d)", cs_sel->rpl, CPU_STAT_CPL));
 			EXCEPTION(GP_EXCEPTION, cs_sel->idx);
@@ -123,7 +121,7 @@ JMPfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip)
 		}
 	} else {
 		VERBOSE(("JMPfar_pm: CONFORMING-CODE-SEGMENT"));
-		/* ²¼´¬ p.120 4.8.1.2. */
+		/* ä¸‹å·» p.120 4.8.1.2. */
 		if (cs_sel->desc.dpl > CPU_STAT_CPL) {
 			VERBOSE(("JMPfar_pm: DPL(%d) > CPL(%d)", cs_sel->desc.dpl, CPU_STAT_CPL));
 			EXCEPTION(GP_EXCEPTION, cs_sel->idx);
@@ -132,7 +130,7 @@ JMPfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip)
 
 	/* not present */
 	if (selector_is_not_present(cs_sel)) {
-		VERBOSE(("JMPfar_pm: selector is not present"));
+		VERBOSE(("JMPfar_pm: code selector is not present"));
 		EXCEPTION(NP_EXCEPTION, cs_sel->idx);
 	}
 
@@ -143,13 +141,13 @@ JMPfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip)
 	}
 
 	load_cs(cs_sel->selector, &cs_sel->desc, CPU_STAT_CPL);
-	SET_EIP(new_ip);
+	CPU_EIP = new_ip;
 }
 
 /*---
  * JMPfar: call gate
  */
-static void
+static void CPUCALL
 JMPfar_pm_call_gate(const selector_t *callgate_sel)
 {
 	selector_t cs_sel;
@@ -169,7 +167,7 @@ JMPfar_pm_call_gate(const selector_t *callgate_sel)
 
 	/* not present */
 	if (selector_is_not_present(callgate_sel)) {
-		VERBOSE(("JMPfar_pm: selector is not present"));
+		VERBOSE(("JMPfar_pm: call gate selector is not present"));
 		EXCEPTION(NP_EXCEPTION, callgate_sel->idx);
 	}
 
@@ -181,18 +179,18 @@ JMPfar_pm_call_gate(const selector_t *callgate_sel)
 	}
 
 	/* check segment type */
-	if (!cs_sel.desc.s) {
+	if (SEG_IS_SYSTEM(&cs_sel.desc)) {
 		VERBOSE(("JMPfar_pm: code segment is system segment"));
 		EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 	}
-	if (!cs_sel.desc.u.seg.c) {
+	if (SEG_IS_DATA(&cs_sel.desc)) {
 		VERBOSE(("JMPfar_pm: code segment is data segment"));
 		EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 	}
 
 	/* check privilege level */
-	if (!cs_sel.desc.u.seg.ec) {
-		/* ²¼´¬ p.119 4.8.1.1. */
+	if (!SEG_IS_CONFORMING_CODE(&cs_sel.desc)) {
+		/* ä¸‹å·» p.119 4.8.1.1. */
 		if (cs_sel.rpl > CPU_STAT_CPL) {
 			VERBOSE(("JMPfar_pm: RPL(%d) > CPL(%d)", cs_sel.rpl, CPU_STAT_CPL));
 			EXCEPTION(GP_EXCEPTION, cs_sel.idx);
@@ -202,7 +200,7 @@ JMPfar_pm_call_gate(const selector_t *callgate_sel)
 			EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 		}
 	} else {
-		/* ²¼´¬ p.120 4.8.1.2. */
+		/* ä¸‹å·» p.120 4.8.1.2. */
 		if (cs_sel.desc.dpl > CPU_STAT_CPL) {
 			VERBOSE(("JMPfar_pm: DPL(%d) > CPL(%d)", cs_sel.desc.dpl, CPU_STAT_CPL));
 			EXCEPTION(GP_EXCEPTION, cs_sel.idx);
@@ -211,7 +209,7 @@ JMPfar_pm_call_gate(const selector_t *callgate_sel)
 
 	/* not present */
 	if (selector_is_not_present(&cs_sel)) {
-		VERBOSE(("JMPfar_pm: selector is not present"));
+		VERBOSE(("JMPfar_pm: code selector is not present"));
 		EXCEPTION(NP_EXCEPTION, cs_sel.idx);
 	}
 
@@ -222,13 +220,13 @@ JMPfar_pm_call_gate(const selector_t *callgate_sel)
 	}
 
 	load_cs(cs_sel.selector, &cs_sel.desc, CPU_STAT_CPL);
-	SET_EIP(callgate_sel->desc.u.gate.offset);
+	CPU_EIP = callgate_sel->desc.u.gate.offset;
 }
 
 /*---
  * JMPfar: task gate
  */
-static void
+static void CPUCALL
 JMPfar_pm_task_gate(selector_t *taskgate_sel)
 {
 	selector_t tss_sel;
@@ -282,12 +280,18 @@ JMPfar_pm_task_gate(selector_t *taskgate_sel)
 	}
 
 	task_switch(&tss_sel, TASK_SWITCH_JMP);
+
+	/* out of range */
+	if (CPU_EIP > CPU_STAT_CS_LIMIT) {
+		VERBOSE(("JMPfar_pm: new_ip is out of range. new_ip = %08x, limit = %08x", CPU_EIP, CPU_STAT_CS_LIMIT));
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
 }
 
 /*---
  * JMPfar: TSS
  */
-static void
+static void CPUCALL
 JMPfar_pm_tss(selector_t *tss_sel)
 {
 
@@ -310,18 +314,24 @@ JMPfar_pm_tss(selector_t *tss_sel)
 	}
 
 	task_switch(tss_sel, TASK_SWITCH_JMP);
+
+	/* out of range */
+	if (CPU_EIP > CPU_STAT_CS_LIMIT) {
+		VERBOSE(("JMPfar_pm: new_ip is out of range. new_ip = %08x, limit = %08x", CPU_EIP, CPU_STAT_CS_LIMIT));
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
 }
 
 
 /*------------------------------------------------------------------------------
  * CALLfar_pm
  */
-static void CALLfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip);
-static void CALLfar_pm_call_gate(const selector_t *callgate_sel);
-static void CALLfar_pm_task_gate(selector_t *taskgate_sel);
-static void CALLfar_pm_tss(selector_t *tss_sel);
+static void CPUCALL CALLfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip);
+static void CPUCALL CALLfar_pm_call_gate(const selector_t *callgate_sel);
+static void CPUCALL CALLfar_pm_task_gate(selector_t *taskgate_sel);
+static void CPUCALL CALLfar_pm_tss(selector_t *tss_sel);
 
-void
+void CPUCALL
 CALLfar_pm(UINT16 selector, UINT32 new_ip)
 {
 	selector_t call_sel;
@@ -336,11 +346,11 @@ CALLfar_pm(UINT16 selector, UINT32 new_ip)
 		EXCEPTION(GP_EXCEPTION, call_sel.idx);
 	}
 
-	if (call_sel.desc.s) {
+	if (!SEG_IS_SYSTEM(&call_sel.desc)) {
 		/* code or data segment descriptor */
 		VERBOSE(("CALLfar_pm: code or data segment descriptor"));
 
-		if (!call_sel.desc.u.seg.c) {
+		if (SEG_IS_DATA(&call_sel.desc)) {
 			/* data segment */
 			VERBOSE(("CALLfar_pm: data segment"));
 			EXCEPTION(GP_EXCEPTION, call_sel.idx);
@@ -384,7 +394,7 @@ CALLfar_pm(UINT16 selector, UINT32 new_ip)
 /*---
  * CALLfar_pm: code segment
  */
-static void
+static void CPUCALL
 CALLfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip)
 {
 	UINT32 sp;
@@ -392,9 +402,9 @@ CALLfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip)
 	VERBOSE(("CALLfar_pm: CODE-SEGMENT"));
 
 	/* check privilege level */
-	if (!cs_sel->desc.u.seg.ec) {
+	if (!SEG_IS_CONFORMING_CODE(&cs_sel->desc)) {
 		VERBOSE(("CALLfar_pm: NON-CONFORMING-CODE-SEGMENT"));
-		/* ²¼´¬ p.119 4.8.1.1. */
+		/* ä¸‹å·» p.119 4.8.1.1. */
 		if (cs_sel->rpl > CPU_STAT_CPL) {
 			VERBOSE(("CALLfar_pm: RPL(%d) > CPL(%d)", cs_sel->rpl, CPU_STAT_CPL));
 			EXCEPTION(GP_EXCEPTION, cs_sel->idx);
@@ -405,7 +415,7 @@ CALLfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip)
 		}
 	} else {
 		VERBOSE(("CALLfar_pm: CONFORMING-CODE-SEGMENT"));
-		/* ²¼´¬ p.120 4.8.1.2. */
+		/* ä¸‹å·» p.120 4.8.1.2. */
 		if (cs_sel->desc.dpl > CPU_STAT_CPL) {
 			VERBOSE(("CALLfar_pm: DPL(%d) > CPL(%d)", cs_sel->desc.dpl, CPU_STAT_CPL));
 			EXCEPTION(GP_EXCEPTION, cs_sel->idx);
@@ -424,7 +434,7 @@ CALLfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip)
 		sp = CPU_SP;
 	}
 	if (CPU_INST_OP32) {
-		STACK_PUSH_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, 8);
+		SS_PUSH_CHECK(sp, 8);
 
 		/* out of range */
 		if (new_ip > cs_sel->desc.u.seg.limit) {
@@ -435,7 +445,7 @@ CALLfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip)
 		PUSH0_32(CPU_CS);
 		PUSH0_32(CPU_EIP);
 	} else {
-		STACK_PUSH_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, 4);
+		SS_PUSH_CHECK(sp, 4);
 
 		/* out of range */
 		if (new_ip > cs_sel->desc.u.seg.limit) {
@@ -448,16 +458,16 @@ CALLfar_pm_code_segment(const selector_t *cs_sel, UINT32 new_ip)
 	}
 
 	load_cs(cs_sel->selector, &cs_sel->desc, CPU_STAT_CPL);
-	SET_EIP(new_ip);
+	CPU_EIP = new_ip;
 }
 
 /*---
  * CALLfar_pm: call gate
  */
-static void CALLfar_pm_call_gate_same_privilege(const selector_t *call_sel, selector_t *cs_sel);
-static void CALLfar_pm_call_gate_more_privilege(const selector_t *call_sel, selector_t *cs_sel);
+static void CPUCALL CALLfar_pm_call_gate_same_privilege(const selector_t *call_sel, selector_t *cs_sel);
+static void CPUCALL CALLfar_pm_call_gate_more_privilege(const selector_t *call_sel, selector_t *cs_sel);
 
-static void
+static void CPUCALL
 CALLfar_pm_call_gate(const selector_t *callgate_sel)
 {
 	selector_t cs_sel;
@@ -489,11 +499,11 @@ CALLfar_pm_call_gate(const selector_t *callgate_sel)
 	}
 
 	/* check segment type */
-	if (!cs_sel.desc.s) {
+	if (SEG_IS_SYSTEM(&cs_sel.desc)) {
 		VERBOSE(("CALLfar_pm: code segment is system segment"));
 		EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 	}
-	if (!cs_sel.desc.u.seg.c) {
+	if (SEG_IS_DATA(&cs_sel.desc)) {
 		VERBOSE(("CALLfar_pm: code segment is data segment"));
 		EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 	}
@@ -516,7 +526,7 @@ CALLfar_pm_call_gate(const selector_t *callgate_sel)
 		EXCEPTION(GP_EXCEPTION, 0);
 	}
 
-	if (!cs_sel.desc.u.seg.ec && (cs_sel.desc.dpl < CPU_STAT_CPL)) {
+	if (!SEG_IS_CONFORMING_CODE(&cs_sel.desc) && (cs_sel.desc.dpl < CPU_STAT_CPL)) {
 	 	CALLfar_pm_call_gate_more_privilege(callgate_sel, &cs_sel);
 	} else {
 		CALLfar_pm_call_gate_same_privilege(callgate_sel, &cs_sel);
@@ -526,7 +536,7 @@ CALLfar_pm_call_gate(const selector_t *callgate_sel)
 /*---
  * CALLfar_pm: call gate (SAME-PRIVILEGE)
  */
-static void
+static void CPUCALL
 CALLfar_pm_call_gate_same_privilege(const selector_t *callgate_sel, selector_t *cs_sel)
 {
 	UINT32 sp;
@@ -538,34 +548,31 @@ CALLfar_pm_call_gate_same_privilege(const selector_t *callgate_sel, selector_t *
 	} else {
 		sp = CPU_SP;
 	}
-
 	if (callgate_sel->desc.type == CPU_SYSDESC_TYPE_CALL_32) {
-		STACK_PUSH_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, 8);
+		SS_PUSH_CHECK(sp, 8);
 
 		PUSH0_32(CPU_CS);
 		PUSH0_32(CPU_EIP);
-
-		load_cs(cs_sel->selector, &cs_sel->desc, CPU_STAT_CPL);
-		SET_EIP(callgate_sel->desc.u.gate.offset);
 	} else {
-		STACK_PUSH_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, 4);
+		SS_PUSH_CHECK(sp, 4);
 
 		PUSH0_16(CPU_CS);
 		PUSH0_16(CPU_IP);
-
-		load_cs(cs_sel->selector, &cs_sel->desc, CPU_STAT_CPL);
-		SET_EIP(callgate_sel->desc.u.gate.offset);
 	}
+
+	load_cs(cs_sel->selector, &cs_sel->desc, CPU_STAT_CPL);
+	CPU_EIP = callgate_sel->desc.u.gate.offset;
 }
 
 /*---
  * CALLfar_pm: call gate (MORE-PRIVILEGE)
  */
-static void
+static void CPUCALL
 CALLfar_pm_call_gate_more_privilege(const selector_t *callgate_sel, selector_t *cs_sel)
 {
 	UINT32 param[32];	/* copy param */
 	selector_t ss_sel;
+	UINT stacksize;
 	UINT32 old_eip, old_esp;
 	UINT32 new_esp;
 	UINT16 old_cs, old_ss;
@@ -597,24 +604,24 @@ CALLfar_pm_call_gate_more_privilege(const selector_t *callgate_sel, selector_t *
 
 	/* check privilege level */
 	if (ss_sel.rpl != cs_sel->desc.dpl) {
-		VERBOSE(("CALLfar_pm: RPL[SS](%d) != DPL[CS](%d)", ss_sel.rpl, cs_sel->desc.dpl));
+		VERBOSE(("CALLfar_pm: selector RPL[SS](%d) != DPL[CS](%d)", ss_sel.rpl, cs_sel->desc.dpl));
 		EXCEPTION(TS_EXCEPTION, ss_sel.idx);
 	}
 	if (ss_sel.desc.dpl != cs_sel->desc.dpl) {
-		VERBOSE(("CALLfar_pm: DPL[SS](%d) != DPL[CS](%d)", ss_sel.desc.dpl, cs_sel->desc.dpl));
+		VERBOSE(("CALLfar_pm: descriptor DPL[SS](%d) != DPL[CS](%d)", ss_sel.desc.dpl, cs_sel->desc.dpl));
 		EXCEPTION(TS_EXCEPTION, ss_sel.idx);
 	}
 
 	/* stack segment must be writable data segment. */
-	if (!ss_sel.desc.s) {
+	if (SEG_IS_SYSTEM(&ss_sel.desc)) {
 		VERBOSE(("CALLfar_pm: stack segment is system segment"));
 		EXCEPTION(TS_EXCEPTION, ss_sel.idx);
 	}
-	if (ss_sel.desc.u.seg.c) {
+	if (SEG_IS_CODE(&ss_sel.desc)) {
 		VERBOSE(("CALLfar_pm: stack segment is code segment"));
 		EXCEPTION(TS_EXCEPTION, ss_sel.idx);
 	}
-	if (!ss_sel.desc.u.seg.wr) {
+	if (!SEG_IS_WRITABLE_DATA(&ss_sel.desc)) {
 		VERBOSE(("CALLfar_pm: stack segment is read-only data segment"));
 		EXCEPTION(TS_EXCEPTION, ss_sel.idx);
 	}
@@ -628,9 +635,20 @@ CALLfar_pm_call_gate_more_privilege(const selector_t *callgate_sel, selector_t *
 	param_count = callgate_sel->desc.u.gate.count;
 	VERBOSE(("CALLfar_pm: param_count = %d", param_count));
 
+	/* check stack size */
+	if (cs_sel->desc.d) {
+		stacksize = 16;
+	} else {
+		stacksize = 8;
+	}
 	if (callgate_sel->desc.type == CPU_SYSDESC_TYPE_CALL_32) {
-		STACK_PUSH_CHECK(ss_sel.idx, &ss_sel.desc, new_esp, 16 + param_count * 4);
+		stacksize += param_count * 4;
+	} else {
+		stacksize += param_count * 2;
+	}
+	cpu_stack_push_check(ss_sel.idx, &ss_sel.desc, new_esp, stacksize);
 
+	if (callgate_sel->desc.type == CPU_SYSDESC_TYPE_CALL_32) {
 		/* dump param */
 		for (i = 0; i < param_count; i++) {
 			param[i] = cpu_vmemoryread_d(CPU_SS_INDEX, old_esp + i * 4);
@@ -645,7 +663,7 @@ CALLfar_pm_call_gate_more_privilege(const selector_t *callgate_sel, selector_t *
 		}
 
 		load_cs(cs_sel->selector, &cs_sel->desc, cs_sel->desc.dpl);
-		SET_EIP(callgate_sel->desc.u.gate.offset);
+		CPU_EIP = callgate_sel->desc.u.gate.offset;
 
 		PUSH0_32(old_ss);
 		PUSH0_32(old_esp);
@@ -659,8 +677,6 @@ CALLfar_pm_call_gate_more_privilege(const selector_t *callgate_sel, selector_t *
 		PUSH0_32(old_cs);
 		PUSH0_32(old_eip);
 	} else {
-		STACK_PUSH_CHECK(ss_sel.idx, &ss_sel.desc, new_esp, 8 + param_count * 2);
-
 		/* dump param */
 		for (i = 0; i < param_count; i++) {
 			param[i] = cpu_vmemoryread_w(CPU_SS_INDEX, old_esp + i * 2);
@@ -675,7 +691,7 @@ CALLfar_pm_call_gate_more_privilege(const selector_t *callgate_sel, selector_t *
 		}
 
 		load_cs(cs_sel->selector, &cs_sel->desc, cs_sel->desc.dpl);
-		SET_EIP(callgate_sel->desc.u.gate.offset);
+		CPU_EIP = callgate_sel->desc.u.gate.offset;
 
 		PUSH0_16(old_ss);
 		PUSH0_16(old_esp);
@@ -694,7 +710,7 @@ CALLfar_pm_call_gate_more_privilege(const selector_t *callgate_sel, selector_t *
 /*---
  * CALLfar_pm: task gate
  */
-static void
+static void CPUCALL
 CALLfar_pm_task_gate(selector_t *taskgate_sel)
 {
 	selector_t tss_sel;
@@ -748,12 +764,18 @@ CALLfar_pm_task_gate(selector_t *taskgate_sel)
 	}
 
 	task_switch(&tss_sel, TASK_SWITCH_CALL);
+
+	/* out of range */
+	if (CPU_EIP > CPU_STAT_CS_LIMIT) {
+		VERBOSE(("JMPfar_pm: new_ip is out of range. new_ip = %08x, limit = %08x", CPU_EIP, CPU_STAT_CS_LIMIT));
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
 }
 
 /*---
  * CALLfar_pm: TSS
  */
-static void
+static void CPUCALL
 CALLfar_pm_tss(selector_t *tss_sel)
 {
 
@@ -776,6 +798,12 @@ CALLfar_pm_tss(selector_t *tss_sel)
 	}
 
 	task_switch(tss_sel, TASK_SWITCH_CALL);
+
+	/* out of range */
+	if (CPU_EIP > CPU_STAT_CS_LIMIT) {
+		VERBOSE(("JMPfar_pm: new_ip is out of range. new_ip = %08x, limit = %08x", CPU_EIP, CPU_STAT_CS_LIMIT));
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
 }
 
 
@@ -783,10 +811,11 @@ CALLfar_pm_tss(selector_t *tss_sel)
  * RETfar_pm
  */
 
-void
+void CPUCALL
 RETfar_pm(UINT nbytes)
 {
 	selector_t cs_sel, ss_sel, temp_sel;
+	descriptor_t *sdp;
 	UINT32 sp;
 	UINT32 new_ip, new_sp;
 	UINT16 new_cs, new_ss;
@@ -801,27 +830,27 @@ RETfar_pm(UINT nbytes)
 		sp = CPU_SP;
 	}
 	if (CPU_INST_OP32) {
-		STACK_POP_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, nbytes + 8);
+		SS_POP_CHECK(sp, nbytes + 8);
 		new_ip = cpu_vmemoryread_d(CPU_SS_INDEX, sp);
 		new_cs = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 4);
 	} else {
-		STACK_POP_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, nbytes + 4);
+		SS_POP_CHECK(sp, nbytes + 4);
 		new_ip = cpu_vmemoryread_w(CPU_SS_INDEX, sp);
 		new_cs = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 2);
 	}
 
 	rv = parse_selector(&cs_sel, new_cs);
 	if (rv < 0) {
-		VERBOSE(("RETfar_pm: parse_selector (selector = %04x, rv = %d, %s)", cs_sel.selector, rv));
+		VERBOSE(("RETfar_pm: parse_selector (selector = %04x, rv = %d)", cs_sel.selector, rv));
 		EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 	}
 
 	/* check segment type */
-	if (!cs_sel.desc.s) {
+	if (SEG_IS_SYSTEM(&cs_sel.desc)) {
 		VERBOSE(("RETfar_pm: return to system segment"));
 		EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 	}
-	if (!cs_sel.desc.u.seg.c) {
+	if (SEG_IS_DATA(&cs_sel.desc)) {
 		VERBOSE(("RETfar_pm: return to data segment"));
 		EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 	}
@@ -831,7 +860,7 @@ RETfar_pm(UINT nbytes)
 		VERBOSE(("RETfar_pm: RPL(%d) < CPL(%d)", cs_sel.rpl, CPU_STAT_CPL));
 		EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 	}
-	if (!cs_sel.desc.u.seg.ec && (cs_sel.desc.dpl > cs_sel.rpl)) {
+	if (!SEG_IS_CONFORMING_CODE(&cs_sel.desc) && (cs_sel.desc.dpl > cs_sel.rpl)) {
 		VERBOSE(("RETfar_pm: NON-COMFORMING-CODE-SEGMENT and DPL(%d) > RPL(%d)", cs_sel.desc.dpl, cs_sel.rpl));
 		EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 	}
@@ -865,47 +894,47 @@ RETfar_pm(UINT nbytes)
 		}
 
 		load_cs(cs_sel.selector, &cs_sel.desc, CPU_STAT_CPL);
-		SET_EIP(new_ip);
+		CPU_EIP = new_ip;
 	} else {
 		VERBOSE(("RETfar_pm: RETURN-OUTER-PRIVILEGE-LEVEL"));
 
 		if (CPU_INST_OP32) {
-			STACK_POP_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, 8 + 8 + nbytes);
+			SS_POP_CHECK(sp, 8 + 8 + nbytes);
 			new_sp = cpu_vmemoryread_d(CPU_SS_INDEX, sp + 8 + nbytes);
 			new_ss = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 8 + nbytes + 4);
 		} else {
-			STACK_POP_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, 4 + 4 + nbytes);
+			SS_POP_CHECK(sp, 4 + 4 + nbytes);
 			new_sp = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 4 + nbytes);
 			new_ss = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 4 + nbytes + 2);
 		}
 
 		rv = parse_selector(&ss_sel, new_ss);
 		if (rv < 0) {
-			VERBOSE(("RETfar_pm: parse_selector (selector = %04x, rv = %d, %s)", ss_sel.selector, rv));
-			EXCEPTION(GP_EXCEPTION, ss_sel.idx);
+			VERBOSE(("RETfar_pm: parse_selector (selector = %04x, rv = %d)", ss_sel.selector, rv));
+			EXCEPTION(GP_EXCEPTION, (rv == -2) ? 0 : ss_sel.idx);
 		}
 
-		/* check stack segment descriptor */
-		if (!ss_sel.desc.s) {
+		/* stack segment must be writable data segment. */
+		if (SEG_IS_SYSTEM(&ss_sel.desc)) {
 			VERBOSE(("RETfar_pm: stack segment is system segment"));
 			EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 		}
-		if (ss_sel.desc.u.seg.c) {
+		if (SEG_IS_CODE(&ss_sel.desc)) {
 			VERBOSE(("RETfar_pm: stack segment is code segment"));
 			EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 		}
-		if (!ss_sel.desc.u.seg.wr) {
+		if (!SEG_IS_WRITABLE_DATA(&ss_sel.desc)) {
 			VERBOSE(("RETfar_pm: stack segment is read-only data segment"));
 			EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 		}
 
 		/* check privilege level */
 		if (ss_sel.rpl != cs_sel.rpl) {
-			VERBOSE(("RETfar_pm: RPL[SS](%d) != RPL[CS](%d)", ss_sel.rpl, cs_sel.rpl));
+			VERBOSE(("RETfar_pm: selector RPL[SS](%d) != RPL[CS](%d)", ss_sel.rpl, cs_sel.rpl));
 			EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 		}
 		if (ss_sel.desc.dpl != cs_sel.rpl) {
-			VERBOSE(("RETfar_pm: DPL[SS](%d) != RPL[CS](%d)", ss_sel.desc.dpl, cs_sel.rpl));
+			VERBOSE(("RETfar_pm: descriptor DPL[SS](%d) != RPL[CS](%d)", ss_sel.desc.dpl, cs_sel.rpl));
 			EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 		}
 
@@ -924,9 +953,6 @@ RETfar_pm(UINT nbytes)
 		VERBOSE(("RETfar_pm: new_ip = %08x, new_cs = %04x", new_ip, cs_sel.selector));
 		VERBOSE(("RETfar_pm: new_sp = %08x, new_ss = %04x", new_sp, ss_sel.selector));
 
-		load_cs(cs_sel.selector, &cs_sel.desc, cs_sel.rpl);
-		SET_EIP(new_ip);
-
 		load_ss(ss_sel.selector, &ss_sel.desc, cs_sel.rpl);
 		if (CPU_STAT_SS32) {
 			CPU_ESP = new_sp + nbytes;
@@ -934,47 +960,46 @@ RETfar_pm(UINT nbytes)
 			CPU_SP = (UINT16)(new_sp + nbytes);
 		}
 
+		load_cs(cs_sel.selector, &cs_sel.desc, cs_sel.rpl);
+		CPU_EIP = new_ip;
+
 		/* check segment register */
 		for (i = 0; i < CPU_SEGREG_NUM; i++) {
-			descriptor_t *dp;
-			BOOL valid;
+			if (i == CPU_SS_INDEX || i == CPU_CS_INDEX)
+				continue;
 
-			dp = &CPU_STAT_SREG(i);
-			if ((!dp->u.seg.c || !dp->u.seg.ec)
-			 && (CPU_STAT_SREG(i).dpl < CPU_STAT_CPL)) {
-				/* segment register is invalid */
+			sdp = &CPU_STAT_SREG(i);
+			if ((SEG_IS_DATA(sdp) || !SEG_IS_CONFORMING_CODE(sdp))
+			 && (CPU_STAT_CPL > sdp->dpl)) {
+				/* current segment descriptor is invalid */
 				CPU_REGS_SREG(i) = 0;
-				CPU_STAT_SREG_CLEAR(i);
+				memset(sdp, 0, sizeof(*sdp));
 				continue;
 			}
 
+			/* Reload segment descriptor */
 			rv = parse_selector(&temp_sel, CPU_REGS_SREG(i));
 			if (rv < 0) {
 				/* segment register is invalid */
 				CPU_REGS_SREG(i) = 0;
-				CPU_STAT_SREG_CLEAR(i);
+				memset(sdp, 0, sizeof(*sdp));
 				continue;
 			}
 
-			valid = TRUE;
-			if (!temp_sel.desc.s) {
-				/* system segment */
-				valid = FALSE;
-			}
-			if (temp_sel.desc.u.seg.c && !temp_sel.desc.u.seg.wr) {
-				/* execute-only code segment */
-				valid = FALSE;
-			}
-			if (!temp_sel.desc.u.seg.c || !temp_sel.desc.u.seg.ec) {
-				if (CPU_STAT_CPL > temp_sel.desc.dpl) {
-					valid = FALSE;
-				}
-			}
-
-			if (!valid) {
-				/* segment register is invalid */
+			/*
+			 * - system segment
+			 * - execute-only code segment
+			 * - data or conforming code segment && CPL > DPL
+			 */
+			if (SEG_IS_SYSTEM(&temp_sel.desc)
+			 || (SEG_IS_CODE(&temp_sel.desc)
+			     && !SEG_IS_READABLE_CODE(&temp_sel.desc))
+			 || ((SEG_IS_DATA(&temp_sel.desc)
+			       || !SEG_IS_CONFORMING_CODE(&temp_sel.desc))
+			     && (CPU_STAT_CPL > temp_sel.desc.dpl))) {
+				/* segment descriptor is invalid */
 				CPU_REGS_SREG(i) = 0;
-				CPU_STAT_SREG(i).valid = 0;
+				memset(sdp, 0, sizeof(*sdp));
 			}
 		}
 	}
@@ -987,11 +1012,11 @@ RETfar_pm(UINT nbytes)
  * IRET_pm
  */
 static void IRET_pm_nested_task(void);
-static void IRET_pm_protected_mode_return(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags);
-static void IRET_pm_protected_mode_return_same_privilege(const selector_t *cs_sel, UINT32 new_ip, UINT32 new_flags);
-static void IRET_pm_protected_mode_return_outer_privilege(const selector_t *cs_sel, UINT32 new_ip, UINT32 new_flags);
-static void IRET_pm_return_to_vm86(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags);
-static void IRET_pm_return_from_vm86(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags);
+static void CPUCALL IRET_pm_protected_mode_return(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags);
+static void CPUCALL IRET_pm_protected_mode_return_same_privilege(const selector_t *cs_sel, UINT32 new_ip, UINT32 new_flags);
+static void CPUCALL IRET_pm_protected_mode_return_outer_privilege(const selector_t *cs_sel, UINT32 new_ip, UINT32 new_flags);
+static void CPUCALL IRET_pm_return_to_vm86(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags);
+static void CPUCALL IRET_pm_return_from_vm86(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags);
 
 void
 IRET_pm(void)
@@ -1012,12 +1037,12 @@ IRET_pm(void)
 			sp = CPU_SP;
 		}
 		if (CPU_INST_OP32) {
-			STACK_POP_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, 12);
+			SS_POP_CHECK(sp, 12);
 			new_ip = cpu_vmemoryread_d(CPU_SS_INDEX, sp);
 			new_cs = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 4);
 			new_flags = cpu_vmemoryread_d(CPU_SS_INDEX, sp + 8);
 		} else {
-			STACK_POP_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, 6);
+			SS_POP_CHECK(sp, 6);
 			new_ip = cpu_vmemoryread_w(CPU_SS_INDEX, sp);
 			new_cs = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 2);
 			new_flags = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 4);
@@ -1028,7 +1053,7 @@ IRET_pm(void)
 		if (CPU_EFLAG & VM_FLAG) {
 			/* RETURN-FROM-VIRTUAL-8086-MODE */
 			IRET_pm_return_from_vm86(new_cs, new_ip, new_flags);
-		} else if (new_flags & VM_FLAG) {
+		} else if ((new_flags & VM_FLAG) && CPU_STAT_CPL == 0) {
 			/* RETURN-TO-VIRTUAL-8086-MODE */
 			IRET_pm_return_to_vm86(new_cs, new_ip, new_flags);
 		} else {
@@ -1061,7 +1086,7 @@ IRET_pm_nested_task(void)
 	}
 
 	/* check system segment */
-	if (tss_sel.desc.s) {
+	if (!SEG_IS_SYSTEM(&tss_sel.desc)) {
 		VERBOSE(("IRET_pm: task segment is %s segment", tss_sel.desc.u.seg.c ? "code" : "data"));
 		EXCEPTION(GP_EXCEPTION, tss_sel.idx);
 	}
@@ -1088,12 +1113,18 @@ IRET_pm_nested_task(void)
 	}
 
 	task_switch(&tss_sel, TASK_SWITCH_IRET);
+
+	/* out of range */
+	if (CPU_EIP > CPU_STAT_CS_LIMIT) {
+		VERBOSE(("JMPfar_pm: new_ip is out of range. new_ip = %08x, limit = %08x", CPU_EIP, CPU_STAT_CS_LIMIT));
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
 }
 
 /*---
  * IRET_pm: PROTECTED-MODE-RETURN
  */
-static void
+static void CPUCALL
 IRET_pm_protected_mode_return(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags)
 {
 	selector_t cs_sel;
@@ -1109,11 +1140,11 @@ IRET_pm_protected_mode_return(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags)
 	}
 
 	/* check code segment descriptor */
-	if (!cs_sel.desc.s) {
+	if (SEG_IS_SYSTEM(&cs_sel.desc)) {
 		VERBOSE(("IRET_pm: return code segment is system segment"));
 		EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 	}
-	if (!cs_sel.desc.u.seg.c) {
+	if (SEG_IS_DATA(&cs_sel.desc)) {
 		VERBOSE(("IRET_pm: return code segment is data segment"));
 		EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 	}
@@ -1123,8 +1154,8 @@ IRET_pm_protected_mode_return(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags)
 		VERBOSE(("IRET_pm: RPL(%d) < CPL(%d)", cs_sel.rpl, CPU_STAT_CPL));
 		EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 	}
-	if (cs_sel.desc.u.seg.ec && (cs_sel.desc.dpl > cs_sel.rpl)) {
-		VERBOSE(("IRET_pm: CONFORMING-CODE-SEGMENT and DPL(%d) != RPL(%d)", cs_sel.desc.dpl, cs_sel.rpl));
+	if (SEG_IS_CONFORMING_CODE(&cs_sel.desc) && (cs_sel.desc.dpl > cs_sel.rpl)) {
+		VERBOSE(("IRET_pm: CONFORMING-CODE-SEGMENT and DPL(%d) > RPL(%d)", cs_sel.desc.dpl, cs_sel.rpl));
 		EXCEPTION(GP_EXCEPTION, cs_sel.idx);
 	}
 
@@ -1144,7 +1175,7 @@ IRET_pm_protected_mode_return(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags)
 /*---
  * IRET_pm: SAME-PRIVILEGE
  */
-static void
+static void CPUCALL
 IRET_pm_protected_mode_return_same_privilege(const selector_t *cs_sel, UINT32 new_ip, UINT32 new_flags)
 {
 	UINT32 mask;
@@ -1178,24 +1209,24 @@ IRET_pm_protected_mode_return_same_privilege(const selector_t *cs_sel, UINT32 ne
 
 	/* set new register */
 	load_cs(cs_sel->selector, &cs_sel->desc, CPU_STAT_CPL);
-	SET_EIP(new_ip);
-
-	set_eflags(new_flags, mask);
+	CPU_EIP = new_ip;
 
 	if (CPU_STAT_SS32) {
 		CPU_ESP += stacksize;
 	} else {
 		CPU_SP += (UINT16)stacksize;
 	}
+
+	set_eflags(new_flags, mask);
 }
 
 /*---
  * IRET_pm: OUTER-PRIVILEGE
  */
-static void
+static void CPUCALL
 IRET_pm_protected_mode_return_outer_privilege(const selector_t *cs_sel, UINT32 new_ip, UINT32 new_flags)
 {
-	descriptor_t *dp;
+	descriptor_t *sdp;
 	selector_t ss_sel;
 	UINT32 mask;
 	UINT32 sp;
@@ -1212,11 +1243,11 @@ IRET_pm_protected_mode_return_outer_privilege(const selector_t *cs_sel, UINT32 n
 		sp = CPU_SP;
 	}
 	if (CPU_INST_OP32) {
-		STACK_POP_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, 20);
+		SS_POP_CHECK(sp, 20);
 		new_sp = cpu_vmemoryread_d(CPU_SS_INDEX, sp + 12);
 		new_ss = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 16);
 	} else {
-		STACK_POP_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, 10);
+		SS_POP_CHECK(sp, 10);
 		new_sp = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 6);
 		new_ss = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 8);
 	}
@@ -1225,29 +1256,35 @@ IRET_pm_protected_mode_return_outer_privilege(const selector_t *cs_sel, UINT32 n
 	rv = parse_selector(&ss_sel, new_ss);
 	if (rv < 0) {
 		VERBOSE(("IRET_pm: parse_selector (selector = %04x, rv = %d)", ss_sel.selector, rv));
-		EXCEPTION(GP_EXCEPTION, ss_sel.idx);
+		EXCEPTION(GP_EXCEPTION, (rv == -2) ? 0 : ss_sel.idx);
 	}
 
 	/* check privilege level */
 	if (ss_sel.rpl != cs_sel->rpl) {
-		VERBOSE(("IRET_pm: RPL[SS](%d) != RPL[CS](%d)", ss_sel.rpl, cs_sel->rpl));
+		VERBOSE(("IRET_pm: selector RPL[SS](%d) != RPL[CS](%d)", ss_sel.rpl, cs_sel->rpl));
 		EXCEPTION(GP_EXCEPTION, ss_sel.idx);
 	}
+#if 0
 	if (ss_sel.desc.dpl != cs_sel->rpl) {
-		VERBOSE(("IRET_pm: DPL[SS](%d) != RPL[CS](%d)", ss_sel.desc.dpl, cs_sel->rpl));
+		VERBOSE(("IRET_pm: segment DPL[SS](%d) != RPL[CS](%d)", ss_sel.desc.dpl, cs_sel->rpl));
 		EXCEPTION(GP_EXCEPTION, ss_sel.idx);
 	}
+	if (ss_sel.desc.rpl != cs_sel->rpl) {
+		VERBOSE(("IRET_pm: segment RPL[SS](%d) != RPL[CS](%d)", ss_sel.desc.rpl, cs_sel->rpl));
+		EXCEPTION(GP_EXCEPTION, ss_sel.idx);
+	}
+#endif
 
-	/* check stack segment descriptor */
-	if (!ss_sel.desc.s) {
+	/* stack segment must be writable data segment. */
+	if (SEG_IS_SYSTEM(&ss_sel.desc)) {
 		VERBOSE(("IRET_pm: stack segment is system segment"));
 		EXCEPTION(GP_EXCEPTION, ss_sel.idx);
 	}
-	if (ss_sel.desc.u.seg.c) {
+	if (SEG_IS_CODE(&ss_sel.desc)) {
 		VERBOSE(("IRET_pm: stack segment is code segment"));
 		EXCEPTION(GP_EXCEPTION, ss_sel.idx);
 	}
-	if (!ss_sel.desc.u.seg.wr) {
+	if (!SEG_IS_WRITABLE_DATA(&ss_sel.desc)) {
 		VERBOSE(("IRET_pm: stack segment is read-only data segment"));
 		EXCEPTION(GP_EXCEPTION, ss_sel.idx);
 	}
@@ -1278,9 +1315,7 @@ IRET_pm_protected_mode_return_outer_privilege(const selector_t *cs_sel, UINT32 n
 
 	/* set new register */
 	load_cs(cs_sel->selector, &cs_sel->desc, cs_sel->rpl);
-	SET_EIP(new_ip);
-
-	set_eflags(new_flags, mask);
+	CPU_EIP = new_ip;
 
 	load_ss(ss_sel.selector, &ss_sel.desc, cs_sel->rpl);
 	if (CPU_STAT_SS32) {
@@ -1289,15 +1324,17 @@ IRET_pm_protected_mode_return_outer_privilege(const selector_t *cs_sel, UINT32 n
 		CPU_SP = (UINT16)new_sp;
 	}
 
+	set_eflags(new_flags, mask);
+
 	/* check segment register */
 	for (i = 0; i < CPU_SEGREG_NUM; i++) {
 		if ((i != CPU_CS_INDEX) && (i != CPU_SS_INDEX)) {
-			dp = &CPU_STAT_SREG(i);
-			if ((!dp->u.seg.c || !dp->u.seg.ec)
-			 && (CPU_STAT_SREG(i).dpl < CPU_STAT_CPL)) {
+			sdp = &CPU_STAT_SREG(i);
+			if ((SEG_IS_DATA(sdp) || !SEG_IS_CONFORMING_CODE(sdp))
+			 && (sdp->dpl < CPU_STAT_CPL)) {
 				/* segment register is invalid */
 				CPU_REGS_SREG(i) = 0;
-				CPU_STAT_SREG_CLEAR(i);
+				memset(sdp, 0, sizeof(*sdp));
 			}
 		}
 	}
@@ -1306,7 +1343,7 @@ IRET_pm_protected_mode_return_outer_privilege(const selector_t *cs_sel, UINT32 n
 /*---
  * IRET_pm: new_flags & VM_FLAG
  */
-static void
+static void CPUCALL
 IRET_pm_return_to_vm86(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags)
 {
 	UINT16 segsel[CPU_SEGREG_NUM];
@@ -1315,10 +1352,6 @@ IRET_pm_return_to_vm86(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags)
 	int i;
 
 	VERBOSE(("IRET_pm: Interrupt procedure was in virtual-8086 mode: PE=1, VM=1 in flags image"));
-
-	if (CPU_STAT_CPL != 0) {
-		ia32_panic("IRET_pm: CPL != 0");
-	}
 
 	if (!CPU_INST_OP32) {
 		ia32_panic("IRET_pm: 16bit mode");
@@ -1329,34 +1362,31 @@ IRET_pm_return_to_vm86(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags)
 	} else {
 		sp = CPU_SP;
 	}
-	STACK_POP_CHECK(CPU_REGS_SREG(CPU_SS_INDEX), &CPU_STAT_SREG(CPU_SS_INDEX), sp, 36);
+	SS_POP_CHECK(sp, 36);
+
 	new_sp = cpu_vmemoryread_d(CPU_SS_INDEX, sp + 12);
 	segsel[CPU_SS_INDEX] = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 16);
 	segsel[CPU_ES_INDEX] = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 20);
 	segsel[CPU_DS_INDEX] = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 24);
 	segsel[CPU_FS_INDEX] = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 28);
 	segsel[CPU_GS_INDEX] = cpu_vmemoryread_w(CPU_SS_INDEX, sp + 32);
-	segsel[CPU_CS_INDEX] = (UINT16)new_cs;
+	segsel[CPU_CS_INDEX] = new_cs;
 
 	for (i = 0; i < CPU_SEGREG_NUM; i++) {
-		CPU_REGS_SREG(i) = segsel[i];
-		CPU_STAT_SREG_INIT(i);
+		segdesc_init(i, segsel[i], &CPU_STAT_SREG(i));
 	}
+
+	CPU_ESP = new_sp;
+	CPU_EIP = new_ip & 0xffff;
 
 	/* to VM86 mode */
 	set_eflags(new_flags, IOPL_FLAG|I_FLAG|VM_FLAG|RF_FLAG);
-
-	new_sp &= 0xffff;
-	new_ip &= 0xffff;
-
-	CPU_ESP = new_sp;
-	SET_EIP(new_ip);
 }
 
 /*---
  * IRET_pm: VM_FLAG
  */
-static void
+static void CPUCALL
 IRET_pm_return_from_vm86(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags)
 {
 	UINT stacksize;
@@ -1373,13 +1403,16 @@ IRET_pm_return_from_vm86(UINT16 new_cs, UINT32 new_ip, UINT32 new_flags)
 		if (CPU_STAT_SS32) {
 			CPU_ESP += stacksize;
 		} else {
-			CPU_SP += (UINT16)stacksize;
+			CPU_SP += stacksize;
 		}
 
-		set_eflags(new_flags, I_FLAG|RF_FLAG);
+		LOAD_SEGREG(CPU_CS_INDEX, new_cs);
+		if (new_ip > CPU_STAT_CS_LIMIT) {
+			EXCEPTION(GP_EXCEPTION, 0);
+		}
+		CPU_EIP = new_ip;
 
-		CPU_SET_SEGREG(CPU_CS_INDEX, new_cs);
-		SET_EIP(new_ip);
+		set_eflags(new_flags, I_FLAG|RF_FLAG);
 		return;
 	}
 	VERBOSE(("IRET_pm: trap to virtual-8086 monitor: VM=1, IOPL<3"));

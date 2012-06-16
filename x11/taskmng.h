@@ -5,9 +5,7 @@
 
 #include "np2.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+G_BEGIN_DECLS
 
 void taskmng_initialize(void);
 BOOL taskmng_sleep(UINT32 tick);
@@ -15,8 +13,6 @@ void taskmng_exit(void);
 
 #define	taskmng_isavail()	np2running
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #endif	/* NP2_X11_TASKMNG_H__ */

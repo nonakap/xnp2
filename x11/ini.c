@@ -15,8 +15,8 @@
 
 typedef struct {
 	const char	*title;
-	const INITBL	*tbl;
-	const INITBL	*tblterm;
+	INITBL		*tbl;
+	INITBL		*tblterm;
 	UINT		count;
 } _INIARG, *INIARG;
 
@@ -43,7 +43,7 @@ inisetbmp(BYTE *ptr, UINT pos, BOOL set)
 }
 
 static void
-inirdargs16(const char *src, const INITBL *ini)
+inirdargs16(const char *src, INITBL *ini)
 {
 	SINT16 *dst;
 	int dsize;
@@ -71,7 +71,7 @@ inirdargs16(const char *src, const INITBL *ini)
 }
 
 static void
-inirdargh8(const char *src, const INITBL *ini)
+inirdargh8(const char *src, INITBL *ini)
 {
 	BYTE *dst;
 	int dsize;
@@ -117,7 +117,7 @@ inirdargh8(const char *src, const INITBL *ini)
 }
 
 static void
-iniwrsetargh8(char *work, int size, const INITBL *ini)
+iniwrsetargh8(char *work, int size, INITBL *ini)
 {
 	char tmp[8];
 	const BYTE *ptr;
@@ -127,11 +127,11 @@ iniwrsetargh8(char *work, int size, const INITBL *ini)
 	ptr = (BYTE *)(ini->value);
 	arg = ini->arg;
 	if (arg > 0) {
-		SPRINTF(tmp, "%.2x ", ptr[0]);
+		g_snprintf(tmp, sizeof(tmp), "%.2x ", ptr[0]);
 		milstr_ncpy(work, tmp, size);
 	}
 	for (i = 1; i < arg; i++) {
-		SPRINTF(tmp, "%.2x ", ptr[i]);
+		g_snprintf(tmp, sizeof(tmp), "%.2x ", ptr[i]);
 		milstr_ncat(work, tmp, size);
 	}
 }
@@ -139,7 +139,7 @@ iniwrsetargh8(char *work, int size, const INITBL *ini)
 /* ----- user */
 
 static void
-inirdbyte3(const char *src, const INITBL *ini)
+inirdbyte3(const char *src, INITBL *ini)
 {
 	UINT i;
 
@@ -155,7 +155,7 @@ inirdbyte3(const char *src, const INITBL *ini)
 }
 
 static void
-inirdkb(const char *src, const INITBL *ini)
+inirdkb(const char *src, INITBL *ini)
 {
 
 	if ((!milstr_extendcmp(src, "DOS"))
@@ -175,14 +175,14 @@ inirdkb(const char *src, const INITBL *ini)
 }
 
 static void
-inirdsnddrv(const char *src, const INITBL *ini)
+inirdsnddrv(const char *src, INITBL *ini)
 {
 
 	*(UINT8 *)ini->value = snddrv_drv2num(src);
 }
 
 static void
-inirdinterp(const char *src, const INITBL *ini)
+inirdinterp(const char *src, INITBL *ini)
 {
 
 	if (!milstr_cmp(src, "NEAREST")) {
@@ -202,7 +202,7 @@ static BOOL
 inireadcb(void *arg, const char *para, const char *key, const char *data)
 {
 	char work[512];
-	const INITBL *p;
+	INITBL *p;
 	BOOL rv;
 
 	if (arg == NULL) {
@@ -299,7 +299,7 @@ inireadcb(void *arg, const char *para, const char *key, const char *data)
 }
 
 void
-ini_read(const char *path, const char *title, const INITBL *tbl, UINT count)
+ini_read(const char *path, const char *title, INITBL *tbl, UINT count)
 {
 	_INIARG	iniarg;
 
@@ -376,13 +376,13 @@ iniwrinterp(UINT8 interp)
 static BOOL read_iniread_flag(const INITBL *p);
 
 void
-ini_write(const char *path, const char *title, const INITBL *tbl, UINT count, BOOL create)
+ini_write(const char *path, const char *title, INITBL *tbl, UINT count, BOOL create)
 {
-	char		work[512];
-	const INITBL	*p;
-	const INITBL	*pterm;
-	FILEH		fh;
-	BOOL		set;
+	char	work[512];
+	INITBL	*p;
+	INITBL	*pterm;
+	FILEH	fh;
+	BOOL	set;
 
 	fh = FILEH_INVALID;
 	if (!create) {
@@ -425,39 +425,39 @@ ini_write(const char *path, const char *title, const INITBL *tbl, UINT count, BO
 				break;
 
 			case INITYPE_SINT8:
-				SPRINTF(work, "%d", *((char *)p->value));
+				g_snprintf(work, sizeof(work), "%d", *((char *)p->value));
 				break;
 
 			case INITYPE_SINT16:
-				SPRINTF(work, "%d", *((SINT16 *)p->value));
+				g_snprintf(work, sizeof(work), "%d", *((SINT16 *)p->value));
 				break;
 
 			case INITYPE_SINT32:
-				SPRINTF(work, "%d", *((SINT32 *)p->value));
+				g_snprintf(work, sizeof(work), "%d", *((SINT32 *)p->value));
 				break;
 
 			case INITYPE_UINT8:
-				SPRINTF(work, "%u", *((BYTE *)p->value));
+				g_snprintf(work, sizeof(work), "%u", *((BYTE *)p->value));
 				break;
 
 			case INITYPE_UINT16:
-				SPRINTF(work, "%u", *((UINT16 *)p->value));
+				g_snprintf(work, sizeof(work), "%u", *((UINT16 *)p->value));
 				break;
 
 			case INITYPE_UINT32:
-				SPRINTF(work, "%u", *((UINT32 *)p->value));
+				g_snprintf(work, sizeof(work), "%u", *((UINT32 *)p->value));
 				break;
 
 			case INITYPE_HEX8:
-				SPRINTF(work, "%x", *((BYTE *)p->value));
+				g_snprintf(work, sizeof(work), "%x", *((BYTE *)p->value));
 				break;
 
 			case INITYPE_HEX16:
-				SPRINTF(work, "%x", *((UINT16 *)p->value));
+				g_snprintf(work, sizeof(work), "%x", *((UINT16 *)p->value));
 				break;
 
 			case INITYPE_HEX32:
-				SPRINTF(work, "%x", *((UINT32 *)p->value));
+				g_snprintf(work, sizeof(work), "%x", *((UINT32 *)p->value));
 				break;
 
 			case INITYPE_KB:
@@ -468,11 +468,11 @@ ini_write(const char *path, const char *title, const INITBL *tbl, UINT count, BO
 				break;
 
 			case INITYPE_SNDDRV:
-				SPRINTF(work, "%s", snddrv_num2drv(*(UINT8 *)p->value));
+				g_snprintf(work, sizeof(work), "%s", snddrv_num2drv(*(UINT8 *)p->value));
 				break;
 
 			case INITYPE_INTERP:
-				SPRINTF(work, "%s", iniwrinterp(*(UINT8 *)p->value));
+				g_snprintf(work, sizeof(work), "%s", iniwrinterp(*(UINT8 *)p->value));
 				break;
 
 			default:
@@ -491,9 +491,12 @@ ini_write(const char *path, const char *title, const INITBL *tbl, UINT count, BO
 	file_close(fh);
 }
 
-extern char modulefile[];
-
-static const char ini_title[] = "NekoProjectII";
+static const char ini_title[] =
+#if !defined(CPUCORE_IA32)
+	"NekoProjectII";
+#else
+	"NekoProjectII_IA32";
+#endif
 
 enum {
 	INIRO_STR	= INIFLAG_RO | INITYPE_STR,
@@ -509,7 +512,7 @@ enum {
 	INIRO_KB	= INIFLAG_RO | INITYPE_KB
 };
 
-static const INITBL iniitem[] = {
+static INITBL iniitem[] = {
 	{"np2title", INIRO_STR,		np2oscfg.titles,	sizeof(np2oscfg.titles)},
 	{"paddingx", INIROMAX_SINT32,	&np2oscfg.paddingx,	32},
 	{"paddingy", INIROMAX_SINT32,	&np2oscfg.paddingy,	32},
@@ -518,7 +521,7 @@ static const INITBL iniitem[] = {
 	{"HDfolder", INITYPE_STR,	hddfolder,		MAX_PATH},
 	{"bmap_Dir", INITYPE_STR,	bmpfilefolder,		MAX_PATH},
 	{"fontfile", INITYPE_STR,	np2cfg.fontfile,	MAX_PATH},
-	{"biospath", INITYPE_STR,	np2cfg.biospath,	MAX_PATH},
+	{"biospath", INIRO_STR,		np2cfg.biospath,	MAX_PATH},
 	{"hdrvroot", INIRO_STR,		np2cfg.hdrvroot,	MAX_PATH},
 	{"hdrv_acc", INIRO_UINT8,	&np2cfg.hdrvacc,	0},
 
@@ -628,8 +631,12 @@ static const INITBL iniitem[] = {
 	{"com3mmdl", INITYPE_STR,	np2oscfg.com[2].mdl,	64},
 	{"com3mdef", INITYPE_STR,	np2oscfg.com[2].def,	MAX_PATH},
 
+#if defined(SUPPORT_RESUME)
 	{"e_resume", INITYPE_BOOL,	&np2oscfg.resume,	0},
+#endif
+#if defined(SUPPORT_STATSAVE)
 	{"STATSAVE", INIRO_BOOL,	&np2oscfg.statsave,	0},
+#endif
 #if defined(GCC_CPU_ARCH_IA32)
 	{"nousemmx", INITYPE_BOOL,	&np2oscfg.disablemmx,	0},
 #endif
@@ -646,6 +653,7 @@ static const INITBL iniitem[] = {
 	{"dinterp_", INITYPE_INTERP,	&np2oscfg.drawinterp,	0},
 	{"fullscrn", INITYPE_UINT32,	&ignore_fullscreen_mode,0},
 	{"F11_KEY_", INITYPE_UINT8,	&np2oscfg.F11KEY,	0},
+	{"READONLY", INIRO_BOOL,	&np2oscfg.cfgreadonly,	0},
 
 	{"I286SAVE", INIRO_BOOL,	&np2oscfg.I286SAVE,	0},
 };
@@ -661,7 +669,7 @@ calc_index(const INITBL *p)
 	UINT idx;
 
 	if (p) {
-		offset = (char *)p - (char *)iniitem;
+		offset = (const char *)p - (const char *)iniitem;
 		if ((offset % sizeof(iniitem[0])) == 0) {
 			idx = offset / sizeof(iniitem[0]);
 			if (idx < INIITEMS) {

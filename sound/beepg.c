@@ -9,7 +9,7 @@ static void oneshot(BEEP bp, SINT32 *pcm, UINT count) {
 
 	SINT32		vol;
 const BPEVENT	*bev;
-	SINT32		clock;
+	SINT32		clk;
 	int			event;
 	SINT32		remain;
 	SINT32		samp;
@@ -18,34 +18,34 @@ const BPEVENT	*bev;
 	bev = bp->event;
 	if (bp->events) {
 		bp->events--;
-		clock = bev->clock;
+		clk = bev->clock;
 		event = bev->enable;
 		bev++;
 	}
 	else {
-		clock = 0x40000000;
+		clk = 0x40000000;
 		event = bp->lastenable;
 	}
 	do {
 		remain = (1 << 16);
 		samp = 0;
-		while(remain >= clock) {
-			remain -= clock;
+		while(remain >= clk) {
+			remain -= clk;
 			if (bp->lastenable) {
-				samp += clock;
+				samp += clk;
 			}
 			bp->lastenable = event;
 			if (bp->events) {
 				bp->events--;
-				clock = bev->clock;
+				clk = bev->clock;
 				event = bev->enable;
 				bev++;
 			}
 			else {
-				clock = 0x40000000;
+				clk = 0x40000000;
 			}
 		}
-		clock -= remain;
+		clk -= remain;
 		if (bp->lastenable) {
 			samp += remain;
 		}
@@ -65,7 +65,7 @@ static void rategenerator(BEEP bp, SINT32 *pcm, UINT count) {
 const BPEVENT	*bev;
 	SINT32		samp;
 	SINT32		remain;
-	SINT32		clock;
+	SINT32		clk;
 	int			event;
 	UINT		r;
 
@@ -73,19 +73,19 @@ const BPEVENT	*bev;
 	bev = bp->event;
 	if (bp->events) {
 		bp->events--;
-		clock = bev->clock;
+		clk = bev->clock;
 		event = bev->enable;
 		bev++;
 	}
 	else {
-		clock = 0x40000000;
+		clk = 0x40000000;
 		event = bp->lastenable;
 	}
 	do {
-		if (clock >= (1 << 16)) {
-			r = clock >> 16;
+		if (clk >= (1 << 16)) {
+			r = clk >> 16;
 			r = min(r, count);
-			clock -= r << 16;
+			clk -= r << 16;
 			count -= r;
 			if (bp->lastenable) {
 				do {
@@ -111,24 +111,24 @@ const BPEVENT	*bev;
 		else {
 			remain = (1 << 16);
 			samp = 0;
-			while(remain >= clock) {
-				remain -= clock;
+			while(remain >= clk) {
+				remain -= clk;
 				if (bp->lastenable) {
-					samp += clock;
+					samp += clk;
 				}
 				bp->lastenable = event;
 				bp->cnt = 0;
 				if (bp->events) {
 					bp->events--;
-					clock = bev->clock;
+					clk = bev->clock;
 					event = bev->enable;
 					bev++;
 				}
 				else {
-					clock = 0x40000000;
+					clk = 0x40000000;
 				}
 			}
-			clock -= remain;
+			clk -= remain;
 			if (bp->lastenable) {
 				samp += remain;
 			}

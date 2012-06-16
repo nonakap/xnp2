@@ -1,55 +1,63 @@
-#include	"compiler.h"
-#include	<time.h>
+/**
+ * @file	np2.cpp
+ * @brief	main window
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/02/17 10:36:05 $
+ */
+
+#include "compiler.h"
+#include <time.h>
+#include <winsock.h>
 #ifndef __GNUC__
-#include	<winnls32.h>
+#include <winnls32.h>
 #endif
-#include	"resource.h"
-#include	"strres.h"
-#include	"parts.h"
-#include	"np2.h"
-#include	"np2arg.h"
-#include	"dosio.h"
-#include	"extromio.h"
-#include	"commng.h"
-#include	"joymng.h"
-#include	"mousemng.h"
-#include	"scrnmng.h"
-#include	"soundmng.h"
-#include	"sysmng.h"
-#include	"winkbd.h"
-#include	"ini.h"
-#include	"menu.h"
-#include	"winloc.h"
-#include	"sstp.h"
-#include	"sstpmsg.h"
-#include	"toolwin.h"
-#include	"juliet.h"
-#include	"np2class.h"
-#include	"dialog.h"
-#include	"cpucore.h"
-#include	"pccore.h"
-#include	"iocore.h"
-#include	"pc9861k.h"
-#include	"mpu98ii.h"
-#include	"bios.h"
-#include	"scrndraw.h"
-#include	"sound.h"
-#include	"beep.h"
-#include	"s98.h"
-#include	"diskdrv.h"
-#include	"fddfile.h"
-#include	"timing.h"
-#include	"keystat.h"
-#include	"debugsub.h"
-#include	"subwind.h"
-#include	"viewer.h"
+#include "resource.h"
+#include "strres.h"
+#include "parts.h"
+#include "np2.h"
+#include "np2arg.h"
+#include "dosio.h"
+#include "extromio.h"
+#include "commng.h"
+#include "joymng.h"
+#include "mousemng.h"
+#include "scrnmng.h"
+#include "soundmng.h"
+#include "sysmng.h"
+#include "winkbd.h"
+#include "ini.h"
+#include "menu.h"
+#include "winloc.h"
+#include "sstp.h"
+#include "sstpmsg.h"
+#include "toolwin.h"
+#include "juliet.h"
+#include "np2class.h"
+#include "dialog.h"
+#include "cpucore.h"
+#include "pccore.h"
+#include "iocore.h"
+#include "pc9861k.h"
+#include "mpu98ii.h"
+#include "bios.h"
+#include "scrndraw.h"
+#include "sound.h"
+#include "beep.h"
+#include "s98.h"
+#include "diskdrv.h"
+#include "fddfile.h"
+#include "timing.h"
+#include "keystat.h"
+#include "debugsub.h"
+#include "subwind.h"
+#include "viewer.h"
 #if !defined(_WIN64)
-#include	"cputype.h"
+#include "cputype.h"
 #endif
 #if defined(SUPPORT_DCLOCK)
-#include	"dclock.h"
+#include "dclock.h"
 #endif
-
 
 #ifdef BETA_RELEASE
 #define		OPENING_WAIT		1500

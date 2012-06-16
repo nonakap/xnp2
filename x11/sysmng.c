@@ -77,14 +77,14 @@ sysmng_updatecaption(BYTE flag)
 		clockstr[0] = '\0';
 		if (np2oscfg.DISPCLK & 2) {
 			if (workclock.fps) {
-				SPRINTF(clockstr, " - %u.%1uFPS", workclock.fps / 10, workclock.fps % 10);
+				g_snprintf(clockstr, sizeof(clockstr), " - %u.%1uFPS", workclock.fps / 10, workclock.fps % 10);
 			}
 			else {
 				milstr_ncpy(clockstr, " - 0FPS", sizeof(clockstr));
 			}
 		}
 		if (np2oscfg.DISPCLK & 1) {
-			SPRINTF(work, " %2u.%03uMHz", workclock.khz / 1000, workclock.khz % 1000);
+			g_snprintf(work, sizeof(work), " %2u.%03uMHz", workclock.khz / 1000, workclock.khz % 1000);
 			if (clockstr[0] == '\0') {
 				milstr_ncpy(clockstr, " -", sizeof(clockstr));
 			}

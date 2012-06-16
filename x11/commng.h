@@ -1,9 +1,9 @@
-/*	$Id: commng.h,v 1.2 2004/03/25 15:10:33 monaka Exp $	*/
-
 #ifndef	NP2_X11_COMMNG_H__
 #define	NP2_X11_COMMNG_H__
 
 // ---- com manager interface
+
+G_BEGIN_DECLS
 
 enum {
 	COMCREATE_SERIAL		= 0,
@@ -48,16 +48,8 @@ typedef struct {
 } _COMFLAG, *COMFLAG;
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 COMMNG commng_create(UINT device);
 void commng_destroy(COMMNG hdl);
-
-#ifdef __cplusplus
-}
-#endif
 
 
 // ---- com manager for unix
@@ -85,6 +77,8 @@ enum {
 };
 
 void commng_initialize(void);
+
+G_END_DECLS
 
 #include "cmmidi.h"
 #include "cmserial.h"

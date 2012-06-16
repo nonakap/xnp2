@@ -1,5 +1,3 @@
-/*	$Id: dialog_screen.c,v 1.2 2005/03/12 12:36:57 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2003 NONAKA Kimihiro
  * All rights reserved.
@@ -87,8 +85,6 @@ ok_button_clicked(GtkButton *b, gpointer d)
 	BOOL renewal;
 	int i;
 
-	UNUSED(b);
-
 	/* Video tab */
 	video_lcd = GTK_TOGGLE_BUTTON(video_lcd_checkbutton)->active;
 	video_lcdrev = GTK_TOGGLE_BUTTON(video_lcd_reverse_checkbutton)->active;
@@ -111,7 +107,7 @@ ok_button_clicked(GtkButton *b, gpointer d)
 		video_lcd |= video_lcdrev ? 2 : 0;
 	}
 	if (np2cfg.LCD_MODE != video_lcd) {
-		np2cfg.LCD_MODE |= video_lcd;
+		np2cfg.LCD_MODE = video_lcd;
 		pal_makelcdpal();
 		renewal = TRUE;
 	}
@@ -173,8 +169,6 @@ static void
 dialog_destroy(GtkWidget *w, GtkWidget **wp)
 {
 
-	UNUSED(wp);
-
 	install_idle_process();
 	gtk_widget_destroy(w);
 }
@@ -190,18 +184,14 @@ static void
 uPD72020_radiobutton_clicked(GtkButton *b, gpointer d)
 {
 
-	UNUSED(b);
-
-	chip_uPD72020 = (gint)d;
+	chip_uPD72020 = GPOINTER_TO_UINT(d);
 }
 
 static void
 gc_radiobutton_clicked(GtkButton *b, gpointer d)
 {
 
-	UNUSED(b);
-
-	chip_gc_kind = (gint)d;
+	chip_gc_kind = GPOINTER_TO_UINT(d);
 }
 
 static GtkWidget*
@@ -242,7 +232,7 @@ create_video_note(void)
 		gtk_widget_set_sensitive(video_lcd_reverse_checkbutton, FALSE);
 	}
 	g_signal_connect(GTK_OBJECT(video_lcd_checkbutton), "clicked",
-	    GTK_SIGNAL_FUNC(lcd_checkbutton_clicked),
+	    G_CALLBACK(lcd_checkbutton_clicked),
 	    (gpointer)video_lcd_reverse_checkbutton);
 
 	video_skipline_checkbutton =
@@ -277,8 +267,8 @@ create_video_note(void)
 static GtkWidget*
 create_chip_note(void)
 {
-	static char *gdc_str[] = { "uPD7220", "uPD72020" };
-	static char *gc_str[] = { "None", "GRCG", "GRCG+", "EGC" };
+	static const char *gdc_str[] = { "uPD7220", "uPD72020" };
+	static const char *gc_str[] = { "None", "GRCG", "GRCG+", "EGC" };
 	GtkWidget *main_widget;
 	GtkWidget *gdc_frame;
 	GtkWidget *gdc_hbox;
@@ -305,13 +295,20 @@ create_chip_note(void)
 	gtk_container_add(GTK_CONTAINER(gdc_frame), gdc_hbox);
 
 	for (i = 0; i < NELEMENTS(gdc_str); i++) {
-		upd72020_radiobutton[i] = gtk_radio_button_new_with_label_from_widget(i > 0 ? GTK_RADIO_BUTTON(upd72020_radiobutton[i-1]) : NULL, gdc_str[i]);
+		upd72020_radiobutton[i] =
+		    gtk_radio_button_new_with_label_from_widget(
+		      (i > 0) ? GTK_RADIO_BUTTON(upd72020_radiobutton[i-1])
+		        : NULL, gdc_str[i]);
 		gtk_widget_show(upd72020_radiobutton[i]);
-		gtk_box_pack_start(GTK_BOX(gdc_hbox), upd72020_radiobutton[i], TRUE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(gdc_hbox), upd72020_radiobutton[i],
+		    TRUE, FALSE, 0);
 		g_signal_connect(GTK_OBJECT(upd72020_radiobutton[i]), "clicked",
-		    GTK_SIGNAL_FUNC(uPD72020_radiobutton_clicked), (gpointer)i);
+		    G_CALLBACK(uPD72020_radiobutton_clicked),
+		    GUINT_TO_POINTER(i));
 	}
-	g_signal_emit_by_name(GTK_OBJECT(upd72020_radiobutton[np2cfg.uPD72020 ? 1 : 0]), "clicked");
+	g_signal_emit_by_name(
+	    GTK_OBJECT(upd72020_radiobutton[np2cfg.uPD72020 ? 1 : 0]),
+	    "clicked");
 
 	/*
 	 * Graphic Charger
@@ -326,22 +323,30 @@ create_chip_note(void)
 	gtk_container_add(GTK_CONTAINER(gc_frame), gc_hbox);
 
 	for (i = 0; i < NELEMENTS(gc_str); i++) {
-		gc_radiobutton[i] = gtk_radio_button_new_with_label_from_widget(i > 0 ? GTK_RADIO_BUTTON(gc_radiobutton[i-1]) : NULL, gc_str[i]);
+		gc_radiobutton[i] =
+		    gtk_radio_button_new_with_label_from_widget(
+		      (i > 0) ? GTK_RADIO_BUTTON(gc_radiobutton[i-1]) : NULL,
+		      gc_str[i]);
 		gtk_widget_show(gc_radiobutton[i]);
-		gtk_box_pack_start(GTK_BOX(gc_hbox), gc_radiobutton[i], TRUE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(gc_hbox), gc_radiobutton[i], TRUE,
+		    FALSE, 0);
 		g_signal_connect(GTK_OBJECT(gc_radiobutton[i]), "clicked",
-		GTK_SIGNAL_FUNC(gc_radiobutton_clicked), (gpointer)i);
+		    G_CALLBACK(gc_radiobutton_clicked), GUINT_TO_POINTER(i));
 	}
-	g_signal_emit_by_name(GTK_OBJECT(gc_radiobutton[np2cfg.grcg & 3]), "clicked");
+	g_signal_emit_by_name(GTK_OBJECT(gc_radiobutton[np2cfg.grcg & 3]),
+	    "clicked");
 
 	/*
 	 * Use 16 colors
 	 */
-	chip_enable_color16_checkbutton = gtk_check_button_new_with_label("Enable 16color (PC-9801-24)");
+	chip_enable_color16_checkbutton =
+	    gtk_check_button_new_with_label("Enable 16color (PC-9801-24)");
 	gtk_widget_show(chip_enable_color16_checkbutton);
-	gtk_box_pack_start(GTK_BOX(main_widget), chip_enable_color16_checkbutton, FALSE, FALSE, 2);
+	gtk_box_pack_start(GTK_BOX(main_widget),
+	    chip_enable_color16_checkbutton, FALSE, FALSE, 2);
 	if (np2cfg.color16) {
-		g_signal_emit_by_name(GTK_OBJECT(chip_enable_color16_checkbutton), "clicked");
+		g_signal_emit_by_name(
+		    GTK_OBJECT(chip_enable_color16_checkbutton), "clicked");
 	}
 
 	return main_widget;
@@ -427,7 +432,7 @@ create_screen_dialog(void)
 	gtk_container_set_border_width(GTK_CONTAINER(screen_dialog), 5);
 
 	g_signal_connect(GTK_OBJECT(screen_dialog), "destroy",
-	    GTK_SIGNAL_FUNC(dialog_destroy), NULL);
+	    G_CALLBACK(dialog_destroy), NULL);
 
 	main_widget = gtk_vbox_new(FALSE, 0);
 	gtk_widget_show(main_widget);
@@ -460,17 +465,17 @@ create_screen_dialog(void)
 	cancel_button = gtk_button_new_from_stock(GTK_STOCK_CANCEL);
 	gtk_widget_show(cancel_button);
 	gtk_box_pack_end(GTK_BOX(confirm_widget),cancel_button,FALSE, FALSE, 0);
-	GTK_WIDGET_SET_FLAGS(cancel_button, GTK_CAN_DEFAULT);
+	gtk_widget_set_can_default(cancel_button, FALSE);
 	g_signal_connect_swapped(GTK_OBJECT(cancel_button), "clicked",
-	    GTK_SIGNAL_FUNC(gtk_widget_destroy), GTK_OBJECT(screen_dialog));
+	    G_CALLBACK(gtk_widget_destroy), GTK_OBJECT(screen_dialog));
 
 	ok_button = gtk_button_new_from_stock(GTK_STOCK_OK);
 	gtk_widget_show(ok_button);
 	gtk_box_pack_end(GTK_BOX(confirm_widget), ok_button, FALSE, FALSE, 0);
 	g_signal_connect(GTK_OBJECT(ok_button), "clicked",
-	    GTK_SIGNAL_FUNC(ok_button_clicked), (gpointer)screen_dialog);
-	GTK_WIDGET_SET_FLAGS(ok_button, GTK_CAN_DEFAULT);
-	GTK_WIDGET_SET_FLAGS(ok_button, GTK_HAS_DEFAULT);
+	    G_CALLBACK(ok_button_clicked), (gpointer)screen_dialog);
+	gtk_widget_set_can_default(ok_button, TRUE);
+	gtk_widget_has_default(ok_button);
 	gtk_widget_grab_default(ok_button);
 
 	gtk_widget_show_all(screen_dialog);

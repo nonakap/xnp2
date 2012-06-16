@@ -1,5 +1,3 @@
-/*	$Id: toolkit.h,v 1.11 2007/01/10 18:02:21 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -28,37 +26,22 @@
 #ifndef	NP2_X11_TOOLKIT_H__
 #define	NP2_X11_TOOLKIT_H__
 
-typedef struct {
-	const char*	(*get_toolkit)(void);
-	BOOL		(*arginit)(int* argc, char*** argv);
-	void		(*terminate)(void);
-	void		(*widget_create)(void);
-	void		(*widget_show)(void);
-	void		(*widget_mainloop)(void);
-	void		(*widget_quit)(void);
-	void		(*event_process)(void);
-	void		(*set_window_title)(const char* str);
-	void		(*messagebox)(const char *title, const char *msg);
-} gui_toolkit_t;
-
-void toolkit_msgbox(const char *title, const char *msg);
-
-#if (USE_GTK2 + USE_SDL) > 1
-
-extern gui_toolkit_t* toolkitp;
-
-void toolkit_initialize(void);
-#define	toolkit_terminate()		(*toolkitp->terminate)()
-#define	toolkit_arginit(argcp, argvp)	(*toolkitp->arginit)(argcp, argvp)
-#define	toolkit_widget_create()		(*toolkitp->widget_create)()
-#define	toolkit_widget_show()		(*toolkitp->widget_show)()
-#define	toolkit_widget_mainloop()	(*toolkitp->widget_mainloop)()
-#define	toolkit_widget_quit()		(*toolkitp->widget_quit)()
-#define	toolkit_event_process()		(*toolkitp->event_process)()
-#define	toolkit_set_window_title(s)	(*toolkitp->set_window_title)(s)
-#define	toolkit_messagebox(t,m)		(*toolkitp->messagebox)(t,m)
-
-#elif USE_GTK2 > 0
+/* for toolkit_msgbox() */
+#define	TK_MB_OK		(1U <<  0)
+#define	TK_MB_CANCEL		(1U <<  1)
+#define	TK_MB_YES		(1U <<  2)
+#define	TK_MB_NO		(1U <<  3)
+#define	TK_MB_OKCANCEL		(TK_MB_OK|TK_MB_CANCEL)
+#define	TK_MB_YESNO		(TK_MB_YES|TK_MB_NO)
+#define	TK_MB_BTN_MASK		(TK_MB_OK|TK_MB_CANCEL|TK_MB_YESNO)
+#define	TK_MB_ICON_INFO		(1U << 16)
+#define	TK_MB_ICON_WARNING	(1U << 17)
+#define	TK_MB_ICON_ERROR	(1U << 18)
+#define	TK_MB_ICON_QUESTION	(1U << 19)
+#define	TK_MB_ICON_MASK		(TK_MB_ICON_INFO \
+				 |TK_MB_ICON_WARNING \
+				 |TK_MB_ICON_ERROR \
+				 |TK_MB_ICON_QUESTION)
 
 #include "gtk2/gtk_toolkit.h"
 
@@ -71,27 +54,7 @@ void toolkit_initialize(void);
 #define	toolkit_widget_quit()		gui_gtk_widget_quit()
 #define	toolkit_event_process()		gui_gtk_event_process()
 #define	toolkit_set_window_title(s)	gui_gtk_set_window_title(s)
-#define	toolkit_messagebox(t,m)		gui_gtk_messagebox(t,m)
-
-#elif USE_SDL > 0
-
-#include "sdl/sdl_toolkit.h"
-
-#define	toolkit_initialize()
-#define	toolkit_terminate()
-#define	toolkit_arginit(argcp, argvp)	gui_sdl_arginit(argcp, argvp)
-#define	toolkit_widget_create()		gui_sdl_widget_create()
-#define	toolkit_widget_show()		gui_sdl_widget_show()
-#define	toolkit_widget_mainloop()	gui_sdl_widget_mainloop()
-#define	toolkit_widget_quit()		gui_sdl_widget_quit()
-#define	toolkit_event_process()		gui_sdl_event_process()
-#define	toolkit_set_window_title(s)	gui_sdl_set_window_title(s)
-#define	toolkit_messagebox(t,m)		gui_sdl_messagebox(t,m)
-
-#else
-
-#error need to defined USE_GTK2 or USE_SDL !!!
-
-#endif
+#define	toolkit_messagebox(t,m)		gui_gtk_msgbox(t,m,TK_MB_OK|TK_MB_ICON_INFO)
+#define	toolkit_msgbox(t,m,f)		gui_gtk_msgbox(t,m,f)
 
 #endif	/* NP2_X11_TOOLKIT_H__ */

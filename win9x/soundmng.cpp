@@ -1,18 +1,30 @@
-#include	"compiler.h"
-#include	<dsound.h>
-#include	"parts.h"
-#include	"wavefile.h"
-#include	"np2.h"
-#include	"soundmng.h"
-#include	"extromio.h"
-#include	"sound.h"
-#include	"juliet.h"
+/**
+ * @file	soundmng.cpp
+ * @brief	Sound Manager (DirectSound3)
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/03/07 09:54:11 $
+ */
+
+#include "compiler.h"
+#include <dsound.h>
+#include "parts.h"
+#include "wavefile.h"
+#include "np2.h"
+#include "soundmng.h"
+#include "extromio.h"
+#include "sound.h"
+#include "juliet.h"
 #if defined(VERMOUTH_LIB)
-#include	"vermouth.h"
+#include "vermouth.h"
 #endif
 #if defined(MT32SOUND_DLL)
-#include	"mt32snd.h"
+#include "mt32snd.h"
 #endif
+
+#if !defined(__GNUC__)
+#pragma comment(lib, "dsound.lib")
+#endif	// !defined(__GNUC__)
 
 #if defined(_M_IA64) || defined(_M_AMD64)
 #define	SOUNDBUFFERALIGN	(1 << 3)

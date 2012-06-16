@@ -1,6 +1,8 @@
 #ifndef	NP2_X11_FONTMNG_H__
 #define	NP2_X11_FONTMNG_H__
 
+G_BEGIN_DECLS
+
 enum {
 	FDAT_BOLD		= 0x01,
 	FDAT_PROPORTIONAL	= 0x02,
@@ -19,10 +21,6 @@ typedef struct {
 	int	pitch;
 } _FNTDAT, *FNTDAT;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 BOOL fontmng_init(void);
 void fontmng_terminate(void);
 void fontmng_setdeffontname(const TCHAR *fontface);
@@ -33,8 +31,6 @@ BOOL fontmng_getsize(void *hdl, const char *string, POINT_T *pt);
 BOOL fontmng_getdrawsize(void *hdl, const char *string, POINT_T *pt);
 FNTDAT fontmng_get(void *hdl, const char *string);
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #endif	/* NP2_X11_FONTMNG_H__ */

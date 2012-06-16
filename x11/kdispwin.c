@@ -25,7 +25,7 @@ kdispwin_initialize(void)
 
 static const char ini_title[] = "NP2 keydisp";
 
-static const INITBL iniitem[] = {
+static INITBL iniitem[] = {
 	{"WindposX", INITYPE_SINT32,	&kdispcfg.posx,		0},
 	{"WindposY", INITYPE_SINT32,	&kdispcfg.posy,		0},
 	{"keydmode", INITYPE_UINT8,	&kdispcfg.mode,		0},

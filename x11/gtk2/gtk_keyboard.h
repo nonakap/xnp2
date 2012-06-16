@@ -32,7 +32,11 @@
 
 #include "gtk2/xnp2.h"
 
+G_BEGIN_DECLS
+
 void gtkkbd_keydown(guint keysym);
 void gtkkbd_keyup(guint keysym);
+
+G_END_DECLS
 
 #endif	/* NP2_GTK2_GTKKEYBOARD_H__ */

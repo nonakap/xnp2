@@ -1,5 +1,3 @@
-/*	$Id: dialog_about.c,v 1.4 2007/01/10 15:58:43 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2003 NONAKA Kimihiro
  * All rights reserved.
@@ -40,8 +38,6 @@ static void
 about_destroy(GtkWidget *w, GtkWidget **wp)
 {
 
-	UNUSED(wp);
-
 	install_idle_process();
 	gtk_widget_destroy(w);
 }
@@ -55,9 +51,7 @@ create_about_dialog(void)
 	GtkWidget *ver_label;
 	GtkWidget *ok_button;
 	GtkWidget *neko_image;
-	GdkColormap *colormap;
-	GdkPixmap *neko_pixmap;
-	GdkBitmap *mask;
+	GdkPixbuf *neko_pixbuf;
 
 	uninstall_idle_process();
 
@@ -68,20 +62,15 @@ create_about_dialog(void)
 	gtk_window_set_resizable(GTK_WINDOW(about_dialog), FALSE);
 	gtk_container_set_border_width(GTK_CONTAINER(about_dialog), 10);
 	g_signal_connect(GTK_OBJECT(about_dialog), "destroy",
-	    GTK_SIGNAL_FUNC(about_destroy), NULL);
+	    G_CALLBACK(about_destroy), NULL);
 
 	main_widget = gtk_hbox_new(FALSE, 3);
 	gtk_widget_show(main_widget);
 	gtk_container_add(GTK_CONTAINER(about_dialog), main_widget);
 
-	colormap = gtk_widget_get_colormap(about_dialog);
-	neko_pixmap = gdk_pixmap_colormap_create_from_xpm_d(NULL, colormap,
-	    &mask, NULL, (gchar **)np2_icon);
-	if (neko_pixmap == NULL)
-		g_error("Couldn't create replacement pixmap.");
-	neko_image = gtk_image_new_from_pixmap(neko_pixmap, mask);
-	g_object_unref(neko_pixmap);
-	g_object_unref(mask);
+	neko_pixbuf = gdk_pixbuf_new_from_xpm_data(np2_icon);
+	neko_image = gtk_image_new_from_pixbuf(neko_pixbuf);
+	g_object_unref(neko_pixbuf);
 	gtk_widget_show(neko_image);
 	gtk_box_pack_start(GTK_BOX(main_widget), neko_image, FALSE, FALSE, 10);
 
@@ -98,9 +87,9 @@ create_about_dialog(void)
 	gtk_widget_show(ok_button);
 	gtk_box_pack_end(GTK_BOX(main_widget), ok_button, FALSE, TRUE, 0);
 	g_signal_connect_swapped(GTK_OBJECT(ok_button), "clicked",
-	    GTK_SIGNAL_FUNC(gtk_widget_destroy), GTK_OBJECT(about_dialog));
-	GTK_WIDGET_SET_FLAGS(ok_button, GTK_CAN_DEFAULT);
-	GTK_WIDGET_SET_FLAGS(ok_button, GTK_HAS_DEFAULT);
+	    G_CALLBACK(gtk_widget_destroy), GTK_OBJECT(about_dialog));
+	gtk_widget_set_can_default(ok_button, TRUE);
+	gtk_widget_has_default(ok_button);
 	gtk_widget_grab_default(ok_button);
 
 	gtk_widget_show_all(about_dialog);

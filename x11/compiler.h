@@ -1,7 +1,5 @@
-/*	$Id: compiler.h,v 1.34 2007/01/23 15:48:20 monaka Exp $	*/
-
 /*-
- * Copyright (c) 2003, 2004 NONAKA Kimihiro
+ * Copyright (C) 2003, 2004 NONAKA Kimihiro <nonakap@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,17 +11,16 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef	NP2_X11_COMPILER_H__
@@ -32,6 +29,25 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(s)				gettext(s)
+#ifdef gettext_noop
+#define N_(s)				gettext_noop(s)
+#else
+#define N_(s)				(s)
+#endif
+#else /* !ENABLE_NLS */
+#define _(s)				(s)
+#define N_(s) (s)
+#define textdomain(s)			(s)
+#define gettext(s)			(s)
+#define dgettext(d,s)			(s)
+#define dcgettext(d,s,t)		(s)
+#define bindtextdomain(d,dir)		(d)
+#define bind_textdomain_codeset(d,c)	(c)
+#endif /* ENABLE_NLS */
 
 #ifdef	WORDS_BIGENDIAN
 #define	BYTESEX_BIG
@@ -51,6 +67,7 @@
 
 #include <sys/param.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -65,8 +82,6 @@
 #define	X11
 #define	OSLANG_EUC
 #define	OSLINEBREAK_LF
-
-#if (USE_GTK2 > 0)
 
 #include <glib.h>
 
@@ -91,34 +106,12 @@ typedef	gboolean	BOOL;
 #define PTR_TO_UINT32(p)	((UINT32)GPOINTER_TO_UINT(p))
 #define UINT32_TO_PTR(v)	GUINT_TO_POINTER((UINT32)(v))
 
-#else	/* USE_GTK2 <= 0 */
-
-typedef	signed int		SINT;
-typedef	unsigned int		UINT;
-
-typedef	signed char		SINT8;
-typedef	signed short		SINT16;
-typedef	signed int		SINT32;
-typedef	signed long long	SINT64;
-
-typedef	unsigned char		UINT8;
-typedef	unsigned short		UINT16;
-typedef	unsigned int		UINT32;
-typedef	unsigned long long	UINT64;
-
-typedef	unsigned char		BYTE;
-typedef	char			TCHAR;
-
-typedef	int			BOOL;
-
-#endif	/* USE_GTK2 > 0 */
-
-#ifndef	TRUE
-#define	TRUE	1
-#endif
-
 #ifndef	FALSE
 #define	FALSE	0
+#endif
+
+#ifndef	TRUE
+#define	TRUE	(!FALSE)
 #endif
 
 #ifndef	MAX_PATH
@@ -146,25 +139,8 @@ typedef	int			BOOL;
 #define	roundup(x, y)	((((x)+((y)-1))/(y))*(y))
 #endif
 
-#ifndef	UNUSED
-#define	UNUSED(v)	((void)(v))
-#endif
-
-#define	FASTCALL
-#define	SOUNDCALL
-#define	MEMCALL
-#define	CPUCALL
-
-#ifdef	DEBUG
-#define	INLINE
-#define	__ASSERT(s)	assert(s)
-#else
-#ifndef	__ASSERT
-#define	__ASSERT(s)
-#endif
-#ifndef	INLINE
-#define	INLINE		inline
-#endif
+#ifndef	NELEMENTS
+#define	NELEMENTS(a)	((int)(sizeof(a) / sizeof(a[0])))
 #endif
 
 /* archtecture */
@@ -179,7 +155,6 @@ typedef	int			BOOL;
 #endif /* i386 */
 
 #if defined(__GNUC__)
-#define	GCC_ATTR_PACKED	__attribute__((packed))
 #if defined(NP2_CPU_ARCH_IA32)
 #define	GCC_CPU_ARCH_IA32
 #endif
@@ -188,28 +163,25 @@ typedef	int			BOOL;
 #endif
 #endif /* __GNUC__ */
 
-#ifndef	NELEMENTS
-#define	NELEMENTS(a)	((int)(sizeof(a) / sizeof(a[0])))
-#endif
-
 UINT32 gettick(void);
 #define	GETTICK()	gettick()
 #define	GETRAND()	random()
 #define	SPRINTF		sprintf
 #define	STRLEN		strlen
 
-#define	OEMCHAR		char
+#define	OEMCHAR		gchar
 #define OEMTEXT(s)	s
 #define OEMNULLSTR	OEMTEXT("")
 #define	OEMSPRINTF	sprintf
 #define	OEMSTRLEN	strlen
 
 #if defined(CPUCORE_IA32)
-void toolkit_msgbox(const char *title, const char *msg);
-#define	msgbox(title, msg)	toolkit_msgbox(title, msg);
+#define	msgbox(title, msg)	toolkit_messagebox(title, msg);
 
+#if !defined(DISABLE_PC9821)
 #define	SUPPORT_PC9821
 #define	SUPPORT_CRT31KHZ
+#endif
 #define	SUPPORT_IDEIO
 #else
 #define	SUPPORT_CRT15KHZ
@@ -217,13 +189,13 @@ void toolkit_msgbox(const char *title, const char *msg);
 
 #if defined(NP2_CPU_ARCH_IA32)
 #undef	MEMOPTIMIZE
-#define LOADINTELDWORD(a)	(*((UINT32 *)(a)))
-#define LOADINTELWORD(a)	(*((UINT16 *)(a)))
+#define LOADINTELDWORD(a)	(*((const UINT32 *)(a)))
+#define LOADINTELWORD(a)	(*((const UINT16 *)(a)))
 #define STOREINTELDWORD(a, b)	*(UINT32 *)(a) = (b)
 #define STOREINTELWORD(a, b)	*(UINT16 *)(a) = (b)
-#if defined(__GNUC__) && defined(IA32_USE_GCC_ATTR_REGPARM)
-#define	GCC_ATTR_REGPARM	__attribute__((regparm(2)))
-#endif
+#if !defined(DEBUG) && !defined(NP2_CPU_ARCH_AMD64)
+#define	FASTCALL	__attribute__((regparm(2)))
+#endif	/* !DEBUG && !NP2_CPU_ARCH_AMD64 */
 #elif defined(arm) || defined (__arm__)
 #define	MEMOPTIMIZE	2
 #define	REG8		UINT
@@ -231,6 +203,31 @@ void toolkit_msgbox(const char *title, const char *msg);
 #define	OPNGENARM
 #else
 #define	MEMOPTIMIZE	1
+#endif
+
+#ifndef	FASTCALL
+#define	FASTCALL
+#endif
+#define	CPUCALL		FASTCALL
+#define	MEMCALL		FASTCALL
+#define	DMACCALL	FASTCALL
+#define	IOOUTCALL	FASTCALL
+#define	IOINPCALL	FASTCALL
+#define	SOUNDCALL	FASTCALL
+#define	VRAMCALL	FASTCALL
+#define	SCRNCALL	FASTCALL
+#define	VERMOUTHCL	FASTCALL
+
+#ifdef	DEBUG
+#define	INLINE
+#define	__ASSERT(s)	assert(s)
+#else
+#ifndef	__ASSERT
+#define	__ASSERT(s)
+#endif
+#ifndef	INLINE
+#define	INLINE		inline
+#endif
 #endif
 
 #define	SUPPORT_EUC
@@ -247,27 +244,22 @@ void toolkit_msgbox(const char *title, const char *msg);
 #define	SUPPORT_PC9861K
 #define	SUPPORT_HOSTDRV
 
+#define	SUPPORT_RESUME
+#define	SUPPORT_STATSAVE
+
 #undef	SUPPORT_SASI
 #undef	SUPPORT_SCSI
 
-#if (USE_GTK2 > 0)
 #define	SUPPORT_S98
 #define	SUPPORT_KEYDISP
 #define	SUPPORT_SOFTKBD	0
-#endif
 
-#if (USE_SDL > 0)
-#define	USE_SYSMENU
-#define	SCREEN_BPP	16
-#undef	SUPPORT_8BPP
-#undef	SUPPORT_24BPP
-#undef	SUPPORT_32BPP
-#endif
+#define	SUPPORT_SCREENSIZE
 
-#if (USE_SDL > 0) || defined(USE_SDLAUDIO) || defined(USE_SDLMIXER)
+#if defined(USE_SDLAUDIO) || defined(USE_SDLMIXER)
 #define	SUPPORT_JOYSTICK
 #define	USE_SDL_JOYSTICK
-#endif	/* USE_SDL > 0 || USE_SDLAUDIO || USE_SDLMIXER */
+#endif	/* USE_SDLAUDIO || USE_SDLMIXER */
 
 /*
  * You could specify a complete path, e.g. "/etc/timidity.cfg", and
@@ -282,5 +274,6 @@ extern char timidity_cfgfile_path[MAX_PATH];
 #include "rect.h"
 #include "lstarray.h"
 #include "trace.h"
+#include "toolkit.h"
 
 #endif	/* NP2_X11_COMPILER_H__ */

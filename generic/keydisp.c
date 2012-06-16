@@ -537,6 +537,7 @@ static void setfmhdl(UINT8 items, UINT base) {
 	}
 }
 
+#if defined(SUPPORT_PX)
 static void setfmhdlex(const OPN_T *pOpn, UINT nItems, UINT nBase) {
 
 	while(nItems--) {
@@ -552,6 +553,7 @@ static void setfmhdlex(const OPN_T *pOpn, UINT nItems, UINT nBase) {
 		}
 	}
 }
+#endif	// defined(SUPPORT_PX)
 
 static void setpsghdl(UINT8 items) {
 

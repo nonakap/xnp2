@@ -1,5 +1,3 @@
-/*	$Id: gtk_wrapper.c,v 1.12 2007/02/05 14:58:59 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2004 NONAKA Kimihiro
  * All rights reserved.
@@ -45,9 +43,13 @@
 extern int verbose;
 extern volatile sig_atomic_t np2running;
 
+#ifdef DEBUG
 #ifndef	VERBOSE
-#define	VERBOSE(s)	if (verbose) printf s
-#endif
+#define	VERBOSE(s)	if (verbose) g_printerr s
+#endif	/* !VERBOSE */
+#else	/* !DEBUG */
+#define	VERBOSE(s)
+#endif	/* DEBUG */
 
 void
 gtk_scale_set_default_values(GtkScale *scale)
@@ -136,7 +138,6 @@ static int
 check_xvid(GtkWidget *widget)
 {
 	gboolean ret = FALSE;
-	GtkWindow *window;
 	GdkWindow *w;
 	Display *xdisplay;
 	int xscreen;
@@ -149,7 +150,6 @@ check_xvid(GtkWidget *widget)
 
 	g_return_val_if_fail(widget != NULL, FALSE);
 
-	window = GTK_WINDOW(widget);
 	w = widget->window;
 	xdisplay = GDK_WINDOW_XDISPLAY(w);
 	xscreen = XDefaultScreen(xdisplay);
@@ -232,7 +232,7 @@ check_netwm(GtkWidget *widget)
 	unsigned char *prop;
 	guint32 *data;
 	int rv;
-	long i;
+	unsigned long i;
 
 	g_return_val_if_fail(widget != NULL, 0);
 
@@ -290,11 +290,11 @@ gtk_window_init_fullscreen(GtkWidget *widget)
 
 	if (verbose) {
 		if (use_xvid) {
-			printf("Using XF86VidMode extension\n");
+			VERBOSE(("Using XF86VidMode extension\n"));
 		} else if (use_netwm) {
-			printf("Using _NET_WM_STATE_FULLSCREEN\n");
+			VERBOSE(("Using _NET_WM_STATE_FULLSCREEN\n"));
 		} else {
-			printf("not supported\n");
+			VERBOSE(("not supported\n"));
 		}
 	}
 

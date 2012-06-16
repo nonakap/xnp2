@@ -169,14 +169,14 @@ static void setdataalign(void) {
 	cs4231.bufdatas &= ~3;
 }
 
-void cs4231_control(UINT index, REG8 dat) {
+void cs4231_control(UINT idx, REG8 dat) {
 
 	UINT8	modify;
 	DMACH	dmach;
 
-	modify = ((UINT8 *)&cs4231.reg)[index] ^ dat;
-	((UINT8 *)&cs4231.reg)[index] = dat;
-	switch(index) {
+	modify = ((UINT8 *)&cs4231.reg)[idx] ^ dat;
+	((UINT8 *)&cs4231.reg)[idx] = dat;
+	switch(idx) {
 		case CS4231REG_PLAYFMT:
 			if (modify & 0xf0) {
 				setdataalign();

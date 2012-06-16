@@ -1,5 +1,3 @@
-/*	$Id: cpucore.h,v 1.5 2004/06/15 13:50:13 monaka Exp $	*/
-
 #ifndef	NP2_I386C_CPUCORE_H__
 #define	NP2_I386C_CPUCORE_H__
 

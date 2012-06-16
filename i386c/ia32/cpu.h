@@ -1,5 +1,3 @@
-/*	$Id: cpu.h,v 1.36 2008/01/25 18:02:18 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2003 NONAKA Kimihiro
  * All rights reserved.
@@ -172,9 +170,10 @@ typedef struct {
 	UINT8		user_mode;
 
 	UINT8		hlt;
-	UINT8		bp;	/* break point bitmap */
-	UINT8		bp_ev;	/* break point event */
-	UINT8		pad;
+	UINT8		bp;		/* break point bitmap */
+	UINT8		bp_ev;		/* break point event */
+
+	UINT8		backout_sp;	/* backout ESP, when exception */
 
 	UINT32		pde_base;
 
@@ -214,20 +213,20 @@ typedef struct {
 } FPU_REGS;
 
 typedef struct {
-	UINT8		valid;	/* •Ï•∏•π•øÕ≠∏˙ */
-	UINT8		sign;	/* …‰πÊ */
-	UINT8		zero;	/* •º•Ì */
-	UINT8		inf;	/* °Á */
-	UINT8		nan;	/* NaN */
-	UINT8		denorm;	/* »Û¿µµ¨≤Ω */
-	SINT16		exp;	/* ªÿøÙ…Ù */
-	UINT64		num;	/* æÆøÙ…Ù */
+	UINT8		valid;
+	UINT8		sign;
+	UINT8		zero;
+	UINT8		inf;
+	UINT8		nan;
+	UINT8		denorm;
+	SINT16		exp;
+	UINT64		num;
 } FP_REG;
 
 typedef struct {
-	UINT8		top;	/* •π•ø•√•Ø∞Ã√÷ */
-	UINT8		pc;	/* ¿∫≈Ÿ */
-	UINT8		rc;	/* ¥›§· */
+	UINT8		top;
+	UINT8		pc;
+	UINT8		rc;
 	UINT8		dmy[1];
 
 	FP_REG		reg[FPU_REG_NUM];
@@ -265,7 +264,7 @@ typedef struct {
 } I386EXT;
 
 typedef struct {
-	I386STAT	s;				/* STATsave§µ§Ï§Î≈€ */
+	I386STAT	s;		/* STATsave'ed */
 	I386EXT		e;
 } I386CORE;
 
@@ -360,22 +359,8 @@ extern sigjmp_buf	exec_1step_jmpbuf;
 #define	CPU_REGS_SREG(n)	CPU_STATSAVE.cpu_regs.sreg[(n)]
 
 #define	CPU_STAT_SREG(n)	CPU_STATSAVE.cpu_stat.sreg[(n)]
-#define	CPU_STAT_SREGBASE(n)	CPU_STATSAVE.cpu_stat.sreg[(n)].u.seg.segbase
-#define	CPU_STAT_SREGEND(n)	CPU_STATSAVE.cpu_stat.sreg[(n)].u.seg.segend
-#define	CPU_STAT_SREGLIMIT(n)	CPU_STATSAVE.cpu_stat.sreg[(n)].u.seg.limit
-#define	CPU_STAT_SREG_CLEAR(n) \
-do { \
-	memset(&CPU_STAT_SREG(n), 0, sizeof(descriptor_t)); \
-} while (/*CONSTCOND*/ 0)
-#define	CPU_STAT_SREG_INIT(n) \
-do { \
-	descriptor_t sd; \
-\
-	memset(&sd, 0, sizeof(sd)); \
-	sd.u.seg.limit = 0xffff; \
-	CPU_SET_SEGDESC_DEFAULT(&sd, (n), 0); \
-	CPU_STAT_SREG(n) = sd; \
-} while (/*CONSTCOND*/ 0)
+#define	CPU_STAT_SREGBASE(n)	CPU_STAT_SREG((n)).u.seg.segbase
+#define	CPU_STAT_SREGLIMIT(n)	CPU_STAT_SREG((n)).u.seg.limit
 
 
 #define CPU_AL		CPU_REGS_BYTEL(CPU_EAX_INDEX)
@@ -415,6 +400,13 @@ do { \
 #define	CPU_DS		CPU_REGS_SREG(CPU_DS_INDEX)
 #define	CPU_FS		CPU_REGS_SREG(CPU_FS_INDEX)
 #define	CPU_GS		CPU_REGS_SREG(CPU_GS_INDEX)
+
+#define	CPU_ES_DESC	CPU_STAT_SREG(CPU_ES_INDEX)
+#define	CPU_CS_DESC	CPU_STAT_SREG(CPU_CS_INDEX)
+#define	CPU_SS_DESC	CPU_STAT_SREG(CPU_SS_INDEX)
+#define	CPU_DS_DESC	CPU_STAT_SREG(CPU_DS_INDEX)
+#define	CPU_FS_DESC	CPU_STAT_SREG(CPU_FS_INDEX)
+#define	CPU_GS_DESC	CPU_STAT_SREG(CPU_GS_INDEX)
 
 #define ES_BASE		CPU_STAT_SREGBASE(CPU_ES_INDEX)
 #define CS_BASE		CPU_STAT_SREGBASE(CPU_CS_INDEX)
@@ -458,8 +450,8 @@ do { \
 #define	REAL_FLAGREG	((CPU_FLAG & 0xf7ff) | (CPU_OV ? O_FLAG : 0) | 2)
 #define	REAL_EFLAGREG	((CPU_EFLAG & 0xfffff7ff) | (CPU_OV ? O_FLAG : 0) | 2)
 
-void set_flags(UINT16 new_flags, UINT16 mask);
-void set_eflags(UINT32 new_flags, UINT32 mask);
+void CPUCALL set_flags(UINT16 new_flags, UINT16 mask);
+void CPUCALL set_eflags(UINT32 new_flags, UINT32 mask);
 
 
 #define	CPU_INST_OP32		CPU_STATSAVE.cpu_inst.op_32
@@ -472,7 +464,6 @@ void set_eflags(UINT32 new_flags, UINT32 mask);
 
 #define	CPU_STAT_CS_BASE	CPU_STAT_SREGBASE(CPU_CS_INDEX)
 #define	CPU_STAT_CS_LIMIT	CPU_STAT_SREGLIMIT(CPU_CS_INDEX)
-#define	CPU_STAT_CS_END		CPU_STAT_SREGEND(CPU_CS_INDEX)
 
 #define	CPU_STAT_ADRSMASK	CPU_STATSAVE.cpu_stat.adrsmask
 #define	CPU_STAT_SS32		CPU_STATSAVE.cpu_stat.ss_32
@@ -481,9 +472,19 @@ void set_eflags(UINT32 new_flags, UINT32 mask);
 #define	CPU_STAT_PAGING		CPU_STATSAVE.cpu_stat.paging
 #define	CPU_STAT_VM86		CPU_STATSAVE.cpu_stat.vm86
 #define	CPU_STAT_WP		CPU_STATSAVE.cpu_stat.page_wp
-#define	CPU_STAT_CPL		CPU_STAT_SREG(CPU_CS_INDEX).rpl
+#define	CPU_STAT_CPL		CPU_CS_DESC.rpl
 #define	CPU_STAT_USER_MODE	CPU_STATSAVE.cpu_stat.user_mode
 #define	CPU_STAT_PDE_BASE	CPU_STATSAVE.cpu_stat.pde_base
+#define	CPU_SET_PREV_ESP1(esp) \
+do { \
+	CPU_STATSAVE.cpu_stat.backout_sp = 1; \
+	CPU_PREV_ESP = (esp); \
+} while (/*CONSTCOND*/0)
+#define	CPU_SET_PREV_ESP()	CPU_SET_PREV_ESP1(CPU_ESP)
+#define	CPU_CLEAR_PREV_ESP() \
+do { \
+	CPU_STATSAVE.cpu_stat.backout_sp = 0; \
+} while (/*CONSTCOND*/0)
 
 #define	CPU_STAT_HLT		CPU_STATSAVE.cpu_stat.hlt
 
@@ -503,12 +504,6 @@ void set_eflags(UINT32 new_flags, UINT32 mask);
 
 #define	CPU_MODE_SUPERVISER	0
 #define	CPU_MODE_USER		(1 << 3)
-#define	CPU_SET_CPL(cpl) \
-do { \
-	UINT8 __t = (UINT8)((cpl) & 3); \
-	CPU_STAT_CPL = __t; \
-	CPU_STAT_USER_MODE = (__t == 3) ? CPU_MODE_USER : CPU_MODE_SUPERVISER; \
-} while (/*CONSTCOND*/ 0)
 
 #define CPU_CLI \
 do { \
@@ -528,14 +523,12 @@ do { \
 #define CPU_IDTR_BASE	CPU_STATSAVE.cpu_sysregs.idtr_base
 #define CPU_LDTR	CPU_STATSAVE.cpu_sysregs.ldtr
 #define CPU_LDTR_DESC	CPU_STATSAVE.cpu_stat.ldtr
-#define CPU_LDTR_BASE	CPU_STATSAVE.cpu_stat.ldtr.u.seg.segbase
-#define CPU_LDTR_END	CPU_STATSAVE.cpu_stat.ldtr.u.seg.segend
-#define CPU_LDTR_LIMIT	CPU_STATSAVE.cpu_stat.ldtr.u.seg.limit
+#define CPU_LDTR_BASE	CPU_LDTR_DESC.u.seg.segbase
+#define CPU_LDTR_LIMIT	CPU_LDTR_DESC.u.seg.limit
 #define CPU_TR		CPU_STATSAVE.cpu_sysregs.tr
 #define CPU_TR_DESC	CPU_STATSAVE.cpu_stat.tr
-#define CPU_TR_BASE	CPU_STATSAVE.cpu_stat.tr.u.seg.segbase
-#define CPU_TR_END	CPU_STATSAVE.cpu_stat.tr.u.seg.segend
-#define CPU_TR_LIMIT	CPU_STATSAVE.cpu_stat.tr.u.seg.limit
+#define CPU_TR_BASE	CPU_TR_DESC.u.seg.segbase
+#define CPU_TR_LIMIT	CPU_TR_DESC.u.seg.limit
 
 /*
  * control register
@@ -626,7 +619,6 @@ void ia32a20enable(BOOL enable);
 void ia32(void);
 void ia32_step(void);
 void CPUCALL ia32_interrupt(int vect, int soft);
-void CPUCALL ia32_exception(int vect, int p1, int p2);
 
 void exec_1step(void);
 #define	INST_PREFIX	(1 << 0)
@@ -639,9 +631,12 @@ void ia32_panic(const char *buf, ...);
 
 void ia32_bioscall(void);
 
-void FASTCALL change_pm(BOOL onoff);
-void FASTCALL change_vm(BOOL onoff);
-void FASTCALL change_pg(BOOL onoff);
+void CPUCALL change_pm(BOOL onoff);
+void CPUCALL change_vm(BOOL onoff);
+void CPUCALL change_pg(BOOL onoff);
+
+void CPUCALL set_cr3(UINT32 new_cr3);
+void CPUCALL set_cpl(int new_cpl);
 
 extern const UINT8 iflags[];
 #define	szpcflag	iflags
@@ -654,9 +649,10 @@ extern UINT16 *reg16_b53[0x100];
 extern UINT32 *reg32_b20[0x100];
 extern UINT32 *reg32_b53[0x100];
 
-extern const char *reg8_str[8];
-extern const char *reg16_str[8];
-extern const char *reg32_str[8];
+extern const char *reg8_str[CPU_REG_NUM];
+extern const char *reg16_str[CPU_REG_NUM];
+extern const char *reg32_str[CPU_REG_NUM];
+extern const char *sreg_str[CPU_SEGREG_NUM];
 
 char *cpu_reg2str(void);
 #if defined(USE_FPU)
@@ -689,20 +685,20 @@ void dbg_printf(const char *str, ...);
 #define	FPU_REG(i)		FPU_STAT.reg[i]
 
 /* FPU status register */
-#define	FP_IE_FLAG	(1 << 0)	/* Ãµ∏˙§ ∆∞∫Ó */
-#define	FP_DE_FLAG	(1 << 1)	/* •«•Œ°º•ﬁ•È•§•∫•…°¶•™•⁄•È•Û•… */
-#define	FP_ZE_FLAG	(1 << 2)	/* •º•Ì§À§Ë§ÎΩ¸ªª */
-#define	FP_OE_FLAG	(1 << 3)	/* •™°º•–°º•’•Ì°º */
-#define	FP_UE_FLAG	(1 << 4)	/* •¢•Û•¿°º•’•Ì°º */
-#define	FP_PE_FLAG	(1 << 5)	/* ¿∫≈Ÿ */
-#define	FP_SF_FLAG	(1 << 6)	/* •π•ø•√•Ø•’•©•Î•» */
-#define	FP_ES_FLAG	(1 << 7)	/* •®•È°º•µ•ﬁ•Í•π•∆°º•ø•π */
-#define	FP_C0_FLAG	(1 << 8)	/* æÚ∑Ô•≥°º•… */
-#define	FP_C1_FLAG	(1 << 9)	/* æÚ∑Ô•≥°º•… */
-#define	FP_C2_FLAG	(1 << 10)	/* æÚ∑Ô•≥°º•… */
-#define	FP_TOP_FLAG	(7 << 11)	/* •π•ø•√•Ø•›•§•Û•»§Œ•»•√•◊ */
-#define	FP_C3_FLAG	(1 << 14)	/* æÚ∑Ô•≥°º•… */
-#define	FP_B_FLAG	(1 << 15)	/* FPU •”•∏°º */
+#define	FP_IE_FLAG	(1 << 0)	/* ÁÑ°Âäπ„Å™Âãï‰Ωú */
+#define	FP_DE_FLAG	(1 << 1)	/* „Éá„Éé„Éº„Éû„É©„Ç§„Ç∫„Éâ„Éª„Ç™„Éö„É©„É≥„Éâ */
+#define	FP_ZE_FLAG	(1 << 2)	/* „Çº„É≠„Å´„Çà„ÇãÈô§ÁÆó */
+#define	FP_OE_FLAG	(1 << 3)	/* „Ç™„Éº„Éê„Éº„Éï„É≠„Éº */
+#define	FP_UE_FLAG	(1 << 4)	/* „Ç¢„É≥„ÉÄ„Éº„Éï„É≠„Éº */
+#define	FP_PE_FLAG	(1 << 5)	/* Á≤æÂ∫¶ */
+#define	FP_SF_FLAG	(1 << 6)	/* „Çπ„Çø„ÉÉ„ÇØ„Éï„Ç©„É´„Éà */
+#define	FP_ES_FLAG	(1 << 7)	/* „Ç®„É©„Éº„Çµ„Éû„É™„Çπ„ÉÜ„Éº„Çø„Çπ */
+#define	FP_C0_FLAG	(1 << 8)	/* Êù°‰ª∂„Ç≥„Éº„Éâ */
+#define	FP_C1_FLAG	(1 << 9)	/* Êù°‰ª∂„Ç≥„Éº„Éâ */
+#define	FP_C2_FLAG	(1 << 10)	/* Êù°‰ª∂„Ç≥„Éº„Éâ */
+#define	FP_TOP_FLAG	(7 << 11)	/* „Çπ„Çø„ÉÉ„ÇØ„Éù„Ç§„É≥„Éà„ÅÆ„Éà„ÉÉ„Éó */
+#define	FP_C3_FLAG	(1 << 14)	/* Êù°‰ª∂„Ç≥„Éº„Éâ */
+#define	FP_B_FLAG	(1 << 15)	/* FPU „Éì„Ç∏„Éº */
 
 #define	FP_TOP_SHIFT	11
 #define	FP_TOP_GET()	((FPU_STATUSWORD & FP_TOP_FLAG) >> FP_TOP_SHIFT)
@@ -718,12 +714,12 @@ do { \
 } while (/*CONSTCOND*/0)
 
 /* FPU control register */
-#define	FP_CTRL_PC_SHIFT	8	/* ¿∫≈Ÿ¿©∏Ê */
-#define	FP_CTRL_RC_SHIFT	10	/* ¥›§·¿©∏Ê */
+#define	FP_CTRL_PC_SHIFT	8	/* Á≤æÂ∫¶Âà∂Âæ° */
+#define	FP_CTRL_RC_SHIFT	10	/* ‰∏∏„ÇÅÂà∂Âæ° */
 
-#define	FP_CTRL_PC_24		0	/* √±¿∫≈Ÿ */
-#define	FP_CTRL_PC_53		1	/* «‹¿∫≈Ÿ */
-#define	FP_CTRL_PC_64		3	/* ≥»ƒ•¿∫≈Ÿ */
+#define	FP_CTRL_PC_24		0	/* ÂçòÁ≤æÂ∫¶ */
+#define	FP_CTRL_PC_53		1	/* ÂÄçÁ≤æÂ∫¶ */
+#define	FP_CTRL_PC_64		3	/* Êã°ÂºµÁ≤æÂ∫¶ */
 
 #define	FP_CTRL_RC_NEAREST_EVEN	0
 #define	FP_CTRL_RC_DOWN		1
@@ -740,6 +736,7 @@ void idtr_dump(UINT32 base, UINT limit);
 void ldtr_dump(UINT32 base, UINT limit);
 void tr_dump(UINT16 selector, UINT32 base, UINT limit);
 UINT32 pde_dump(UINT32 base, int idx);
+void segdesc_dump(descriptor_t *sdp);
 UINT32 convert_laddr_to_paddr(UINT32 laddr);
 UINT32 convert_vaddr_to_paddr(unsigned int idx, UINT32 offset);
 
@@ -778,6 +775,7 @@ typedef struct {
 } disasm_context_t;
 
 int disasm(UINT32 *eip, disasm_context_t *ctx);
+char *cpu_disasm2str(UINT32 eip);
 
 #ifdef __cplusplus
 }

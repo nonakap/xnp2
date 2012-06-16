@@ -1093,5 +1093,3 @@ egcww_oddr:		push	dword egc_write
 				mov		dl, dh
 				jmp		egc_write_m
 
-	ends
-

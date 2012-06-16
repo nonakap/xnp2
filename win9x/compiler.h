@@ -1,14 +1,28 @@
+/**
+ * @file	compiler.h
+ * @brief	include file for standard system include files,
+ *			or project specific include files that are used frequently,
+ *			but are changed infrequently
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/03/09 00:22:18 $
+ */
 
-#define	_WIN32_IE	0x0200
-
-#include	<windows.h>
-#include	<tchar.h>
-#include	<stdio.h>
-#include	<stddef.h>
-#include	<setjmp.h>
+#include "targetver.h"
+#include <windows.h>
+#if !defined(__GNUC__)
+#include <tchar.h>
+#endif	// !defined(__GNUC__)
+#include <stdio.h>
+#include <stddef.h>
+#include <setjmp.h>
 #if defined(TRACE)
-#include	<assert.h>
+#include <assert.h>
 #endif
+
+#ifndef _T
+#define _T(x)	TEXT(x)
+#endif	// !_T
 
 #define	BYTESEX_LITTLE
 #if !defined(OSLANG_UTF8)
@@ -36,7 +50,7 @@ typedef	unsigned __int64	UINT64;
 #define	snprintf			_snprintf
 #define	vsnprintf			_vsnprintf
 #else
-#include	<stdlib.h>
+#include <stdlib.h>
 typedef	signed int			SINT;
 typedef	signed char			SINT8;
 typedef	unsigned char		UINT8;
@@ -54,9 +68,11 @@ typedef	signed __int64		SINT64;
 #define	STOREINTELDWORD(a, b)	*(UINT32 *)(a) = (b)
 #define	STOREINTELWORD(a, b)	*(UINT16 *)(a) = (b)
 
+#if !defined(__GNUC__)
 #define	sigjmp_buf				jmp_buf
 #define	sigsetjmp(env, mask)	setjmp(env)
 #define	siglongjmp(env, val)	longjmp(env, val)
+#endif	// !defined(__GNUC__)
 #define	msgbox(title, msg)		__msgbox(title, msg)
 
 #define	STRCALL		__stdcall
@@ -74,15 +90,13 @@ typedef	signed __int64		SINT64;
 #define	OEMSTRLEN			strlen
 #endif
 
-
-#include	"common.h"
-#include	"win32sub.h"
-#include	"milstr.h"
-#include	"_memory.h"
-#include	"rect.h"
-#include	"lstarray.h"
-#include	"trace.h"
-
+#include "common.h"
+#include "win32sub.h"
+#include "milstr.h"
+#include "_memory.h"
+#include "rect.h"
+#include "lstarray.h"
+#include "trace.h"
 
 #define	GETTICK()			GetTickCount()
 #if defined(TRACE)
@@ -161,7 +175,6 @@ typedef	signed __int64		SINT64;
 #define	SUPPORT_ROMEO
 
 #define	SOUNDRESERVE	20
-
 
 #define	SUPPORT_TEXTCNV
 

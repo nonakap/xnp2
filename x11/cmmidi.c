@@ -6,9 +6,9 @@
 #include "mimpidef.h"
 #include "sound.h"
 
-#if defined(VERMOUTH_LIB)
 #include "vermouth.h"
 
+#if defined(VERMOUTH_LIB)
 extern MIDIMOD vermouth_module;
 
 const char cmmidi_vermouth[] = "VERMOUTH";
@@ -68,9 +68,7 @@ enum {
 	CMMIDI_MIDIOUT		= 0x01,
 	CMMIDI_MIDIIN		= 0x02,
 	CMMIDI_MIDIINSTART	= 0x04,
-#if defined(VERMOUTH_LIB)
 	CMMIDI_VERMOUTH		= 0x08,
-#endif
 
 	MIDICTRL_READY		= 0,
 	MIDICTRL_2BYTES,
@@ -97,9 +95,7 @@ struct _cmmidi {
 	int		hmidiin;
 	int		hmidiout;
 	struct timeval	hmidiout_nextstart;
-#if defined(VERMOUTH_LIB)
 	MIDIHDL		vermouth;
-#endif
 
 	UINT		midictrl;
 	UINT		midisyscnt;
@@ -256,9 +252,7 @@ static void
 midiout_none(CMMIDI midi, UINT32 msg, UINT cnt)
 {
 
-	UNUSED(midi);
-	UNUSED(msg);
-	UNUSED(cnt);
+	/* Nothing to do */
 }
 
 static void
@@ -278,8 +272,6 @@ midiout_device(CMMIDI midi, UINT32 msg, UINT cnt)
 static void
 midiout_vermouth(CMMIDI midi, UINT32 msg, UINT cnt)
 {
-
-	UNUSED(cnt);
 
 	sound_sync();
 	midiout_shortmsg(midi->vermouth, msg);
@@ -480,7 +472,7 @@ midiwrite(COMMNG self, BYTE data)
 				}
 				break;
 			}
-		} else { /* Key-on¤Î¤ß¤Êµ¤¤¬¤·¤¿¤ó¤À¤±¤ÉËº¤ì¤¿¡Ä */
+		} else { /* Key-onã®ã¿ãªæ°—ãŒã—ãŸã‚“ã ã‘ã©å¿˜ã‚ŒãŸâ€¦ */
 			/* running status */
 			midi->buffer[0] = midi->midilast;
 			midi->mpos = 1;
@@ -562,7 +554,7 @@ midiwrite(COMMNG self, BYTE data)
 #endif
 			midi->midictrl = MIDICTRL_READY;
 			return midi->mpos;
-		} else if (midi->mpos >= MIDI_BUFFER) {	// ¤ª¡¼¤Ð¡¼¤Õ¤í¡¼
+		} else if (midi->mpos >= MIDI_BUFFER) {	// ãŠãƒ¼ã°ãƒ¼ãµã‚ãƒ¼
 			midi->midictrl = MIDICTRL_READY;
 		}
 		break;
@@ -570,7 +562,7 @@ midiwrite(COMMNG self, BYTE data)
 	case MIDICTRL_TIMECODE:
 		if (midi->mpos >= 2) {
 			if ((data == 0x7e) || (data == 0x7f)) {
-				// exclusive¤ÈÆ±¤¸¤Ç¤¤¤¤È¦¡Ä
+				// exclusiveã¨åŒã˜ã§ã„ã„ç­ˆâ€¦
 				midi->midictrl = MIDICTRL_EXCLUSIVE;
 			} else {
 				midi->midictrl = MIDICTRL_READY;
@@ -592,8 +584,6 @@ midiwrite(COMMNG self, BYTE data)
 static BYTE
 midigetstat(COMMNG self)
 {
-
-	UNUSED(self);
 
 	return 0x00;
 }

@@ -1,5 +1,3 @@
-/*	$Id: cmserial.c,v 1.4 2007/01/21 00:03:02 monaka Exp $	*/
-
 /*
  * Copyright (c) 2004 NONAKA Kimihiro
  * All rights reserved.
@@ -94,6 +92,10 @@ serialgetstat(COMMNG self)
 	int rv;
 
 	rv = ioctl(serial->hdl, TIOCMGET, &status);
+	if (rv < 0) {
+		VERBOSE(("serialgetstat: ioctl: %s", strerror(errno)));
+		return 0x20;
+	}
 	if (!(status & TIOCM_DSR)) {
 		VERBOSE(("serialgetstat: DSR is disable"));
 		return 0x20;
@@ -134,35 +136,35 @@ print_status(const struct termios *tio)
 	speed_t ispeed = cfgetispeed(tio);
 	speed_t ospeed = cfgetospeed(tio);
 
-	fprintf(stderr, " ispeed %d", ispeed);
-	fprintf(stderr, " ospeed %d", ospeed);
-	fprintf(stderr, "%s", "\r\n");
-	fprintf(stderr, " %cIGNBRK", (tio->c_iflag & IGNBRK) ? '+' : '-');
-	fprintf(stderr, " %cBRKINT", (tio->c_iflag & BRKINT) ? '+' : '-');
-	fprintf(stderr, " %cIGNPAR", (tio->c_iflag & IGNPAR) ? '+' : '-');
-	fprintf(stderr, " %cPARMRK", (tio->c_iflag & PARMRK) ? '+' : '-');
-	fprintf(stderr, " %cINPCK", (tio->c_iflag & INPCK) ? '+' : '-');
-	fprintf(stderr, " %cISTRIP", (tio->c_iflag & ISTRIP) ? '+' : '-');
-	fprintf(stderr, " %cINLCR", (tio->c_iflag & INLCR) ? '+' : '-');
-	fprintf(stderr, " %cIGNCR", (tio->c_iflag & IGNCR) ? '+' : '-');
-	fprintf(stderr, " %cICRNL", (tio->c_iflag & ICRNL) ? '+' : '-');
-	fprintf(stderr, " %cIXON", (tio->c_iflag & IXON) ? '+' : '-');
-	fprintf(stderr, " %cIXOFF", (tio->c_iflag & IXOFF) ? '+' : '-');
-	fprintf(stderr, " %cIXANY", (tio->c_iflag & IXANY) ? '+' : '-');
-	fprintf(stderr, " %cIMAXBEL", (tio->c_iflag & IMAXBEL) ? '+' : '-');
-	fprintf(stderr, "%s", "\r\n");
-	fprintf(stderr, " %cOPOST", (tio->c_oflag & OPOST) ? '+' : '-');
-	fprintf(stderr, " %cONLCR", (tio->c_oflag & ONLCR) ? '+' : '-');
+	g_printerr(" ispeed %d", ispeed);
+	g_printerr(" ospeed %d", ospeed);
+	g_printerr("%s", "\r\n");
+	g_printerr(" %cIGNBRK", (tio->c_iflag & IGNBRK) ? '+' : '-');
+	g_printerr(" %cBRKINT", (tio->c_iflag & BRKINT) ? '+' : '-');
+	g_printerr(" %cIGNPAR", (tio->c_iflag & IGNPAR) ? '+' : '-');
+	g_printerr(" %cPARMRK", (tio->c_iflag & PARMRK) ? '+' : '-');
+	g_printerr(" %cINPCK", (tio->c_iflag & INPCK) ? '+' : '-');
+	g_printerr(" %cISTRIP", (tio->c_iflag & ISTRIP) ? '+' : '-');
+	g_printerr(" %cINLCR", (tio->c_iflag & INLCR) ? '+' : '-');
+	g_printerr(" %cIGNCR", (tio->c_iflag & IGNCR) ? '+' : '-');
+	g_printerr(" %cICRNL", (tio->c_iflag & ICRNL) ? '+' : '-');
+	g_printerr(" %cIXON", (tio->c_iflag & IXON) ? '+' : '-');
+	g_printerr(" %cIXOFF", (tio->c_iflag & IXOFF) ? '+' : '-');
+	g_printerr(" %cIXANY", (tio->c_iflag & IXANY) ? '+' : '-');
+	g_printerr(" %cIMAXBEL", (tio->c_iflag & IMAXBEL) ? '+' : '-');
+	g_printerr("%s", "\r\n");
+	g_printerr(" %cOPOST", (tio->c_oflag & OPOST) ? '+' : '-');
+	g_printerr(" %cONLCR", (tio->c_oflag & ONLCR) ? '+' : '-');
 #ifdef OXTABS
-	fprintf(stderr, " %cOXTABS", (tio->c_oflag & OXTABS) ? '+' : '-');
+	g_printerr(" %cOXTABS", (tio->c_oflag & OXTABS) ? '+' : '-');
 #endif
 #ifdef TABDLY
-	fprintf(stderr, " %cTABDLY", (tio->c_oflag & TABDLY) == XTABS ? '+' : '-');
+	g_printerr(" %cTABDLY", (tio->c_oflag & TABDLY) == XTABS ? '+' : '-');
 #endif
 #ifdef ONOEOT
-	fprintf(stderr, " %cONOEOT", (tio->c_oflag & ONOEOT) ? '+' : '-');
+	g_printerr(" %cONOEOT", (tio->c_oflag & ONOEOT) ? '+' : '-');
 #endif
-	fprintf(stderr, "%s", "\r\n");
+	g_printerr("%s", "\r\n");
 
 	cs = tio->c_cflag & CSIZE;
 	switch (cs) {
@@ -186,47 +188,47 @@ print_status(const struct termios *tio)
 		csstr = "?";
 		break;
 	}
-	fprintf(stderr, " cs%s", csstr);
-	fprintf(stderr, " %cCSTOPB", (tio->c_cflag & CSTOPB) ? '+' : '-');
-	fprintf(stderr, " %cCREAD", (tio->c_cflag & CREAD) ? '+' : '-');
-	fprintf(stderr, " %cPARENB", (tio->c_cflag & PARENB) ? '+' : '-');
-	fprintf(stderr, " %cPARODD", (tio->c_cflag & PARODD) ? '+' : '-');
-	fprintf(stderr, " %cHUPCL", (tio->c_cflag & HUPCL) ? '+' : '-');
-	fprintf(stderr, " %cCLOCAL", (tio->c_cflag & CLOCAL) ? '+' : '-');
+	g_printerr(" cs%s", csstr);
+	g_printerr(" %cCSTOPB", (tio->c_cflag & CSTOPB) ? '+' : '-');
+	g_printerr(" %cCREAD", (tio->c_cflag & CREAD) ? '+' : '-');
+	g_printerr(" %cPARENB", (tio->c_cflag & PARENB) ? '+' : '-');
+	g_printerr(" %cPARODD", (tio->c_cflag & PARODD) ? '+' : '-');
+	g_printerr(" %cHUPCL", (tio->c_cflag & HUPCL) ? '+' : '-');
+	g_printerr(" %cCLOCAL", (tio->c_cflag & CLOCAL) ? '+' : '-');
 #ifdef CCTS_OFLOW
-	fprintf(stderr, " %cCCTS_OFLOW", (tio->c_cflag & CCTS_OFLOW) ? '+' : '-');
+	g_printerr(" %cCCTS_OFLOW", (tio->c_cflag & CCTS_OFLOW) ? '+' : '-');
 #endif
-	fprintf(stderr, " %cCRTSCTS", (tio->c_cflag & CRTSCTS) ? '+' : '-');
+	g_printerr(" %cCRTSCTS", (tio->c_cflag & CRTSCTS) ? '+' : '-');
 #ifdef CRTS_IFLOW
-	fprintf(stderr, " %cCRTS_IFLOW", (tio->c_cflag & CRTS_IFLOW) ? '+' : '-');
+	g_printerr(" %cCRTS_IFLOW", (tio->c_cflag & CRTS_IFLOW) ? '+' : '-');
 #endif
 #ifdef MDMBUF
-	fprintf(stderr, " %cMDMBUF", (tio->c_cflag & MDMBUF) ? '+' : '-');
+	g_printerr(" %cMDMBUF", (tio->c_cflag & MDMBUF) ? '+' : '-');
 #endif
-	fprintf(stderr, " %cECHOKE", (tio->c_lflag & ECHOKE) ? '+' : '-');
-	fprintf(stderr, " %cECHOE", (tio->c_lflag & ECHOE) ? '+' : '-');
-	fprintf(stderr, " %cECHO", (tio->c_lflag & ECHO) ? '+' : '-');
-	fprintf(stderr, " %cECHONL", (tio->c_lflag & ECHONL) ? '+' : '-');
-	fprintf(stderr, " %cECHOPRT", (tio->c_lflag & ECHOPRT) ? '+' : '-');
-	fprintf(stderr, " %cECHOCTL", (tio->c_lflag & ECHOCTL) ? '+' : '-');
-	fprintf(stderr, " %cISIG", (tio->c_lflag & ISIG) ? '+' : '-');
-	fprintf(stderr, " %cICANON", (tio->c_lflag & ICANON) ? '+' : '-');
+	g_printerr(" %cECHOKE", (tio->c_lflag & ECHOKE) ? '+' : '-');
+	g_printerr(" %cECHOE", (tio->c_lflag & ECHOE) ? '+' : '-');
+	g_printerr(" %cECHO", (tio->c_lflag & ECHO) ? '+' : '-');
+	g_printerr(" %cECHONL", (tio->c_lflag & ECHONL) ? '+' : '-');
+	g_printerr(" %cECHOPRT", (tio->c_lflag & ECHOPRT) ? '+' : '-');
+	g_printerr(" %cECHOCTL", (tio->c_lflag & ECHOCTL) ? '+' : '-');
+	g_printerr(" %cISIG", (tio->c_lflag & ISIG) ? '+' : '-');
+	g_printerr(" %cICANON", (tio->c_lflag & ICANON) ? '+' : '-');
 #ifdef ALTWERASE
-	fprintf(stderr, " %cALTWERASE", (tio->c_lflag & ALTWERASE) ? '+' : '-');
+	g_printerr(" %cALTWERASE", (tio->c_lflag & ALTWERASE) ? '+' : '-');
 #endif
-	fprintf(stderr, " %cIEXTEN", (tio->c_lflag & IEXTEN) ? '+' : '-');
-	fprintf(stderr, "%s", "\r\n");
+	g_printerr(" %cIEXTEN", (tio->c_lflag & IEXTEN) ? '+' : '-');
+	g_printerr("%s", "\r\n");
 #ifdef EXTPROC
-	fprintf(stderr, " %cEXTPROC", (tio->c_lflag & EXTPROC) ? '+' : '-');
+	g_printerr(" %cEXTPROC", (tio->c_lflag & EXTPROC) ? '+' : '-');
 #endif
-	fprintf(stderr, " %cTOSTOP", (tio->c_lflag & TOSTOP) ? '+' : '-');
-	fprintf(stderr, " %cFLUSHO", (tio->c_lflag & FLUSHO) ? '+' : '-');
+	g_printerr(" %cTOSTOP", (tio->c_lflag & TOSTOP) ? '+' : '-');
+	g_printerr(" %cFLUSHO", (tio->c_lflag & FLUSHO) ? '+' : '-');
 #ifdef NOKERNINFO
-	fprintf(stderr, " %cNOKERNINFO", (tio->c_lflag & NOKERNINFO) ? '+' : '-');
+	g_printerr(" %cNOKERNINFO", (tio->c_lflag & NOKERNINFO) ? '+' : '-');
 #endif
-	fprintf(stderr, " %cPENDIN", (tio->c_lflag & PENDIN) ? '+' : '-');
-	fprintf(stderr, " %cNOFLSH", (tio->c_lflag & NOFLSH) ? '+' : '-');
-	fprintf(stderr, "%s", "\r\n");
+	g_printerr(" %cPENDIN", (tio->c_lflag & PENDIN) ? '+' : '-');
+	g_printerr(" %cNOFLSH", (tio->c_lflag & NOFLSH) ? '+' : '-');
+	g_printerr("%s", "\r\n");
 }
 #endif
 

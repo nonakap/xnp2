@@ -138,7 +138,7 @@ static void calc_gdcslavewait(UINT dots) {
 	gdcsub_setslavewait(clk);
 }
 
-void gdcsub_setvectl(GDCVECT *vect, int x1, int y1, int x2, int y2) {
+void gdcsub_setvectl(GDCVECT *vect, int xx1, int yy1, int xx2, int yy2) {
 
 	UINT	ope;
 	int		dy;
@@ -146,13 +146,13 @@ void gdcsub_setvectl(GDCVECT *vect, int x1, int y1, int x2, int y2) {
 	int		tmp;
 
 	ope = 0;
-	dy = y2 - y1;
+	dy = yy2 - yy1;
 	if (dy < 0) {
 		dy = 0 - dy;
 	}
-	dx = x2 - x1;
+	dx = xx2 - xx1;
 	if (dx == 0) {
-		if (y1 <= y2) {
+		if (yy1 <= yy2) {
 			ope = 7;
 		}
 		else {
@@ -161,14 +161,14 @@ void gdcsub_setvectl(GDCVECT *vect, int x1, int y1, int x2, int y2) {
 	}
 	else {
 		if (dx > 0) {
-			if (y1 >= y2) {
+			if (yy1 >= yy2) {
 				ope += 2;
 			}
 		}
 		else {
 			dx = 0 - dx;
 			ope += 4;
-			if (y1 <= y2) {
+			if (yy1 <= yy2) {
 				ope += 2;
 			}
 		}

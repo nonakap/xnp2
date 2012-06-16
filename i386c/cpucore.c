@@ -1,5 +1,3 @@
-/*	$Id: cpucore.c,v 1.3 2004/02/20 16:09:04 monaka Exp $	*/
-
 #include	"compiler.h"
 #include	"cpucore.h"
 

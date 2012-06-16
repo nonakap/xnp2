@@ -1,5 +1,3 @@
-/*	$Id: dosio.c,v 1.15 2007/08/22 15:11:55 monaka Exp $	*/
-
 #include "compiler.h"
 
 #include <sys/stat.h>
@@ -29,7 +27,7 @@ dosio_term(void)
 	/* nothing to do */
 }
 
-/* •’•°•§•Î¡‡∫Ó */
+/* „Éï„Ç°„Ç§„É´Êìç‰Ωú */
 FILEH
 file_open(const OEMCHAR *path)
 {
@@ -162,7 +160,7 @@ file_dircreate(const OEMCHAR *path)
 }
 
 
-/* •´•Ï•Û•»•’•°•§•Î¡‡∫Ó */
+/* „Ç´„É¨„É≥„Éà„Éï„Ç°„Ç§„É´Êìç‰Ωú */
 void
 file_setcd(const OEMCHAR *exepath)
 {
@@ -223,7 +221,7 @@ file_attr_c(const OEMCHAR *filename)
 
 	*curfilep = '\0';
 	file_catname(curpath, filename, sizeof(curpath));
-	return file_attr_c(curpath);
+	return file_attr(curpath);
 }
 
 FLISTH
@@ -352,7 +350,7 @@ file_catname(OEMCHAR *path, const OEMCHAR *filename, int maxlen)
 			} else if (((*path - 0x41) & 0xff) < 26) {
 				*path |= 0x20;
 			} else if (*path == '\\') {
-				*path = '/';
+				*path = G_DIR_SEPARATOR;
 			}
 		}
 	}
@@ -376,7 +374,7 @@ file_getname(const OEMCHAR *path)
 			if (*path == '\0') {
 				break;
 			}
-		} else if (*path == '/') {
+		} else if (*path == G_DIR_SEPARATOR) {
 			ret = path + 1;
 		}
 	}
@@ -405,7 +403,7 @@ file_getext(const OEMCHAR *path)
 	if (q == NULL) {
 		q = p;
 	}
-	return (char *)q;
+	return (OEMCHAR *)q;
 }
 
 void
@@ -429,7 +427,7 @@ file_cutseparator(OEMCHAR *path)
 	int pos;
 
 	pos = strlen(path) - 1;
-	if ((pos > 0) && (path[pos] == '/')) {
+	if ((pos > 0) && (path[pos] == G_DIR_SEPARATOR)) {
 		path[pos] = '\0';
 	}
 }
@@ -440,8 +438,8 @@ file_setseparator(OEMCHAR *path, int maxlen)
 	int pos;
 
 	pos = strlen(path);
-	if ((pos) && (path[pos-1] != '/') && ((pos + 2) < maxlen)) {
-		path[pos++] = '/';
+	if ((pos) && (path[pos-1] != G_DIR_SEPARATOR) && ((pos + 2) < maxlen)) {
+		path[pos++] = G_DIR_SEPARATOR;
 		path[pos] = '\0';
 	}
 }

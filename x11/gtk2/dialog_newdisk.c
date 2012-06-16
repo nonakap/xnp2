@@ -1,5 +1,3 @@
-/*	$Id: dialog_newdisk.c,v 1.3 2005/03/12 12:36:57 monaka Exp $	*/
-
 /*
  * Copyright (c) 2004 NONAKA Kimihiro
  * All rights reserved.
@@ -33,6 +31,7 @@
 #include "np2.h"
 #include "dosio.h"
 #include "ini.h"
+#include "pccore.h"
 
 #include "fddfile.h"
 #include "newdisk.h"
@@ -41,6 +40,8 @@
 /*
  * create hard disk image
  */
+
+static const OEMCHAR *str_hddsize = OEMTEXT(" HDD Size");
 
 static gint
 anex_newdisk_dialog(GtkWidget *dialog)
@@ -52,23 +53,32 @@ anex_newdisk_dialog(GtkWidget *dialog)
 	char buf[32];
 	GtkWidget *dialog_table;
 	GtkWidget *button[NELEMENTS(hddsize)];
+	GtkWidget *label;
 	int i;
 
 	/* dialog table */
-	dialog_table = gtk_table_new(3, 2, FALSE);
+	dialog_table = gtk_table_new(4, 2, FALSE);
 	gtk_table_set_col_spacings(GTK_TABLE(dialog_table), 5);
 	gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),dialog_table);
 	gtk_widget_show(dialog_table);
 
-	/* HD size radio button */
+	/* "HDD Size" label */
+	label = gtk_label_new(str_hddsize);
+	gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
+	gtk_table_attach(GTK_TABLE(dialog_table), label, 0, 1, 0, 1,
+	    GTK_FILL|GTK_SHRINK, GTK_FILL|GTK_SHRINK,
+	    0, 5);
+	gtk_widget_show(label);
+
+	/* HDD Size radio button */
 	for (i = 0; i < NELEMENTS(hddsize); ++i) {
 		g_snprintf(buf, sizeof(buf), "%dMB", hddsize[i]);
 		button[i] = gtk_radio_button_new_with_label_from_widget(
 		    (i > 0) ? GTK_RADIO_BUTTON(button[i-1]) : NULL, buf);
 		gtk_widget_show(button[i]);
 		gtk_table_attach_defaults(GTK_TABLE(dialog_table),
-		    button[i], i % 2, (i % 2) + 1, i / 2, (i / 2) + 1);
-		GTK_WIDGET_UNSET_FLAGS(button[i], GTK_CAN_FOCUS);
+		    button[i], i % 2, (i % 2) + 1, (i / 2) + 1, (i / 2) + 2);
+		gtk_widget_set_can_focus(button[i], FALSE);
 	}
 	if (last >= NELEMENTS(hddsize)) {
 		last = 0;
@@ -128,7 +138,7 @@ t98_newdisk_dialog(GtkWidget *dialog, const int kind)
 	gtk_widget_show(dialog_table);
 
 	/* "HDD Size" label */
-	label = gtk_label_new(" HDD Size");
+	label = gtk_label_new(str_hddsize);
 	gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
 	gtk_table_attach_defaults(GTK_TABLE(dialog_table), label, 0, 1, 0, 1);
 	gtk_widget_show(label);
@@ -254,7 +264,13 @@ create_newdisk_fd_dialog(const char *filename)
 	GtkWidget *hbox;
 	GtkWidget *button[NELEMENTS(disktype)];
 	const gchar *p;
+	int ndisktype;
 	int i;
+
+	ndisktype = NELEMENTS(disktype);
+	if (!np2cfg.usefd144) {
+		ndisktype--;
+	}
 
 	dialog = gtk_dialog_new_with_buttons("Create new floppy disk image",
 	    GTK_WINDOW(main_window),
@@ -298,19 +314,19 @@ create_newdisk_fd_dialog(const char *filename)
 	hbox = gtk_hbox_new(FALSE, 3);
 	gtk_table_attach_defaults(GTK_TABLE(dialog_table), hbox, 1, 2, 1, 2);
 	gtk_widget_show(hbox);
-	for (i = 0; i < NELEMENTS(disktype); ++i) {
+	for (i = 0; i < ndisktype; ++i) {
 		button[i] = gtk_radio_button_new_with_label_from_widget(
 		    (i > 0) ? GTK_RADIO_BUTTON(button[i-1]) : NULL,
 		    disktype[i].str);
 		gtk_widget_show(button[i]);
 		gtk_box_pack_start(GTK_BOX(hbox), button[i], FALSE, FALSE, 1);
-		GTK_WIDGET_UNSET_FLAGS(button[i], GTK_CAN_FOCUS);
+		gtk_widget_set_can_focus(button[i], FALSE);
 	}
-	for (i = 0; i < NELEMENTS(disktype); ++i) {
+	for (i = 0; i < ndisktype; ++i) {
 		if (disktype[i].fdtype == makefdtype)
 			break;
 	}
-	if (i == NELEMENTS(disktype)) {
+	if (i == ndisktype) {
 		i = (i <= 1) ? 0 : 1;	/* 2HD */
 	}
 	g_signal_emit_by_name(GTK_OBJECT(button[i]), "clicked");

@@ -243,7 +243,7 @@ static void b0patch(void) {
 			cnt = 0;
 			last = 0;
 			while(size--) {
-				c = MEMR_READ8(ES_BASE, addr++);
+				c = MEMR_READ8(CPU_ES, addr++);
 				cl = 0;
 				do {
 					REG8 now = c & 0x80;

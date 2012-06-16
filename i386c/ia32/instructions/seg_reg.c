@@ -1,5 +1,3 @@
-/*	$Id: seg_reg.c,v 1.5 2005/03/12 12:33:47 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -45,7 +43,7 @@ LES_GwMp(void)
 		madr = calc_ea_dst(op);
 		dst = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr);
 		sreg = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 2);
-		CPU_SET_SEGREG(CPU_ES_INDEX, sreg);
+		LOAD_SEGREG(CPU_ES_INDEX, sreg);
 		*out = (UINT16)dst;
 		return;
 	}
@@ -65,7 +63,7 @@ LES_GdMp(void)
 		madr = calc_ea_dst(op);
 		dst = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr);
 		sreg = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 4);
-		CPU_SET_SEGREG(CPU_ES_INDEX, sreg);
+		LOAD_SEGREG(CPU_ES_INDEX, sreg);
 		*out = dst;
 		return;
 	}
@@ -85,7 +83,7 @@ LSS_GwMp(void)
 		madr = calc_ea_dst(op);
 		dst = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr);
 		sreg = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 2);
-		CPU_SET_SEGREG(CPU_SS_INDEX, sreg);
+		LOAD_SEGREG(CPU_SS_INDEX, sreg);
 		*out = (UINT16)dst;
 		return;
 	}
@@ -105,7 +103,7 @@ LSS_GdMp(void)
 		madr = calc_ea_dst(op);
 		dst = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr);
 		sreg = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 4);
-		CPU_SET_SEGREG(CPU_SS_INDEX, sreg);
+		LOAD_SEGREG(CPU_SS_INDEX, sreg);
 		*out = dst;
 		return;
 	}
@@ -125,7 +123,7 @@ LDS_GwMp(void)
 		madr = calc_ea_dst(op);
 		dst = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr);
 		sreg = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 2);
-		CPU_SET_SEGREG(CPU_DS_INDEX, sreg);
+		LOAD_SEGREG(CPU_DS_INDEX, sreg);
 		*out = (UINT16)dst;
 		return;
 	}
@@ -145,7 +143,7 @@ LDS_GdMp(void)
 		madr = calc_ea_dst(op);
 		dst = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr);
 		sreg = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 4);
-		CPU_SET_SEGREG(CPU_DS_INDEX, sreg);
+		LOAD_SEGREG(CPU_DS_INDEX, sreg);
 		*out = dst;
 		return;
 	}
@@ -165,7 +163,7 @@ LFS_GwMp(void)
 		madr = calc_ea_dst(op);
 		dst = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr);
 		sreg = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 2);
-		CPU_SET_SEGREG(CPU_FS_INDEX, sreg);
+		LOAD_SEGREG(CPU_FS_INDEX, sreg);
 		*out = (UINT16)dst;
 		return;
 	}
@@ -185,7 +183,7 @@ LFS_GdMp(void)
 		madr = calc_ea_dst(op);
 		dst = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr);
 		sreg = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 4);
-		CPU_SET_SEGREG(CPU_FS_INDEX, sreg);
+		LOAD_SEGREG(CPU_FS_INDEX, sreg);
 		*out = dst;
 		return;
 	}
@@ -205,7 +203,7 @@ LGS_GwMp(void)
 		madr = calc_ea_dst(op);
 		dst = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr);
 		sreg = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 2);
-		CPU_SET_SEGREG(CPU_GS_INDEX, sreg);
+		LOAD_SEGREG(CPU_GS_INDEX, sreg);
 		*out = (UINT16)dst;
 		return;
 	}
@@ -225,7 +223,7 @@ LGS_GdMp(void)
 		madr = calc_ea_dst(op);
 		dst = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr);
 		sreg = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr + 4);
-		CPU_SET_SEGREG(CPU_GS_INDEX, sreg);
+		LOAD_SEGREG(CPU_GS_INDEX, sreg);
 		*out = dst;
 		return;
 	}

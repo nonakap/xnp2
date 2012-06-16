@@ -161,7 +161,3 @@ enum {
 #define	FASTCALL
 #endif
 
-#if !defined(GCC_ATTR_REGPARM)
-#define GCC_ATTR_REGPARM
-#endif
-

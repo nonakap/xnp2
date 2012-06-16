@@ -1,5 +1,3 @@
-/*	$Id: cpu_io.c,v 1.8 2007/02/06 14:20:57 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -32,122 +30,90 @@
 #include "iocore.h"
 #include "memory.h"
 
-static void IOOUTCALL check_io(UINT port, UINT len);
+static void CPUCALL check_io(UINT port, UINT len);
 
-static void IOOUTCALL
+static void CPUCALL
 check_io(UINT port, UINT len) 
 {
 	UINT off;
-	UINT8 bit;
-	UINT8 map;
+	UINT16 map;
+	UINT16 mask;
 
 	if (CPU_STAT_IOLIMIT == 0) {
 		VERBOSE(("check_io: CPU_STAT_IOLIMIT == 0 (port = %04x, len = %d)", port, len));
 		EXCEPTION(GP_EXCEPTION, 0);
 	}
 
+	if ((port + len) / 8 >= CPU_STAT_IOLIMIT) {
+		VERBOSE(("check_io: out of range: CPU_STAT_IOLIMIT(%08x) (port = %04x, len = %d)", CPU_STAT_IOLIMIT, port, len));
+		EXCEPTION(GP_EXCEPTION, 0);
+	}
+
 	off = port / 8;
-	bit = 1 << (port % 8);
-	for (; len > 0; ++off, bit = 0x01) {
-		if (off >= CPU_STAT_IOLIMIT) {
-			VERBOSE(("check_io: off(%08x) >= CPU_STAT_IOLIMIT(%08x) (port = %04x, len = %d)", off, CPU_STAT_IOLIMIT, port, len));
-			EXCEPTION(GP_EXCEPTION, 0);
-		}
-
-		map = cpu_kmemoryread(CPU_STAT_IOADDR + off);
-		for (; (len > 0) && (bit != 0x00); bit <<= 1, --len) {
-			if (map & bit) {
-				VERBOSE(("check_io: (bitmap(0x%02x) & bit(0x%02x)) != 0 (port = %04x, len = %d)", map, bit, port, len));
-				EXCEPTION(GP_EXCEPTION, 0);
-			}
-		}
+	mask = ((1 << len) - 1) << (port % 8);
+	map = cpu_kmemoryread_w(CPU_STAT_IOADDR + off);
+	if (map & mask) {
+		VERBOSE(("check_io: (bitmap(0x%04x) & bit(0x%04x)) != 0 (CPU_STAT_IOADDR=0x%08x, offset=0x%04x, port = 0x%04x, len = %d)", map, mask, CPU_STAT_IOADDR, off, port, len));
+		EXCEPTION(GP_EXCEPTION, 0);
 	}
 }
 
-#if defined(IA32_SUPPORT_DEBUG_REGISTER) && CPU_FAMILY >= 5
-INLINE static void IOOUTCALL
-check_ioport_break_point(UINT port, UINT length)
-{
-	int i;
-
-	if (CPU_STAT_BP && !(CPU_EFLAG & RF_FLAG)) {
-		for (i = 0; i < CPU_DEBUG_REG_INDEX_NUM; i++) {
-			if ((CPU_STAT_BP & (1 << i))
-			 && (CPU_DR7_GET_RW(i) == CPU_DR7_RW_IO)
-
-			 && ((port <= CPU_DR(i) && port + length > CPU_DR(i))
-			  || (port > CPU_DR(i) && port <= CPU_DR(i) + CPU_DR7_GET_LEN(i)))) {
-				CPU_STAT_BP_EVENT |= CPU_STAT_BP_EVENT_B(i);
-			}
-		}
-	}
-}
-#else
-#define	check_ioport_break_point(port, length)
-#endif
-
-UINT8
+UINT8 IOINPCALL
 cpu_in(UINT port)
 {
 
 	if (CPU_STAT_PM && (CPU_STAT_VM86 || (CPU_STAT_CPL > CPU_STAT_IOPL))) {
 		check_io(port, 1);
 	}
-	check_ioport_break_point(port, 1);
 	return iocore_inp8(port);
 }
 
-UINT16
+UINT16 IOINPCALL
 cpu_in_w(UINT port)
 {
 
 	if (CPU_STAT_PM && (CPU_STAT_VM86 || (CPU_STAT_CPL > CPU_STAT_IOPL))) {
 		check_io(port, 2);
 	}
-	check_ioport_break_point(port, 2);
 	return iocore_inp16(port);
 }
 
-UINT32
+UINT32 IOINPCALL
 cpu_in_d(UINT port)
 {
 
 	if (CPU_STAT_PM && (CPU_STAT_VM86 || (CPU_STAT_CPL > CPU_STAT_IOPL))) {
 		check_io(port, 4);
 	}
-	check_ioport_break_point(port, 4);
 	return iocore_inp32(port);
 }
 
-void
+void IOOUTCALL
 cpu_out(UINT port, UINT8 data)
 {
 
 	if (CPU_STAT_PM && (CPU_STAT_VM86 || (CPU_STAT_CPL > CPU_STAT_IOPL))) {
 		check_io(port, 1);
 	}
-	check_ioport_break_point(port, 1);
 	iocore_out8(port, data);
 }
 
-void
+void IOOUTCALL
 cpu_out_w(UINT port, UINT16 data)
 {
 
 	if (CPU_STAT_PM && (CPU_STAT_VM86 || (CPU_STAT_CPL > CPU_STAT_IOPL))) {
 		check_io(port, 2);
 	}
-	check_ioport_break_point(port, 2);
 	iocore_out16(port, data);
 }
 
-void
+void IOOUTCALL
 cpu_out_d(UINT port, UINT32 data)
 {
 
 	if (CPU_STAT_PM && (CPU_STAT_VM86 || (CPU_STAT_CPL > CPU_STAT_IOPL))) {
 		check_io(port, 4);
 	}
-	check_ioport_break_point(port, 4);
 	iocore_out32(port, data);
 }

@@ -3,9 +3,7 @@
 
 #if defined(SUPPORT_VIEWER)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+G_BEGIN_DECLS
 
 #define	NP2VIEW_MAX	8
 
@@ -78,9 +76,7 @@ void viewer_allclose(void);
 
 void viewer_allreload(BOOL force);
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #else	/* SUPPORT_VIEWER */
 

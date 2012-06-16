@@ -3,6 +3,8 @@
 
 #include <dirent.h>
 
+G_BEGIN_DECLS
+
 typedef FILE *			FILEH;
 #define	FILEH_INVALID		NULL
 
@@ -54,15 +56,11 @@ typedef struct {
 } FLINFO;
 
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
-
-/* DOSIO:¥ÿøÙ§ŒΩ‡»˜ */
+/* DOSIO:Èñ¢Êï∞„ÅÆÊ∫ñÂÇô */
 void dosio_init(void);
 void dosio_term(void);
 
-/* •’•°•§•Î¡‡∫Ó */
+/* „Éï„Ç°„Ç§„É´Êìç‰Ωú */
 FILEH file_open(const OEMCHAR *path);
 FILEH file_open_rb(const OEMCHAR *path);
 FILEH file_create(const OEMCHAR *path);
@@ -76,7 +74,7 @@ short file_delete(const OEMCHAR *path);
 short file_attr(const OEMCHAR *path);
 short file_dircreate(const OEMCHAR *path);
 
-/* •´•Ï•Û•»•’•°•§•Î¡‡∫Ó */
+/* „Ç´„É¨„É≥„Éà„Éï„Ç°„Ç§„É´Êìç‰Ωú */
 void file_setcd(const OEMCHAR *exepath);
 char *file_getcd(const OEMCHAR *sjis);
 FILEH file_open_c(const OEMCHAR *sjis);
@@ -99,8 +97,6 @@ void file_cutext(OEMCHAR *path);
 void file_cutseparator(OEMCHAR *path);
 void file_setseparator(OEMCHAR *path, int maxlen);
 
-#ifdef	__cplusplus
-};
-#endif
+G_END_DECLS
 
 #endif	/* NP2_X11_DOSIO_H__ */

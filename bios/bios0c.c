@@ -13,7 +13,7 @@ void bios0x0c(void) {
 	UINT16	dseg;
 	REG8	flag;
 	UINT8	data;
-	UINT8	stat;
+	UINT8	status;
 	REG16	pos;
 	REG16	cnt;
 
@@ -22,11 +22,11 @@ void bios0x0c(void) {
 
 	flag = MEMR_READ8(dseg, doff + R_FLAG);
 	data = iocore_inp8(0x30);							// データ引き取り
-	stat = iocore_inp8(0x32) & 0xfc;					// ステータス
-	stat |= (iocore_inp8(0x33) & 3);
+	status = iocore_inp8(0x32) & 0xfc;					// ステータス
+	status |= (iocore_inp8(0x33) & 3);
 
 #if 0
-	if (stat & 0x38) {
+	if (status & 0x38) {
 		iocore_out8(0x32, flag | 0x10);
 	}
 #endif
@@ -62,7 +62,7 @@ void bios0x0c(void) {
 		}
 		// データ投棄
 		pos = MEMR_READ16(dseg, doff + R_PUTP);
-		MEMR_WRITE16(dseg, pos, (UINT16)((data << 8) | stat));
+		MEMR_WRITE16(dseg, pos, (UINT16)((data << 8) | status));
 
 		// 次のポインタをストア
 		pos = (UINT16)(pos + 2);

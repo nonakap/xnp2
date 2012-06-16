@@ -1,5 +1,3 @@
-/*	$Id: resolve.h,v 1.6 2005/03/12 12:32:54 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2003 NONAKA Kimihiro
  * All rights reserved.
@@ -34,7 +32,7 @@ extern "C" {
 
 void resolve_init(void);
 
-INLINE static UINT32
+STATIC_INLINE UINT32 CPUCALL
 calc_ea_dst(UINT32 op)
 {
 	extern UINT32 (*calc_ea_dst_tbl[0x100])(void);

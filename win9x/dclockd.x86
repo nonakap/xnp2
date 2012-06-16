@@ -13,7 +13,6 @@ DCLOCK_PATMAX	equ		13
 .drawing		resw	1
 .clk_x			resb	1
 .pad			resb	1
-.dat
 				endstruc
 
 				struc dclockpos_t
@@ -174,7 +173,7 @@ _dclock_out8:	push	ebx
 				push	ebp
 				mov		ecx, [esp+16+4]
 				sub		dword [esp+16+8], byte DCLOCK_WIDTH
-				mov		esi, _dclock + dclock_t.dat
+				mov		esi, _dclock + dclock_t_size
 				mov		edi, _dclockpal + dclockpal_t.pal8
 				mov		bh, 4
 .lp1:			mov		bl, 3
@@ -208,7 +207,7 @@ _dclock_out16:	push	ebx
 				push	esi
 				push	edi
 				push	ebp
-				mov		esi, _dclock + dclock_t.dat
+				mov		esi, _dclock + dclock_t_size
 				mov		edi, _dclockpal + dclockpal_t.pal16
 				mov		ecx, [esp+16+4]
 				sub		dword [esp+16+8], byte (DCLOCK_WIDTH * 2)
@@ -244,7 +243,7 @@ _dclock_out24:	push	ebx
 				push	esi
 				push	edi
 				push	ebp
-				mov		esi, _dclock + dclock_t.dat
+				mov		esi, _dclock + dclock_t_size
 				mov		edi, _dclockpal + dclockpal_t.pal32
 				mov		ecx, [esp+16+4]
 				sub		dword [esp+16+8], (DCLOCK_WIDTH * 3)
@@ -283,7 +282,7 @@ _dclock_out32:	push	ebx
 				push	esi
 				push	edi
 				push	ebp
-				mov		esi, _dclock + dclock_t.dat
+				mov		esi, _dclock + dclock_t_size
 				mov		edi, _dclockpal + dclockpal_t.pal32
 				mov		ecx, [esp+16+4]
 				sub		dword [esp+16+8], (DCLOCK_WIDTH * 4)
@@ -313,6 +312,4 @@ _dclock_out32:	push	ebx
 				pop		esi
 				pop		ebx
 				ret
-
-	ends
 

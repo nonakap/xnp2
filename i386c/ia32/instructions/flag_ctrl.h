@@ -1,5 +1,3 @@
-/*	$Id: flag_ctrl.h,v 1.2 2005/03/12 12:33:47 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.

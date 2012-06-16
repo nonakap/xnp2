@@ -1,5 +1,3 @@
-/*	$Id: window_softkbd.c,v 1.2 2004/07/27 17:07:50 monaka Exp $	*/
-
 #include "compiler.h"
 
 #if defined(SUPPORT_SOFTKBD)
@@ -74,9 +72,6 @@ static void
 skbdwin_window_destroy(GtkWidget *w, gpointer p)
 {
 
-	UNUSED(w);
-	UNUSED(p);
-
 	if (skwin.window)
 		skwin.window = NULL;
 	drawmng_release(skwin.hdl);
@@ -86,8 +81,6 @@ skbdwin_window_destroy(GtkWidget *w, gpointer p)
 static gboolean
 skbdwin_expose(GtkWidget *w, GdkEventExpose *ev)
 {
-
-	UNUSED(w);
 
 	if (ev->type == GDK_EXPOSE) {
 		if (ev->count == 0) {
@@ -102,9 +95,6 @@ static gboolean
 skbdwin_key_press(GtkWidget *w, GdkEventKey *ev, gpointer p)
 {
 
-	UNUSED(w);
-	UNUSED(p);
-
 	if (ev->type == GDK_KEY_PRESS) {
 		if ((ev->keyval != GDK_F12) || (np2oscfg.F12KEY != 0))
 			gtkkbd_keydown(ev->keyval);
@@ -115,9 +105,6 @@ skbdwin_key_press(GtkWidget *w, GdkEventKey *ev, gpointer p)
 static gboolean
 skbdwin_key_release(GtkWidget *w, GdkEventKey *ev, gpointer p)
 {
-
-	UNUSED(w);
-	UNUSED(p);
 
 	if (ev->type == GDK_KEY_RELEASE) {
 		if ((ev->keyval != GDK_F12) || (np2oscfg.F12KEY != 0))
@@ -130,9 +117,6 @@ skbdwin_key_release(GtkWidget *w, GdkEventKey *ev, gpointer p)
 static gboolean
 skbdwin_button_press(GtkWidget *w, GdkEventButton *ev, gpointer p)
 {
-
-	UNUSED(w);
-	UNUSED(p);
 
 	if (ev->type == GDK_BUTTON_PRESS) {
 		switch (ev->button) {
@@ -148,9 +132,6 @@ skbdwin_button_press(GtkWidget *w, GdkEventButton *ev, gpointer p)
 static gboolean
 skbdwin_button_release(GtkWidget *w, GdkEventButton *ev, gpointer p)
 {
-
-	UNUSED(w);
-	UNUSED(p);
 
 	if (ev->type == GDK_BUTTON_RELEASE) {
 		switch (ev->button) {
@@ -191,7 +172,7 @@ skbdwin_create(void)
 	gtk_window_set_resizable(GTK_WINDOW(skwin.window), FALSE);
 	gtk_widget_add_events(skwin.window, EVENT_MASK);
 	g_signal_connect(GTK_OBJECT(skwin.window), "destroy",
-	    GTK_SIGNAL_FUNC(skbdwin_window_destroy), NULL);
+	    G_CALLBACK(skbdwin_window_destroy), NULL);
 	gtk_widget_realize(skwin.window);
 
 	main_widget = gtk_vbox_new(FALSE, 2);
@@ -208,16 +189,16 @@ skbdwin_create(void)
 	gtk_widget_show(da);
 
 	g_signal_connect(GTK_OBJECT(skwin.window), "key_press_event",
-	    GTK_SIGNAL_FUNC(skbdwin_key_press), NULL);
+	    G_CALLBACK(skbdwin_key_press), NULL);
 	g_signal_connect(GTK_OBJECT(skwin.window), "key_release_event",
-	    GTK_SIGNAL_FUNC(skbdwin_key_release), NULL);
+	    G_CALLBACK(skbdwin_key_release), NULL);
 	g_signal_connect(GTK_OBJECT(skwin.window), "button_press_event",
-	    GTK_SIGNAL_FUNC(skbdwin_button_press), NULL);
+	    G_CALLBACK(skbdwin_button_press), NULL);
 	g_signal_connect(GTK_OBJECT(skwin.window), "button_release_event",
-	    GTK_SIGNAL_FUNC(skbdwin_button_release), NULL);
+	    G_CALLBACK(skbdwin_button_release), NULL);
 
 	g_signal_connect(GTK_OBJECT(da), "expose_event",
-	    GTK_SIGNAL_FUNC(skbdwin_expose), NULL);
+	    G_CALLBACK(skbdwin_expose), NULL);
 
 	gtk_widget_show_all(skwin.window);
 

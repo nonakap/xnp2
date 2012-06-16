@@ -105,7 +105,7 @@ static void beep_eventset(void) {
 
 	BPEVENT	*evt;
 	int		enable;
-	SINT32	clock;
+	SINT32	clk;
 
 	enable = beep.low & beep.buz;
 	if (beep.enable != enable) {
@@ -128,12 +128,12 @@ static void beep_eventset(void) {
 		}
 		beep.enable = enable;
 		if (beep.events < BEEPEVENT_MAX) {
-			clock = CPU_CLOCK + CPU_BASECLOCK - CPU_REMCLOCK;
+			clk = CPU_CLOCK + CPU_BASECLOCK - CPU_REMCLOCK;
 			evt = beep.event + beep.events;
 			beep.events++;
-			evt->clock = (clock - beep.clock) * beepcfg.samplebase;
+			evt->clock = (clk - beep.clock) * beepcfg.samplebase;
 			evt->enable = enable;
-			beep.clock = clock;
+			beep.clock = clk;
 		}
 	}
 }

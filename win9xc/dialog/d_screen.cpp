@@ -258,7 +258,11 @@ void dialog_scropt(HWND hWnd) {
 	PROPSHEETHEADER	psh;
 	HPROPSHEETPAGE	hpsp[3];
 
-	hinst = (HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE);
+#if defined(_WIN64)
+	hinst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
+#else
+	hinst = reinterpret_cast<HINSTANCE>(::GetWindowLong(hWnd, GWL_HINSTANCE));
+#endif
 
 	ZeroMemory(&psp, sizeof(psp));
 	psp.dwSize = sizeof(PROPSHEETPAGE);

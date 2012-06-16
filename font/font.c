@@ -1,3 +1,11 @@
+/**
+ * @file	font.c
+ * @brief	CGROM and font loader
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/02/23 10:11:44 $
+ */
+
 #include	"compiler.h"
 #include	"strres.h"
 #include	"dosio.h"
@@ -6,15 +14,26 @@
 #include	"fontdata.h"
 #include	"fontmake.h"
 
-
 #ifndef FONTMEMORYBIND
 	UINT8	__font[0x84000];
 #endif
 
 static const OEMCHAR fonttmpname[] = OEMTEXT("font.tmp");
 
-
+/**
+ * Initializes CGROM
+ */
 void font_initialize(void) {
+
+	ZeroMemory(fontrom, sizeof(fontrom));
+	font_setchargraph(FALSE);
+}
+
+/**
+ * Builds charactor graphics
+ * @param[in] epson If this parameter is FALSE, patched NEC charactor
+ */
+void font_setchargraph(BOOL epson) {
 
 	UINT8	*p;
 	UINT8	*q;
@@ -22,7 +41,6 @@ void font_initialize(void) {
 	UINT	j;
 	UINT32	dbit;
 
-	ZeroMemory(fontrom, sizeof(fontrom));
 	p = fontrom + 0x81000;
 	q = fontrom + 0x82000;
 	for (i=0; i<256; i++) {
@@ -41,8 +59,18 @@ void font_initialize(void) {
 			q += 2;
 		}
 	}
+
+	if (!epson) {
+		*(UINT16 *)(fontrom + 0x81000 + (0xf2 * 16)) = 0;
+		fontrom[0x82000 + (0xf2 * 8)] = 0;
+	}
 }
 
+/**
+ * Retrieves the font type of the specified file.
+ * @param[in] fname The name of the font file
+ * @return font type
+ */
 static UINT8 fonttypecheck(const OEMCHAR *fname) {
 
 const OEMCHAR	*p;
@@ -75,6 +103,13 @@ const OEMCHAR	*p;
 	return(FONTTYPE_NONE);
 }
 
+/**
+ * Loads font files
+ * @param[in] filename The name of the font file
+ * @param[in] force If this parameter is TRUE, load file always
+ *                  If this parameter is FALSE, load when font is not ready
+ * @return font type
+ */
 UINT8 font_load(const OEMCHAR *filename, BOOL force) {
 
 	UINT	i;
@@ -154,4 +189,3 @@ const UINT8	*p;
 	}
 	return(type);
 }
-

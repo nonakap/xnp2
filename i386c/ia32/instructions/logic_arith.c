@@ -1,5 +1,3 @@
-/*	$Id: logic_arith.c,v 1.7 2005/03/12 12:33:47 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.

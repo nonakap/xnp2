@@ -31,16 +31,23 @@
 
 #include "kbdmng.h"
 
-static const BYTE kbdmng_f12keys[] = { 0x61, 0x60, 0x4f, 0x4d, 0x76, 0x77 };
-
+static const BYTE kbdmng_f12keys[] = {
+	0x61,	/* Copy */
+	0x60,	/* Stop */
+	0x4f,	/* tenkey [,] */
+	0x4d,	/* tenkey [=] */
+	0x76,	/* User1 */
+	0x77,	/* User2 */
+	0x3f,	/* Help */
+};
 
 BYTE
 kbdmng_getf12key(void)
 {
 	int key;
 
-	key = np2oscfg.F12KEY - 1;
-	if (key < NELEMENTS(kbdmng_f12keys))
+	key = np2oscfg.F12KEY - 1; /* 0 is Mouse mode */
+	if (key >= 0 && key < NELEMENTS(kbdmng_f12keys))
 		return kbdmng_f12keys[key];
 	return KEYBOARD_KC_NC;
 }

@@ -1,5 +1,3 @@
-/*	$Id: shift_rotate.h,v 1.4 2005/03/12 12:33:48 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -35,50 +33,50 @@ extern "C" {
 /*
  * SAR
  */
-void SAR_Eb(UINT8 *);
-void SAR_Ew(UINT16 *);
-void SAR_Ed(UINT32 *);
-void SAR_Eb_ext(UINT32);
-void SAR_Ew_ext(UINT32);
-void SAR_Ed_ext(UINT32);
-void SAR_EbCL(UINT8 *, UINT32);
-void SAR_EbCL_ext(UINT32, UINT32);
-void SAR_EwCL(UINT16 *, UINT32);
-void SAR_EwCL_ext(UINT32, UINT32);
-void SAR_EdCL(UINT32 *, UINT32);
-void SAR_EdCL_ext(UINT32, UINT32);
+void CPUCALL SAR_Eb(UINT8 *);
+void CPUCALL SAR_Ew(UINT16 *);
+void CPUCALL SAR_Ed(UINT32 *);
+void CPUCALL SAR_Eb_ext(UINT32);
+void CPUCALL SAR_Ew_ext(UINT32);
+void CPUCALL SAR_Ed_ext(UINT32);
+void CPUCALL SAR_EbCL(UINT8 *, UINT32);
+void CPUCALL SAR_EbCL_ext(UINT32, UINT32);
+void CPUCALL SAR_EwCL(UINT16 *, UINT32);
+void CPUCALL SAR_EwCL_ext(UINT32, UINT32);
+void CPUCALL SAR_EdCL(UINT32 *, UINT32);
+void CPUCALL SAR_EdCL_ext(UINT32, UINT32);
 
 /*
  * SHR
  */
-void SHR_Eb(UINT8 *);
-void SHR_Ew(UINT16 *);
-void SHR_Ed(UINT32 *);
-void SHR_Eb_ext(UINT32);
-void SHR_Ew_ext(UINT32);
-void SHR_Ed_ext(UINT32);
-void SHR_EbCL(UINT8 *, UINT32);
-void SHR_EbCL_ext(UINT32, UINT32);
-void SHR_EwCL(UINT16 *, UINT32);
-void SHR_EwCL_ext(UINT32, UINT32);
-void SHR_EdCL(UINT32 *, UINT32);
-void SHR_EdCL_ext(UINT32, UINT32);
+void CPUCALL SHR_Eb(UINT8 *);
+void CPUCALL SHR_Ew(UINT16 *);
+void CPUCALL SHR_Ed(UINT32 *);
+void CPUCALL SHR_Eb_ext(UINT32);
+void CPUCALL SHR_Ew_ext(UINT32);
+void CPUCALL SHR_Ed_ext(UINT32);
+void CPUCALL SHR_EbCL(UINT8 *, UINT32);
+void CPUCALL SHR_EbCL_ext(UINT32, UINT32);
+void CPUCALL SHR_EwCL(UINT16 *, UINT32);
+void CPUCALL SHR_EwCL_ext(UINT32, UINT32);
+void CPUCALL SHR_EdCL(UINT32 *, UINT32);
+void CPUCALL SHR_EdCL_ext(UINT32, UINT32);
 
 /*
  * SHL
  */
-void SHL_Eb(UINT8 *);
-void SHL_Ew(UINT16 *);
-void SHL_Ed(UINT32 *);
-void SHL_Eb_ext(UINT32);
-void SHL_Ew_ext(UINT32);
-void SHL_Ed_ext(UINT32);
-void SHL_EbCL(UINT8 *, UINT32);
-void SHL_EbCL_ext(UINT32, UINT32);
-void SHL_EwCL(UINT16 *, UINT32);
-void SHL_EwCL_ext(UINT32, UINT32);
-void SHL_EdCL(UINT32 *, UINT32);
-void SHL_EdCL_ext(UINT32, UINT32);
+void CPUCALL SHL_Eb(UINT8 *);
+void CPUCALL SHL_Ew(UINT16 *);
+void CPUCALL SHL_Ed(UINT32 *);
+void CPUCALL SHL_Eb_ext(UINT32);
+void CPUCALL SHL_Ew_ext(UINT32);
+void CPUCALL SHL_Ed_ext(UINT32);
+void CPUCALL SHL_EbCL(UINT8 *, UINT32);
+void CPUCALL SHL_EbCL_ext(UINT32, UINT32);
+void CPUCALL SHL_EwCL(UINT16 *, UINT32);
+void CPUCALL SHL_EwCL_ext(UINT32, UINT32);
+void CPUCALL SHL_EdCL(UINT32 *, UINT32);
+void CPUCALL SHL_EdCL_ext(UINT32, UINT32);
 
 /*
  * SHRD
@@ -99,66 +97,66 @@ void SHLD_EdGdCL(void);
 /*
  * ROR
  */
-void ROR_Eb(UINT8 *);
-void ROR_Ew(UINT16 *);
-void ROR_Ed(UINT32 *);
-void ROR_Eb_ext(UINT32);
-void ROR_Ew_ext(UINT32);
-void ROR_Ed_ext(UINT32);
-void ROR_EbCL(UINT8 *, UINT32);
-void ROR_EbCL_ext(UINT32, UINT32);
-void ROR_EwCL(UINT16 *, UINT32);
-void ROR_EwCL_ext(UINT32, UINT32);
-void ROR_EdCL(UINT32 *, UINT32);
-void ROR_EdCL_ext(UINT32, UINT32);
+void CPUCALL ROR_Eb(UINT8 *);
+void CPUCALL ROR_Ew(UINT16 *);
+void CPUCALL ROR_Ed(UINT32 *);
+void CPUCALL ROR_Eb_ext(UINT32);
+void CPUCALL ROR_Ew_ext(UINT32);
+void CPUCALL ROR_Ed_ext(UINT32);
+void CPUCALL ROR_EbCL(UINT8 *, UINT32);
+void CPUCALL ROR_EbCL_ext(UINT32, UINT32);
+void CPUCALL ROR_EwCL(UINT16 *, UINT32);
+void CPUCALL ROR_EwCL_ext(UINT32, UINT32);
+void CPUCALL ROR_EdCL(UINT32 *, UINT32);
+void CPUCALL ROR_EdCL_ext(UINT32, UINT32);
 
 /*
  * ROL
  */
-void ROL_Eb(UINT8 *);
-void ROL_Ew(UINT16 *);
-void ROL_Ed(UINT32 *);
-void ROL_Eb_ext(UINT32);
-void ROL_Ew_ext(UINT32);
-void ROL_Ed_ext(UINT32);
-void ROL_EbCL(UINT8 *, UINT32);
-void ROL_EbCL_ext(UINT32, UINT32);
-void ROL_EwCL(UINT16 *, UINT32);
-void ROL_EwCL_ext(UINT32, UINT32);
-void ROL_EdCL(UINT32 *, UINT32);
-void ROL_EdCL_ext(UINT32, UINT32);
+void CPUCALL ROL_Eb(UINT8 *);
+void CPUCALL ROL_Ew(UINT16 *);
+void CPUCALL ROL_Ed(UINT32 *);
+void CPUCALL ROL_Eb_ext(UINT32);
+void CPUCALL ROL_Ew_ext(UINT32);
+void CPUCALL ROL_Ed_ext(UINT32);
+void CPUCALL ROL_EbCL(UINT8 *, UINT32);
+void CPUCALL ROL_EbCL_ext(UINT32, UINT32);
+void CPUCALL ROL_EwCL(UINT16 *, UINT32);
+void CPUCALL ROL_EwCL_ext(UINT32, UINT32);
+void CPUCALL ROL_EdCL(UINT32 *, UINT32);
+void CPUCALL ROL_EdCL_ext(UINT32, UINT32);
 
 /*
  * RCR
  */
-void RCR_Eb(UINT8 *);
-void RCR_Ew(UINT16 *);
-void RCR_Ed(UINT32 *);
-void RCR_Eb_ext(UINT32);
-void RCR_Ew_ext(UINT32);
-void RCR_Ed_ext(UINT32);
-void RCR_EbCL(UINT8 *, UINT32);
-void RCR_EbCL_ext(UINT32, UINT32);
-void RCR_EwCL(UINT16 *, UINT32);
-void RCR_EwCL_ext(UINT32, UINT32);
-void RCR_EdCL(UINT32 *, UINT32);
-void RCR_EdCL_ext(UINT32, UINT32);
+void CPUCALL RCR_Eb(UINT8 *);
+void CPUCALL RCR_Ew(UINT16 *);
+void CPUCALL RCR_Ed(UINT32 *);
+void CPUCALL RCR_Eb_ext(UINT32);
+void CPUCALL RCR_Ew_ext(UINT32);
+void CPUCALL RCR_Ed_ext(UINT32);
+void CPUCALL RCR_EbCL(UINT8 *, UINT32);
+void CPUCALL RCR_EbCL_ext(UINT32, UINT32);
+void CPUCALL RCR_EwCL(UINT16 *, UINT32);
+void CPUCALL RCR_EwCL_ext(UINT32, UINT32);
+void CPUCALL RCR_EdCL(UINT32 *, UINT32);
+void CPUCALL RCR_EdCL_ext(UINT32, UINT32);
 
 /*
  * RCL
  */
-void RCL_Eb(UINT8 *);
-void RCL_Ew(UINT16 *);
-void RCL_Ed(UINT32 *);
-void RCL_Eb_ext(UINT32);
-void RCL_Ew_ext(UINT32);
-void RCL_Ed_ext(UINT32);
-void RCL_EbCL(UINT8 *, UINT32);
-void RCL_EbCL_ext(UINT32, UINT32);
-void RCL_EwCL(UINT16 *, UINT32);
-void RCL_EwCL_ext(UINT32, UINT32);
-void RCL_EdCL(UINT32 *, UINT32);
-void RCL_EdCL_ext(UINT32, UINT32);
+void CPUCALL RCL_Eb(UINT8 *);
+void CPUCALL RCL_Ew(UINT16 *);
+void CPUCALL RCL_Ed(UINT32 *);
+void CPUCALL RCL_Eb_ext(UINT32);
+void CPUCALL RCL_Ew_ext(UINT32);
+void CPUCALL RCL_Ed_ext(UINT32);
+void CPUCALL RCL_EbCL(UINT8 *, UINT32);
+void CPUCALL RCL_EbCL_ext(UINT32, UINT32);
+void CPUCALL RCL_EwCL(UINT16 *, UINT32);
+void CPUCALL RCL_EwCL_ext(UINT32, UINT32);
+void CPUCALL RCL_EdCL(UINT32 *, UINT32);
+void CPUCALL RCL_EdCL_ext(UINT32, UINT32);
 
 #ifdef __cplusplus
 }

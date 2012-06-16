@@ -40,6 +40,7 @@ static REG8 bios0x1f_90(void) {
 		l = min(l, srclimit - srcaddr);
 		l = min(l, dstlimit - dstaddr);
 		if (!l) {
+			CPU_A20EN(FALSE);
 			goto p90_err2;
 		}
 		MEML_READS(srcbase + srcaddr, work, l);

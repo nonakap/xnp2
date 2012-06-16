@@ -1,5 +1,3 @@
-/*	$Id: interface.c,v 1.26 2008/01/27 12:11:31 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2003 NONAKA Kimihiro
  * All rights reserved.
@@ -36,9 +34,6 @@
 #include "iocore.h"
 #include "dmax86.h"
 #include "bios.h"
-#if defined(IA32_REBOOT_ON_PANIC)
-#include "pccore.h"
-#endif
 
 
 void
@@ -50,31 +45,32 @@ ia32_initreg(void)
 
 	CPU_EDX = (CPU_FAMILY << 8) | (CPU_MODEL << 4) | CPU_STEPPING;
 	CPU_EFLAG = 2;
-	CPU_CR0 = CPU_CR0_CD | CPU_CR0_NW | CPU_CR0_ET;
+	CPU_CR0 = CPU_CR0_CD | CPU_CR0_NW;
 #if defined(USE_FPU)
-	CPU_CR0 |= CPU_CR0_EM | CPU_CR0_NE;
-	CPU_CR0 &= ~CPU_CR0_MP;
-#else
+	CPU_CR0 &= ~CPU_CR0_EM;
 	CPU_CR0 |= CPU_CR0_ET;
+#else
+	CPU_CR0 |= CPU_CR0_EM | CPU_CR0_NE;
+	CPU_CR0 &= ~(CPU_CR0_MP | CPU_CR0_ET);
 #endif
 	CPU_MXCSR = 0x1f80;
+
+	CPU_GDTR_BASE = 0x0;
 	CPU_GDTR_LIMIT = 0xffff;
+	CPU_IDTR_BASE = 0x0;
 	CPU_IDTR_LIMIT = 0xffff;
-
-#if CPU_FAMILY == 4
-	CPU_STATSAVE.cpu_regs.dr[6] = 0xffff1ff0;
-#elif CPU_FAMILY >= 5
-	CPU_STATSAVE.cpu_regs.dr[6] = 0xffff0ff0;
-	CPU_STATSAVE.cpu_regs.dr[7] = 0x00000400;
-#endif
-
-	for (i = 0; i < CPU_SEGREG_NUM; ++i) {
-		CPU_STAT_SREG_INIT(i);
-	}
+	CPU_LDTR_BASE = 0x0;
 	CPU_LDTR_LIMIT = 0xffff;
+	CPU_TR_BASE = 0x0;
 	CPU_TR_LIMIT = 0xffff;
 
-	CPU_SET_SEGREG(CPU_CS_INDEX, 0xf000);
+	CPU_STATSAVE.cpu_regs.dr[6] = 0xffff1ff0;
+
+	for (i = 0; i < CPU_SEGREG_NUM; ++i) {
+		segdesc_init(i, 0, &CPU_STAT_SREG(i));
+	}
+	LOAD_SEGREG(CPU_CS_INDEX, 0xf000);
+	CPU_STAT_CS_BASE = 0xffff0000;
 	CPU_EIP = 0xfff0;
 	CPU_ADRSMASK = 0x000fffff;
 
@@ -103,11 +99,8 @@ ia32shut(void)
 void
 ia32a20enable(BOOL enable)
 {
-#if (CPU_FAMILY == 3)
-	CPU_ADRSMASK = (enable)?0x00ffffff:0x00ffffff;
-#else
+
 	CPU_ADRSMASK = (enable)?0xffffffff:0x00ffffff;
-#endif
 }
 
 void
@@ -133,20 +126,12 @@ ia32(void)
 		break;
 	}
 
-#if defined(IA32_SUPPORT_DEBUG_REGISTER)
-	do {
-		exec_1step();
-		if (dmac.working) {
-			dmax86();
-		}
-	} while (CPU_REMCLOCK > 0);
-#else
 	if (CPU_TRAP) {
 		do {
 			exec_1step();
 			if (CPU_TRAP) {
 				CPU_DR6 |= CPU_DR6_BS;
-				INTERRUPT(1, TRUE, FALSE, 0);
+				INTERRUPT(1, INTR_TYPE_EXCEPTION);
 			}
 			dmax86();
 		} while (CPU_REMCLOCK > 0);
@@ -160,7 +145,6 @@ ia32(void)
 			exec_1step();
 		} while (CPU_REMCLOCK > 0);
 	}
-#endif
 }
 
 void
@@ -188,12 +172,10 @@ ia32_step(void)
 
 	do {
 		exec_1step();
-#if !defined(IA32_SUPPORT_DEBUG_REGISTER)
 		if (CPU_TRAP) {
 			CPU_DR6 |= CPU_DR6_BS;
-			INTERRUPT(1, TRUE, FALSE, 0);
+			INTERRUPT(1, INTR_TYPE_EXCEPTION);
 		}
-#endif
 		if (dmac.working) {
 			dmax86();
 		}
@@ -206,13 +188,13 @@ ia32_interrupt(int vect, int soft)
 
 //	TRACEOUT(("int (%x, %x) PE=%d VM=%d",  vect, soft, CPU_STAT_PM, CPU_STAT_VM86));
 	if (!soft) {
-		INTERRUPT(vect, FALSE, FALSE, 0);
-	}
-	else {
-		if (CPU_STAT_VM86 && (CPU_STAT_IOPL < CPU_IOPL3) && (soft == -1)) {
-			TRACEOUT(("BIOS interrupt: VM86 && IOPL < 3 && INTn"));
+		INTERRUPT(vect, INTR_TYPE_EXTINTR);
+	} else {
+		if (CPU_STAT_PM && CPU_STAT_VM86 && CPU_STAT_IOPL < CPU_IOPL3) {
+			VERBOSE(("ia32_interrupt: VM86 && IOPL < 3 && INTn"));
+			EXCEPTION(GP_EXCEPTION, 0);
 		}
-		INTERRUPT(vect, TRUE, FALSE, 0);
+		INTERRUPT(vect, INTR_TYPE_SOFTINTR);
 	}
 }
 
@@ -232,6 +214,7 @@ ia32_panic(const char *str, ...)
 	va_end(ap);
 	strcat(buf, "\n");
 	strcat(buf, cpu_reg2str());
+	VERBOSE(("%s", buf));
 
 	msgbox("ia32_panic", buf);
 
@@ -282,20 +265,18 @@ ia32_bioscall(void)
 
 	if (!CPU_STAT_PM || CPU_STAT_VM86) {
 #if 1
-		adrs = (CPU_EIP - 1) + ((CPU_REGS_SREG(CPU_CS_INDEX)) << 4);
+		adrs = CPU_PREV_EIP + (CPU_CS << 4);
 #else
-		adrs = (CPU_EIP - 1) + CPU_STAT_CS_BASE;
+		adrs = CPU_PREV_EIP + CPU_STAT_CS_BASE;
 #endif
 		if ((adrs >= 0xf8000) && (adrs < 0x100000)) {
 			if (biosfunc(adrs)) {
 				/* Nothing to do */
 			}
-			if (!CPU_STAT_PM || CPU_STAT_VM86) {
-				CPU_SET_SEGREG(CPU_ES_INDEX, CPU_ES);
-				CPU_SET_SEGREG(CPU_CS_INDEX, CPU_CS);
-				CPU_SET_SEGREG(CPU_SS_INDEX, CPU_SS);
-				CPU_SET_SEGREG(CPU_DS_INDEX, CPU_DS);
-			}
+			LOAD_SEGREG(CPU_ES_INDEX, CPU_ES);
+			LOAD_SEGREG(CPU_CS_INDEX, CPU_CS);
+			LOAD_SEGREG(CPU_SS_INDEX, CPU_SS);
+			LOAD_SEGREG(CPU_DS_INDEX, CPU_DS);
 		}
 	}
 }

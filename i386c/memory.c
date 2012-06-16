@@ -582,7 +582,7 @@ void MEMCALL memp_writes(UINT32 address, const void *dat, UINT leng) {
 
 // ---- Logical Space (BIOS)
 
-static UINT32 physicaladdr(UINT32 addr, BOOL wr) {
+static UINT32 MEMCALL physicaladdr(UINT32 addr, BOOL wr) {
 
 	UINT32	a;
 	UINT32	pde;
@@ -610,8 +610,8 @@ static UINT32 physicaladdr(UINT32 addr, BOOL wr) {
 	addr = (pte & CPU_PTE_BASEADDR_MASK) + (addr & 0x00000fff);
 	return(addr);
 
-retdummy:
-	return(0x01000000);		// ÇƒÇ´Ç∆Å[Ç…ÉÅÉÇÉäÇ™ë∂ç›ÇµÇ»Ç¢èÍèä
+ retdummy:
+	return(0x01000000);	/* XXX */
 }
 
 
@@ -754,4 +754,3 @@ void MEMCALL memr_writes(UINT seg, UINT off, const void *dat, UINT leng) {
 }
 
 #endif
-

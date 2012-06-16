@@ -1,5 +1,3 @@
-/*	$Id: task.h,v 1.7 2005/03/12 12:32:54 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -32,20 +30,19 @@
 extern "C" {
 #endif
 
-void load_tr(UINT16 selector);
-void get_stack_pointer_from_tss(UINT pl, UINT16 *new_ss, UINT32 *new_esp);
+void CPUCALL load_tr(UINT16 selector);
+void CPUCALL get_stack_pointer_from_tss(UINT pl, UINT16 *new_ss, UINT32 *new_esp);
 UINT16 get_backlink_selector_from_tss(void);
 
 /* task_switch type */
-enum task_switch_type {
+typedef enum {
 	TASK_SWITCH_JMP,
 	TASK_SWITCH_CALL,
 	TASK_SWITCH_IRET,
 	TASK_SWITCH_INTR
-};
-typedef enum task_switch_type task_switch_type_t;
+} task_switch_type_t;
 
-void task_switch(selector_t *selector, task_switch_type_t type);
+void CPUCALL task_switch(selector_t *selector, task_switch_type_t type);
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 NONAKA Kimihiro
+ * Copyright (c) 2012 NONAKA Kimihiro
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,8 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -25,27 +23,21 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef	NP2_SDL_SDLTOOLKIT_H__
-#define	NP2_SDL_SDLTOOLKIT_H__
+#include "compiler.h"
+#include "cpu.h"
+#include "ia32.mcr"
 
-#ifdef __cplusplus
-extern "C" {
+#include "instructions/fpu/fp.h"
+
+
+void
+FWAIT(void)
+{
+#if defined(USE_FPU)
+	if (CPU_CR0 & (CPU_CR0_MP|CPU_CR0_TS)) {
+		EXCEPTION(NM_EXCEPTION, 0);
+	}
+
+	fpu_fwait();
 #endif
-
-extern gui_toolkit_t sdl_toolkit;
-
-const char *gui_sdl_get_toolkit(void);
-BOOL gui_sdl_arginit(int *argcp, char ***argvp);
-void gui_sdl_widget_create(void);
-void gui_sdl_widget_show(void);
-void gui_sdl_widget_mainloop(void);
-void gui_sdl_widget_quit(void);
-void gui_sdl_event_process(void);
-void gui_sdl_set_window_title(const char* str);
-void gui_sdl_messagebox(const char *title, const char *msg);
-
-#ifdef __cplusplus
 }
-#endif
-
-#endif	/* NP2_SDL_SDLTOOLKIT_H__ */

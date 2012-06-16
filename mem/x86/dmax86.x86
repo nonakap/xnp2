@@ -7,7 +7,6 @@ section .text
 	extern	@i286_memoryread@4
 	extern	@i286_memorywrite@8
 
-
 				align	16
 _dmax86:		cmp		byte [_dmac + dmac_t.working], byte 0
 				je		short .nowork
@@ -16,7 +15,7 @@ _dmax86:		cmp		byte [_dmac + dmac_t.working], byte 0
 .sea:			test	[_dmac + dmac_t.working], cl
 				jne		short .hit
 				add		cl, cl
-				add		eax, byte dmach_t.size
+				add		eax, byte dmach_t_size
 				test	cl, 15
 				jne		short .sea
 .nowork:		ret
@@ -54,6 +53,4 @@ _dmax86:		cmp		byte [_dmac + dmac_t.working], byte 0
 .adrsdec:		dec		dword [edi + dmach_t.adrs]
 				pop		edi
 				ret
-
-	ends
 

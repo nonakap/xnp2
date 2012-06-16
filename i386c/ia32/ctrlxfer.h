@@ -1,5 +1,3 @@
-/*	$Id: ctrlxfer.h,v 1.3 2005/03/12 12:32:54 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -32,9 +30,9 @@
 extern "C" {
 #endif
 
-void JMPfar_pm(UINT16 selector, UINT32 new_ip);
-void CALLfar_pm(UINT16 selector, UINT32 new_ip);
-void RETfar_pm(UINT nbytes);
+void CPUCALL JMPfar_pm(UINT16 selector, UINT32 new_ip);
+void CPUCALL CALLfar_pm(UINT16 selector, UINT32 new_ip);
+void CPUCALL RETfar_pm(UINT nbytes);
 void IRET_pm(void);
 
 #ifdef __cplusplus

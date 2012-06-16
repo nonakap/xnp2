@@ -121,7 +121,7 @@ static BOOL hddseadir(void *vpItem, void *vpArg) {
 	return(FALSE);
 }
 
-LISTARRAY hostdrvs_getpathlist(const OEMCHAR *realpath) {
+LISTARRAY hostdrvs_getpathlist(const OEMCHAR *path) {
 
 	FLISTH		flh;
 	FLINFO		fli;
@@ -129,7 +129,7 @@ LISTARRAY hostdrvs_getpathlist(const OEMCHAR *realpath) {
 	char		fcbname[11];
 	HDRVLST		hdd;
 
-	flh = file_list1st(realpath, &fli);
+	flh = file_list1st(path, &fli);
 	if (flh == FLISTH_INVALID) {
 		goto hdgpl_err1;
 	}

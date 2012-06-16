@@ -398,31 +398,31 @@ static int statflag_writepath(STFLAGH sfh, const OEMCHAR *path,
 	return(statflag_write(sfh, &sp, sizeof(sp)));
 }
 
-static int statflag_checkpath(STFLAGH sfh, const OEMCHAR *devname) {
+static int statflag_checkpath(STFLAGH sfh, const OEMCHAR *dvname) {
 
 	int			ret;
 	STATPATH	sp;
 	FILEH		fh;
 	OEMCHAR		buf[256];
-	DOSDATE		date;
-	DOSTIME		time;
+	DOSDATE		dosdate;
+	DOSTIME		dostime;
 
 	ret = statflag_read(sfh, &sp, sizeof(sp));
 	if (sp.path[0]) {
 		fh = file_open_rb(sp.path);
 		if (fh != FILEH_INVALID) {
-			file_getdatetime(fh, &date, &time);
+			file_getdatetime(fh, &dosdate, &dostime);
 			file_close(fh);
-			if ((memcmp(&sp.date, &date, sizeof(date))) ||
-				(memcmp(&sp.time, &time, sizeof(time)))) {
+			if ((memcmp(&sp.date, &dosdate, sizeof(dosdate))) ||
+				(memcmp(&sp.time, &dostime, sizeof(dostime)))) {
 				ret |= STATFLAG_DISKCHG;
-				OEMSPRINTF(buf, str_updated, devname);
+				OEMSPRINTF(buf, str_updated, dvname);
 				statflag_seterr(sfh, buf);
 			}
 		}
 		else {
 			ret |= STATFLAG_DISKCHG;
-			OEMSPRINTF(buf, str_notfound, devname);
+			OEMSPRINTF(buf, str_notfound, dvname);
 			statflag_seterr(sfh, buf);
 		}
 	}

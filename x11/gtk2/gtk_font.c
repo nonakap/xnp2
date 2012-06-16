@@ -1,5 +1,3 @@
-/*	$Id: gtk_font.c,v 1.6 2007/01/10 15:58:21 monaka Exp $	*/
-
 /*
  * Copyright (c) 2004 NONAKA Kimihiro
  * All rights reserved.
@@ -93,7 +91,7 @@ fontmng_create(int size, UINT type, const TCHAR *fontface)
 	}
 
 	g_snprintf(buf, sizeof(buf), "%s %s %s %d",
-	    fontface ? (char *)fontface : fontname,
+	    fontface ? (const char *)fontface : fontname,
 	    (type & FDAT_BOLD) ? "bold" : "medium",
 	    (type & FDAT_PROPORTIONAL) ? "" : "",
 	    size);
@@ -164,8 +162,6 @@ fontmng_destroy(void *hdl)
 static void
 setfdathead(FNTMNG fhdl, FNTDAT fdat, const char *str, int len)
 {
-
-	UNUSED(str);
 
 	fdat->width = fhdl->rect.width;
 	fdat->height = fhdl->rect.height;

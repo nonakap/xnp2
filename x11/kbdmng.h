@@ -28,9 +28,7 @@
 
 #include "keystat.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+G_BEGIN_DECLS
 
 enum {
 	KEY_KEY106,
@@ -46,8 +44,6 @@ BOOL kbdmng_init(void);
 BYTE kbdmng_getf12key(void);
 void kbdmng_resetf12(void);
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #endif	/* NP2_X11_KBDMNG_H__ */

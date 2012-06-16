@@ -1,5 +1,3 @@
-/*	$Id: ia32xc.mcr,v 1.8 2005/03/12 12:34:30 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.

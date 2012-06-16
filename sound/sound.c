@@ -242,7 +242,7 @@ void sound_reset(void) {
 
 void sound_changeclock(void) {
 
-	UINT32	clock;
+	UINT32	clk;
 	UINT	hz;
 	UINT	hzmax;
 
@@ -251,19 +251,19 @@ void sound_changeclock(void) {
 	}
 
 	// とりあえず 25で割り切れる。
-	clock = pccore.realclock / 25;
+	clk = pccore.realclock / 25;
 	hz = soundcfg.rate / 25;
 
 	// で、クロック数に合せて調整。(64bit演算しろよな的)
-	hzmax = (1 << (32 - 8)) / (clock >> 8);
+	hzmax = (1 << (32 - 8)) / (clk >> 8);
 	while(hzmax < hz) {
-		clock = (clock + 1) >> 1;
+		clk = (clk + 1) >> 1;
 		hz = (hz + 1) >> 1;
 	}
-	TRACEOUT(("hzbase/clockbase = %d/%d", hz, clock));
+	TRACEOUT(("hzbase/clockbase = %d/%d", hz, clk));
 	soundcfg.hzbase = hz;
-	soundcfg.clockbase = clock;
-	soundcfg.minclock = 2 * clock / hz;
+	soundcfg.clockbase = clk;
+	soundcfg.minclock = 2 * clk / hz;
 	soundcfg.lastclock = CPU_CLOCK;
 }
 

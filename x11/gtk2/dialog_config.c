@@ -1,5 +1,3 @@
-/*	$Id: dialog_config.c,v 1.5 2007/01/23 14:17:39 monaka Exp $	*/
-
 /*
  * Copyright (c) 2002-2003 NONAKA Kimihiro
  * All rights reserved.
@@ -65,7 +63,9 @@ static const struct {
 static GtkWidget *baseclock_entry;
 static GtkWidget *clockmult_entry;
 static GtkWidget *buffer_entry;
+#if defined(SUPPORT_RESUME)
 static GtkWidget *resume_checkbutton;
+#endif
 #if defined(GCC_CPU_ARCH_IA32)
 static GtkWidget *disablemmx_checkbutton;
 #endif
@@ -79,7 +79,9 @@ ok_button_clicked(GtkButton *b, gpointer d)
 	const gchar *bufp = gtk_entry_get_text(GTK_ENTRY(buffer_entry));
 	const gchar *base = gtk_entry_get_text(GTK_ENTRY(baseclock_entry));
 	const gchar *multp = gtk_entry_get_text(GTK_ENTRY(clockmult_entry));
+#if defined(SUPPORT_RESUME)
 	gint resume = GTK_TOGGLE_BUTTON(resume_checkbutton)->active;
+#endif
 #if defined(GCC_CPU_ARCH_IA32)
 	gint disablemmx = GTK_TOGGLE_BUTTON(disablemmx_checkbutton)->active;
 #endif
@@ -87,8 +89,6 @@ ok_button_clicked(GtkButton *b, gpointer d)
 	guint mult;
 	UINT renewal = 0;
 	int i;
-
-	UNUSED(b);
 
 	if (strcmp(base, "1.9968MHz") == 0) {
 		if (np2cfg.baseclock != PCBASECLOCK20) {
@@ -160,10 +160,12 @@ ok_button_clicked(GtkButton *b, gpointer d)
 	}
 #endif
 
+#if defined(SUPPORT_RESUME)
 	if (np2oscfg.resume != resume) {
 		np2oscfg.resume = resume;
 		renewal |= SYS_UPDATEOSCFG;
 	}
+#endif
 
 	if (renewal) {
 		sysmng_update(renewal);
@@ -176,8 +178,6 @@ static void
 dialog_destroy(GtkWidget *w, GtkWidget **wp)
 {
 
-	UNUSED(wp);
-
 	install_idle_process();
 	gtk_widget_destroy(w);
 }
@@ -186,16 +186,12 @@ static void
 arch_radiobutton_clicked(GtkButton *b, gpointer d)
 {
 
-	UNUSED(b);
-
 	arch = (char *)d;
 }
 
 static void
 rate_radiobutton_clicked(GtkButton *b, gpointer d)
 {
-
-	UNUSED(b);
 
 	rate = GPOINTER_TO_INT(d);
 }
@@ -207,17 +203,15 @@ clock_changed(GtkEditable *e, gpointer d)
 	const gchar *multp = gtk_entry_get_text(GTK_ENTRY(clockmult_entry));
 	guint mult = milstr_solveINT(multp);
 	gchar buf[80];
-	gint clock;
-
-	UNUSED(e);
+	gint clk;
 
 	if (base[0] == '1') {
-		clock = PCBASECLOCK20 * mult;
+		clk = PCBASECLOCK20 * mult;
 	} else {
-		clock = PCBASECLOCK25 * mult;
+		clk = PCBASECLOCK25 * mult;
 	}
 	g_snprintf(buf, sizeof(buf), "%2d.%03dMHz",
-	    clock / 1000000U, (clock / 1000) % 1000);
+	    clk / 1000000U, (clk / 1000) % 1000);
 	gtk_label_set_text(GTK_LABEL((GtkWidget*)d), buf);
 }
 
@@ -261,7 +255,7 @@ create_configure_dialog(void)
 	gtk_container_set_border_width(GTK_CONTAINER(config_dialog), 5);
 
 	g_signal_connect(GTK_OBJECT(config_dialog), "destroy",
-	    GTK_SIGNAL_FUNC(dialog_destroy), NULL);
+	    G_CALLBACK(dialog_destroy), NULL);
 
 	main_widget = gtk_vbox_new(FALSE, 0);
 	gtk_widget_show(main_widget);
@@ -349,9 +343,9 @@ create_configure_dialog(void)
 	gtk_misc_set_alignment(GTK_MISC(realclock_label), 1.0, 0.5);
 
 	g_signal_connect(GTK_OBJECT(baseclock_entry), "changed",
-	  GTK_SIGNAL_FUNC(clock_changed), (gpointer)realclock_label);
+	  G_CALLBACK(clock_changed), (gpointer)realclock_label);
 	g_signal_connect(GTK_OBJECT(clockmult_entry), "changed",
-	  GTK_SIGNAL_FUNC(clock_changed), (gpointer)realclock_label);
+	  G_CALLBACK(clock_changed), (gpointer)realclock_label);
 	clock_changed(NULL, realclock_label);
 
 	/* OK, Cancel button base widget */
@@ -377,9 +371,9 @@ create_configure_dialog(void)
 		arch_radiobutton[i] = gtk_radio_button_new_with_label_from_widget(i > 0 ? GTK_RADIO_BUTTON(arch_radiobutton[i-1]) : NULL, architecture[i].label);
 		gtk_widget_show(arch_radiobutton[i]);
 		gtk_box_pack_start(GTK_BOX(arch_hbox), arch_radiobutton[i], FALSE, FALSE, 0);
-		GTK_WIDGET_UNSET_FLAGS(arch_radiobutton[i], GTK_CAN_FOCUS);
+		gtk_widget_set_can_focus(arch_radiobutton[i], FALSE);
 		g_signal_connect(GTK_OBJECT(arch_radiobutton[i]), "clicked",
-		    GTK_SIGNAL_FUNC(arch_radiobutton_clicked), (gpointer)architecture[i].arch);
+		    G_CALLBACK(arch_radiobutton_clicked), (gpointer)architecture[i].arch);
 	}
 	for (i = 0; i < NELEMENTS(architecture); i++) {
 		if (strcmp(np2cfg.model, architecture[i].arch) == 0) {
@@ -419,9 +413,9 @@ create_configure_dialog(void)
 		rate_radiobutton[i] = gtk_radio_button_new_with_label_from_widget((i > 0) ? GTK_RADIO_BUTTON(rate_radiobutton[i-1]) : NULL, samplingrate[i].label);
 		gtk_widget_show(rate_radiobutton[i]);
 		gtk_box_pack_start(GTK_BOX(soundrate_hbox), rate_radiobutton[i], FALSE, FALSE, 0);
-		GTK_WIDGET_UNSET_FLAGS(rate_radiobutton[i], GTK_CAN_FOCUS);
+		gtk_widget_set_can_focus(rate_radiobutton[i], FALSE);
 		g_signal_connect(GTK_OBJECT(rate_radiobutton[i]), "clicked",
-		    GTK_SIGNAL_FUNC(rate_radiobutton_clicked), GINT_TO_POINTER(samplingrate[i].rate));
+		    G_CALLBACK(rate_radiobutton_clicked), GINT_TO_POINTER(samplingrate[i].rate));
 	}
 	if (np2cfg.samplingrate == 11025) {
 		i = 0;
@@ -465,6 +459,7 @@ create_configure_dialog(void)
 	gtk_widget_show(ms_label);
 	gtk_box_pack_start(GTK_BOX(soundbuffer_hbox),ms_label, FALSE, FALSE, 0);
 
+#if defined(SUPPORT_RESUME)
 	/* resume */
 	resume_checkbutton = gtk_check_button_new_with_label("Resume");
 	gtk_widget_show(resume_checkbutton);
@@ -472,8 +467,6 @@ create_configure_dialog(void)
 	if (np2oscfg.resume) {
 		g_signal_emit_by_name(GTK_OBJECT(resume_checkbutton), "clicked");
 	}
-#if defined(CPUCORE_IA32)
-	gtk_widget_set_sensitive(resume_checkbutton, FALSE);
 #endif
 
 #if defined(GCC_CPU_ARCH_IA32)
@@ -494,18 +487,18 @@ create_configure_dialog(void)
 	ok_button = gtk_button_new_from_stock(GTK_STOCK_OK);
 	gtk_widget_show(ok_button);
 	gtk_container_add(GTK_CONTAINER(confirm_widget), ok_button);
-	GTK_WIDGET_SET_FLAGS(ok_button, GTK_CAN_DEFAULT);
-	GTK_WIDGET_SET_FLAGS(ok_button, GTK_HAS_DEFAULT);
+	gtk_widget_set_can_default(ok_button, TRUE);
+	gtk_widget_has_default(ok_button);
 	g_signal_connect(GTK_OBJECT(ok_button), "clicked",
-	    GTK_SIGNAL_FUNC(ok_button_clicked), (gpointer)config_dialog);
+	    G_CALLBACK(ok_button_clicked), (gpointer)config_dialog);
 	gtk_widget_grab_default(ok_button);
 
 	cancel_button = gtk_button_new_from_stock(GTK_STOCK_CANCEL);
 	gtk_widget_show(cancel_button);
 	gtk_container_add(GTK_CONTAINER(confirm_widget), cancel_button);
-	GTK_WIDGET_SET_FLAGS(cancel_button, GTK_CAN_DEFAULT);
+	gtk_widget_set_can_default(cancel_button, TRUE);
 	g_signal_connect_swapped(GTK_OBJECT(cancel_button), "clicked",
-	    GTK_SIGNAL_FUNC(gtk_widget_destroy), GTK_OBJECT(config_dialog));
+	    G_CALLBACK(gtk_widget_destroy), GTK_OBJECT(config_dialog));
 
 	gtk_widget_show_all(config_dialog);
 }

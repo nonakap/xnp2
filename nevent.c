@@ -138,26 +138,26 @@ void nevent_waitreset(UINT id) {
 
 void nevent_set(UINT id, SINT32 eventclock, NEVENTCB proc, BOOL absolute) {
 
-	SINT32		clock;
+	SINT32		clk;
 	NEVENTITEM	item;
 	UINT		eventid;
 	UINT		i;
 
 //	TRACEOUT(("event %d - %xclocks", id, eventclock));
 
-	clock = CPU_BASECLOCK - CPU_REMCLOCK;
+	clk = CPU_BASECLOCK - CPU_REMCLOCK;
 	item = &nevent.item[id];
 	item->proc = proc;
 	item->flag = 0;
 	if (absolute) {
-		item->clock = eventclock + clock;
+		item->clock = eventclock + clk;
 	}
 	else {
 		item->clock += eventclock;
 	}
 #if 0
-	if (item->clock < clock) {
-		item->clock = clock;
+	if (item->clock < clk) {
+		item->clock = clk;
 	}
 #endif
 	// イベントの削除
@@ -179,9 +179,9 @@ void nevent_set(UINT id, SINT32 eventclock, NEVENTCB proc, BOOL absolute) {
 
 	// もし最短イベントだったら...
 	if (eventid == 0) {
-		clock = CPU_BASECLOCK - item->clock;
-		CPU_BASECLOCK -= clock;
-		CPU_REMCLOCK -= clock;
+		clk = CPU_BASECLOCK - item->clock;
+		CPU_BASECLOCK -= clk;
+		CPU_REMCLOCK -= clk;
 //		TRACEOUT(("reset nextbase -%d (%d)", clock, CPU_REMCLOCK));
 	}
 }

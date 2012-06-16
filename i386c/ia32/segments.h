@@ -1,5 +1,3 @@
-/*	$Id: segments.h,v 1.10 2005/03/12 12:32:54 monaka Exp $	*/
-
 /*
  * Copyright (c) 2003 NONAKA Kimihiro
  * All rights reserved.
@@ -39,7 +37,7 @@ typedef struct {
 	union {
 		struct {
 			UINT32	segbase;
-			UINT32	segend;
+			UINT32	d_pad;
 			UINT32	limit;
 
 			UINT8	c;	/* 0 = data, 1 = code */
@@ -71,11 +69,22 @@ typedef struct {
 	UINT8	flag;
 #define	CPU_DESC_FLAG_READABLE	(1 << 0)
 #define	CPU_DESC_FLAG_WRITABLE	(1 << 1)
+#define	CPU_DESC_FLAG_WHOLEADR	(1 << 2)
 } descriptor_t;
 
+#define	SEG_IS_VALID(sdp)		((sdp)->valid)
+#define	SEG_IS_PRESENT(sdp)		((sdp)->p)
+#define	SEG_IS_32BIT(sdp)		((sdp)->d)
+#define	SEG_IS_SYSTEM(sdp)		(!(sdp)->s)
+#define	SEG_IS_CODE(sdp)		((sdp)->s && (sdp)->u.seg.c)
+#define	SEG_IS_DATA(sdp)		((sdp)->s && !(sdp)->u.seg.c)
+#define	SEG_IS_READABLE_CODE(sdp)	((sdp)->u.seg.wr)
+#define	SEG_IS_WRITABLE_DATA(sdp)	((sdp)->u.seg.wr)
+#define	SEG_IS_CONFORMING_CODE(sdp)	((sdp)->u.seg.ec)
+#define	SEG_IS_EXPANDDOWN_DATA(sdp)	((sdp)->u.seg.ec)
 
 /*
- * セグメント・ディスクリプタ
+ * segment descriptor
  *
  *  31            24 23 22 21 20 19   16 15 14 13 12 11    8 7             0
  * +----------------+--+--+--+--+-------+--+-----+--+-------+---------------+
@@ -88,9 +97,11 @@ typedef struct {
  */
 
 /* descriptor common */
-#define	CPU_DESC_H_TYPE		(0xf <<  8)
+#define	CPU_DESC_H_TYPE_SHIFT	8
+#define	CPU_DESC_H_TYPE		(0xf << CPU_DESC_H_TYPE_SHIFT)
 #define	CPU_DESC_H_S		(  1 << 12)	/* 0 = system, 1 = code/data */
-#define	CPU_DESC_H_DPL		(  3 << 13)
+#define	CPU_DESC_H_DPL_SHIFT	13
+#define	CPU_DESC_H_DPL		(  3 << CPU_DESC_H_DPL_SHIFT)
 #define	CPU_DESC_H_P		(  1 << 15)	/* exist */
 
 /* for segment descriptor */
@@ -133,62 +144,22 @@ typedef struct {
 #define	CPU_SYSDESC_TYPE_INTR		0x06
 #define	CPU_SYSDESC_TYPE_TRAP		0x07
 #define	CPU_SYSDESC_TYPE_MASKBIT	0x07
+#define	CPU_SYSDESC_TYPE_32BIT		0x08
 
 #define	CPU_SYSDESC_TYPE_TSS_BUSY_IND	0x02
 
-#define	CPU_SET_SEGDESC_DEFAULT(dscp, idx, selector) \
-do { \
-	(dscp)->u.seg.segbase = (UINT32)(selector) << 4; \
-	(dscp)->u.seg.segend = (dscp)->u.seg.segbase + (dscp)->u.seg.limit; \
-	(dscp)->u.seg.c = ((idx) == CPU_CS_INDEX) ? 1 : 0; \
-	(dscp)->u.seg.g = 0; \
-	(dscp)->u.seg.wr = 1; \
-	(dscp)->valid = 1; \
-	(dscp)->p = 1; \
-	(dscp)->type = 0x02; /* writable */ \
-	(dscp)->dpl = 0; \
-	(dscp)->s = 1;	/* code/data */ \
-	(dscp)->d = 0; /* 16bit */ \
-	(dscp)->flag = CPU_DESC_FLAG_READABLE|CPU_DESC_FLAG_WRITABLE; \
-} while (/*CONSTCOND*/ 0)
 
-#define	CPU_SET_TASK_BUSY(selector, dscp) \
-do { \
-	UINT32 addr; \
-	UINT32 h; \
-	addr = CPU_GDTR_BASE + ((selector) & CPU_SEGMENT_SELECTOR_INDEX_MASK); \
-	h = cpu_kmemoryread_d(addr + 4); \
-	if (!(h & CPU_TSS_H_BUSY)) { \
-		(dscp)->type |= CPU_SYSDESC_TYPE_TSS_BUSY_IND; \
-		h |= CPU_TSS_H_BUSY; \
-		cpu_kmemorywrite_d(addr + 4, h); \
-	} else { \
-		ia32_panic("CPU_SET_TASK_BUSY: already busy (%04x:%08x)", selector, h); \
-	} \
-} while (/*CONSTCOND*/ 0)
+void CPUCALL segdesc_init(int idx, UINT16 sreg, descriptor_t *sdp);
+void CPUCALL load_descriptor(descriptor_t *sdp, UINT32 addr);
 
-#define	CPU_SET_TASK_FREE(selector, dscp) \
-do { \
-	UINT32 addr; \
-	UINT32 h; \
-	addr = CPU_GDTR_BASE + ((selector) & CPU_SEGMENT_SELECTOR_INDEX_MASK); \
-	h = cpu_kmemoryread_d(addr + 4); \
-	if (h & CPU_TSS_H_BUSY) { \
-		(dscp)->type &= ~CPU_SYSDESC_TYPE_TSS_BUSY_IND; \
-		h &= ~CPU_TSS_H_BUSY; \
-		cpu_kmemorywrite_d(addr + 4, h); \
-	} else { \
-		ia32_panic("CPU_SET_TASK_FREE: already free (%04x:%08x)", selector, h); \
-	} \
-} while (/*CONSTCOND*/ 0)
-
-void load_descriptor(descriptor_t *descp, UINT32 addr);
-
-#define	CPU_SET_SEGREG(idx, selector)	load_segreg(idx, selector, GP_EXCEPTION)
-void load_segreg(int idx, UINT16 selector, int exc);
-void load_ss(UINT16 selector, const descriptor_t *sd, UINT cpl);
-void load_cs(UINT16 selector, const descriptor_t *sd, UINT cpl);
-void load_ldtr(UINT16 selector, int exc);
+void CPUCALL load_segreg(int idx, UINT16 selector, UINT16 *sregp, descriptor_t *sdp, int exc);
+#define	LOAD_SEGREG1(idx, selector, e) \
+	load_segreg(idx, selector, &CPU_REGS_SREG(idx), &CPU_STAT_SREG(idx), e)
+#define	LOAD_SEGREG(idx, selector) \
+	LOAD_SEGREG1((idx), (selector), GP_EXCEPTION)
+void CPUCALL load_ss(UINT16 selector, const descriptor_t *sdp, int cpl);
+void CPUCALL load_cs(UINT16 selector, const descriptor_t *sdp, int cpl);
+void CPUCALL load_ldtr(UINT16 selector, int exc);
 
 
 /*
@@ -210,8 +181,8 @@ typedef struct {
 	descriptor_t	desc;
 } selector_t;
 
-int parse_selector(selector_t *ssp, UINT16 selector);
-int selector_is_not_present(const selector_t *ssp);
+int CPUCALL parse_selector(selector_t *ssp, UINT16 selector);
+int CPUCALL selector_is_not_present(const selector_t *ssp);
 
 #ifdef __cplusplus
 }

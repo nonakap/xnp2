@@ -210,8 +210,8 @@ static void IOOUTCALL ymfr_o18a(UINT port, REG8 dat) {
 	}
 	S98_put(NORMAL2608, addr, dat);
 	if (addr < 0x10) {
-		if (addr != 0x0e) {
-			*((UINT8 *)(&psg1.reg) + addr) = dat;
+		*((UINT8 *)(&psg1.reg) + addr) = dat;
+		if (addr < 0x0e) {
 			juliet_YMF288A(addr, dat);
 			if (addr == 0x07) {
 				keydisp_psgmix(&psg1);

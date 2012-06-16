@@ -30,11 +30,11 @@ void mouseif_sync(void) {
 
 static void calc_mousexy(void) {
 
-	UINT32	clock;
+	UINT32	clk;
 	SINT32	diff;
 
-	clock = CPU_CLOCK + CPU_BASECLOCK + CPU_REMCLOCK;
-	diff = clock - mouseif.lastc;
+	clk = CPU_CLOCK + CPU_BASECLOCK + CPU_REMCLOCK;
+	diff = clk - mouseif.lastc;
 	if (diff >= 2000) {
 		SINT32 dx;
 		SINT32 dy;

@@ -913,7 +913,7 @@ BEGIN
         MENUITEM "&Reset",                      IDM_RESET
         MENUITEM SEPARATOR
         MENUITEM "&Configure...",               IDM_CONFIG
-        MENUITEM "&NewDisk...",                 IDM_NEWDISK
+        MENUITEM "&New disk...",                IDM_NEWDISK
         MENUITEM "&Font...",                    IDM_CHANGEFONT
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       IDM_EXIT
@@ -1471,7 +1471,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_NEWDISKEXT          "d88"
-    IDS_NEWDISKFILTER       "D88 image files (*.d88;*.d98)|*.d88;*.88d;*.d98;*.98d|Anex86 harddisk image files (*.hdi)|*.hdi|T98 harddisk image files (*.thd)|*.thd|T98-Next harddisk image files (*.nhd)|*.nhd|Virtual98 harddisk image files (*.HDD)|*.hdd|"
+    IDS_NEWDISKFILTER       "D88 image files (*.d88;*.d98)|*.d88;*.88d;*.d98;*.98d|Anex86 harddisk image files (*.hdi)|*.hdi|T98 harddisk image files (*.thd)|*.thd|T98-Next harddisk image files (*.nhd)|*.nhd|Virtual98 harddisk image files (*.hdd)|*.hdd|"
     IDS_NEWDISKFILTER2      "D88 image files (*.d88;*.d98)|*.d88;*.88d;*.d98;*.98d|Anex86 harddisk image files (*.hdi)|*.hdi|T98 harddisk image files (*.thd)|*.thd|T98-Next harddisk image files (*.nhd)|*.nhd|"
     IDS_S98TITLE            "Save as S98 log"
     IDS_S98EXT              "s98"

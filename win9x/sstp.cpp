@@ -1,12 +1,24 @@
-#include	"compiler.h"
-#include	<commctrl.h>
-#include	"np2.h"
-#include	"scrnmng.h"
-#include	"sstp.h"
+/**
+ * @file	sstp.cpp
+ * @brief	Sakura Script Transfer Protocol handler
+ *
+ * @author	$Author: yui $
+ * @date	$Date: 2011/03/07 09:54:11 $
+ */
+
+#include "compiler.h"
+#include <winsock.h>
+#include <commctrl.h>
+#include "np2.h"
+#include "scrnmng.h"
+#include "sstp.h"
 #if defined(OSLANG_UTF8) || defined(OSLANG_UCS2)
-#include	"oemtext.h"
+#include "oemtext.h"
 #endif
 
+#if !defined(__GNUC__)
+#pragma comment(lib, "wsock32.lib")
+#endif	// !defined(__GNUC__)
 
 static	HWND		sstphwnd = NULL;
 static	int			sstp_stat = SSTP_READY;

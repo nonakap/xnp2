@@ -298,7 +298,7 @@ static BRESULT opencue(SXSIDEV sxsi, const OEMCHAR *fname) {
 
 	_CDTRK		trk[99];
 	OEMCHAR		path[MAX_PATH];
-	UINT		index;
+	UINT		idx;
 	UINT8		curtrk;
 	UINT		curtype;
 	TEXTFILEH	tfh;
@@ -308,7 +308,7 @@ static BRESULT opencue(SXSIDEV sxsi, const OEMCHAR *fname) {
 
 	ZeroMemory(trk, sizeof(trk));
 	path[0] = '\0';
-	index = 0;
+	idx = 0;
 	curtrk = 1;
 	curtype = 0x14;
 	tfh = textfile_open(fname, 0x800);
@@ -332,16 +332,16 @@ static BRESULT opencue(SXSIDEV sxsi, const OEMCHAR *fname) {
 			}
 		}
 		else if ((argc >= 3) && (!milstr_cmp(argv[0], str_index))) {
-			if (index < NELEMENTS(trk)) {
-				trk[index].type = curtype;
-				trk[index].track = curtrk;
-				trk[index].pos = getpos(argv[2]);
-				index++;
+			if (idx < NELEMENTS(trk)) {
+				trk[idx].type = curtype;
+				trk[idx].track = curtrk;
+				trk[idx].pos = getpos(argv[2]);
+				idx++;
 			}
 		}
 	}
 	textfile_close(tfh);
-	return(openimg(sxsi, path, trk, index));
+	return(openimg(sxsi, path, trk, idx));
 }
 
 BRESULT sxsicd_open(SXSIDEV sxsi, const OEMCHAR *fname) {

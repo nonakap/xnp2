@@ -30,7 +30,7 @@ typedef struct {
 	UINT	bank;
 	UINT	num;
 } MIDIOUTLAEXPARAM;
-typedef int (*FNMIDIOUTLAEXCB)(MIDIOUTLAEXPARAM *param);
+typedef BRESULT (*FNMIDIOUTLAEXCB)(MIDIOUTLAEXPARAM *param);
 
 
 #ifdef __cplusplus
@@ -57,7 +57,7 @@ VEXTERN void VEXPORT midimod_loadprogram(MIDIMOD hdl, UINT num);
 VEXTERN void VEXPORT midimod_loadrhythm(MIDIMOD hdl, UINT num);
 VEXTERN void VEXPORT midimod_loadgm(MIDIMOD hdl);
 VEXTERN void VEXPORT midimod_loadall(MIDIMOD hdl);
-VEXTERN void VEXPORT midimod_loadallex(MIDIMOD hdl, FNMIDIOUTLAEXCB cb, void *userdata);
+VEXTERN int VEXPORT midimod_loadallex(MIDIMOD hdl, FNMIDIOUTLAEXCB cb, void *userdata);
 
 #ifdef __cplusplus
 }

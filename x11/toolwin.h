@@ -1,6 +1,8 @@
 #ifndef	NP2_X11_TOOLWIN_H__
 #define	NP2_X11_TOOLWIN_H__
 
+G_BEGIN_DECLS
+
 enum {
 	SKINMRU_MAX	= 4,
 	FDDLIST_DRV	= 2,
@@ -22,10 +24,6 @@ typedef struct {
 	char	skin[MAX_PATH];
 	char	skinmru[SKINMRU_MAX][MAX_PATH];
 } NP2TOOL;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 extern NP2TOOL np2tool;
 
@@ -57,8 +55,6 @@ void toolwin_writeini(void);
 
 #endif	/* SUPPORT_TOOLWIN */
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #endif	/* NP2_X11_TOOLWIN_H__ */

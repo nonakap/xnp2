@@ -1,0 +1,318 @@
+
+DCLOCK_WIDTH	equ		56
+DCLOCK_HEIGHT	equ		12
+DCLOCK_YALIGN	equ		(56 / 8)
+DCLOCK_PATMAX	equ		13
+
+				struc dclock_t
+.fnt			resd	1
+.pos			resd	1
+.flm			resb	8
+.now			resb	8
+.bak			resb	8
+.drawing		resw	1
+.clk_x			resb	1
+.pad			resb	1
+.dat
+				endstruc
+
+				struc dclockpos_t
+.pos			resd	1
+.mask			resw	1
+.rolbit			resb	1
+				resb	1
+				endstruc
+
+				struc dclockpal_t
+.pal32			resd	4
+.pal16			resw	4
+.pal8			resd	4*16
+				endstruc
+
+
+section .text
+
+	global	_dclock_cntdown
+	global	_dclock_make
+	global	_dclock_out8
+	global	_dclock_out16
+	global	_dclock_out24
+	global	_dclock_out32
+	extern	_dclock
+	extern	_dclockpal
+
+
+			align	16
+dclocky		db		0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3
+
+
+				align	16
+_dclock_cntdown:xor		edx, edx
+				cmp		[_dclock + dclock_t.clk_x], dl
+				je		short dcd_main
+				cmp		[_dclock + dclock_t.flm], edx
+				jne		short dcd_main
+				cmp		[_dclock + dclock_t.flm + 4], edx
+				jne		short dcd_main
+				ret
+dcd_main:		mov		cl, [esp+4]
+				cmp		cl, dl
+				jne		short dcd_mnlp
+				inc		cl
+dcd_mnlp:		movzx	eax, byte [_dclock + dclock_t.flm + edx]
+				cmp		eax, byte 0
+				je		short dcd_mnnt
+				cmp		eax, byte DCLOCK_PATMAX
+				jae		short dcd_upabove
+				mov		ch, [dclocky + eax]
+				sub		al, cl
+				jc		short dcd_set0
+				cmp		ch, [dclocky + eax]
+				je		short dcd_outflm
+				jmp		short dcd_setdraw
+dcd_upabove:	sub		al, cl
+				jc		short dcd_set0
+				cmp		al, DCLOCK_PATMAX
+				jae		short dcd_outflm
+				jmp		short dcd_setdraw
+dcd_set0:		xor		eax, eax
+dcd_setdraw:	bts		[_dclock + dclock_t.drawing], dx
+dcd_outflm:		mov		[_dclock + dclock_t.flm + edx], al
+dcd_mnnt:		inc		edx
+				cmp		dl, [_dclock + dclock_t.clk_x]
+				jc		short dcd_mnlp
+				ret
+
+				align	16
+_dclock_make:	cmp		byte [_dclock + dclock_t.clk_x], 0
+				je		short dmk_mned
+				pushad
+				xor		ebx, ebx
+dmk_mnlp:		btr		[_dclock + dclock_t.drawing], bx
+				jc		short dmk_mk1
+dmk_mnnt:		inc		ebx
+				cmp		bl, [_dclock + dclock_t.clk_x]
+				jc		short dmk_mnlp
+				popad
+dmk_mned:		ret
+
+dmk_mk1:		mov		eax, [_dclock + dclock_t.pos]
+				lea		eax, [eax + ebx*8]
+				mov		edi, [eax + dclockpos_t.pos]
+				mov		dx, [eax + dclockpos_t.mask]
+				mov		cl, [eax + dclockpos_t.rolbit]
+				movzx	eax, byte [_dclock + dclock_t.flm + ebx]
+				cmp		eax, byte 0
+				je		short makedclock_y0
+				cmp		eax, byte DCLOCK_PATMAX
+				jb		short makedclock_ani
+				movzx	eax, byte [_dclock + dclock_t.bak + ebx]
+				jmp		short makedclock0put
+makedclock_y0:	movzx	eax, byte [_dclock + dclock_t.now + ebx]
+				mov		[_dclock + dclock_t.bak + ebx], al
+makedclock0put:	mov		ch, 3
+makedclock0_up:	and		[edi], dx
+				add		edi, byte DCLOCK_YALIGN
+				dec		ch
+				jne		short makedclock0_up
+				shl		eax, 4
+				add		eax, [_dclock + dclock_t.fnt]
+				mov		esi, eax
+				mov		ch, 9
+makedclock0_dn:	movzx	eax, byte [esi]
+				ror		ax, cl
+				and		[edi], dx
+				or		[edi], ax
+				inc		esi
+				add		edi, byte DCLOCK_YALIGN
+				dec		ch
+				jne		short makedclock0_dn
+				jmp		short dmk_mnnt
+
+makedclock_ani:	movzx	eax, byte [dclocky + eax]
+				push	eax
+				mov		ch, 3
+				sub		ch, al
+				je		short makedclock_an2
+makedclkani_up:	and		[edi], dx
+				add		edi, byte DCLOCK_YALIGN
+				dec		ch
+				jne		short makedclkani_up
+makedclock_an2:	movzx	esi, byte [_dclock + dclock_t.now + ebx]
+				shl		esi, 4
+				add		esi, [_dclock + dclock_t.fnt]
+				mov		ch, 9
+makedclkani_md:	movzx	eax, byte [esi]
+				ror		ax, cl
+				and		[edi], dx
+				or		[edi], ax
+				inc		esi
+				add		edi, DCLOCK_YALIGN
+				dec		ch
+				jne		short makedclkani_md
+				pop		eax
+				mov		ch, al
+				movzx	esi, byte [_dclock + dclock_t.bak + ebx]
+				shl		esi, 4
+				sub		esi, eax
+				add		esi, byte 9
+				add		esi, [_dclock + dclock_t.fnt]
+makedclkani_dn:	movzx	eax, byte [esi]
+				ror		ax, cl
+				and		[edi], dx
+				or		[edi], ax
+				inc		esi
+				add		edi, byte DCLOCK_YALIGN
+				dec		ch
+				jne		short makedclkani_dn
+				jmp		near dmk_mnnt
+
+				align	16
+_dclock_out8:	push	ebx
+				push	esi
+				push	edi
+				push	ebp
+				mov		ecx, [esp+16+4]
+				sub		dword [esp+16+8], byte DCLOCK_WIDTH
+				mov		esi, _dclock + dclock_t.dat
+				mov		edi, _dclockpal + dclockpal_t.pal8
+				mov		bh, 4
+.lp1:			mov		bl, 3
+.lp2:			mov		ebp, DCLOCK_YALIGN
+.lp3:			movzx	eax, byte [esi]
+				shr		eax, 4
+				mov		eax, [eax*4 + edi]
+				mov		[ecx], eax
+				movzx	eax, byte [esi]
+				and		eax, byte 15
+				mov		eax, [eax*4 + edi]
+				mov		[ecx+4], eax
+				inc		esi
+				add		ecx, byte 8
+				dec		ebp
+				jne		short .lp3
+				add		ecx, [esp+16+8]
+				dec		bl
+				jne		short .lp2
+				add		edi, byte 4*16
+				dec		bh
+				jne		short .lp1
+				pop		ebp
+				pop		edi
+				pop		esi
+				pop		ebx
+				ret
+
+				align	16
+_dclock_out16:	push	ebx
+				push	esi
+				push	edi
+				push	ebp
+				mov		esi, _dclock + dclock_t.dat
+				mov		edi, _dclockpal + dclockpal_t.pal16
+				mov		ecx, [esp+16+4]
+				sub		dword [esp+16+8], byte (DCLOCK_WIDTH * 2)
+				mov		dh, 4
+.lp1:			mov		dl, 3
+.lp2:			mov		ebp, DCLOCK_YALIGN
+.lp3:			mov		bl, [esi]
+				mov		bh, 8
+.lp4:			rcl		bl, 1
+				sbb		ax, ax
+				and		ax, [edi]
+				mov		[ecx], ax
+				add		ecx, byte 2
+				dec		bh
+				jne		short .lp4
+				inc		esi
+				dec		ebp
+				jne		short .lp3
+				add		ecx, [esp+16+8]
+				dec		dl
+				jne		short .lp2
+				add		edi, byte 2
+				dec		dh
+				jne		short .lp1
+				pop		ebp
+				pop		edi
+				pop		esi
+				pop		ebx
+				ret
+
+				align	16
+_dclock_out24:	push	ebx
+				push	esi
+				push	edi
+				push	ebp
+				mov		esi, _dclock + dclock_t.dat
+				mov		edi, _dclockpal + dclockpal_t.pal32
+				mov		ecx, [esp+16+4]
+				sub		dword [esp+16+8], (DCLOCK_WIDTH * 3)
+				mov		dh, 4
+.lp1:			mov		dl, 3
+.lp2:			mov		ebp, DCLOCK_YALIGN
+.lp3:			mov		bl, [esi]
+				mov		bh, 8
+.lp4:			rcl		bl, 1
+				sbb		eax, eax
+				and		eax, [edi]
+				mov		[ecx+0], al
+				shr		eax, 8
+				mov		[ecx+1], al
+				mov		[ecx+2], ah
+				add		ecx, byte 3
+				dec		bh
+				jne		short .lp4
+				inc		esi
+				dec		ebp
+				jne		short .lp3
+				add		ecx, [esp+16+8]
+				dec		dl
+				jne		short .lp2
+				add		edi, byte 4
+				dec		dh
+				jne		short .lp1
+				pop		ebp
+				pop		edi
+				pop		esi
+				pop		ebx
+				ret
+
+				align	16
+_dclock_out32:	push	ebx
+				push	esi
+				push	edi
+				push	ebp
+				mov		esi, _dclock + dclock_t.dat
+				mov		edi, _dclockpal + dclockpal_t.pal32
+				mov		ecx, [esp+16+4]
+				sub		dword [esp+16+8], (DCLOCK_WIDTH * 4)
+				mov		dh, 4
+.lp1:			mov		dl, 3
+.lp2:			mov		ebp, DCLOCK_YALIGN
+.lp3:			mov		bl, [esi]
+				mov		bh, 8
+.lp4:			rcl		bl, 1
+				sbb		eax, eax
+				and		eax, [edi]
+				mov		[ecx], eax
+				add		ecx, byte 4
+				dec		bh
+				jne		short .lp4
+				inc		esi
+				dec		ebp
+				jne		short .lp3
+				add		ecx, [esp+16+8]
+				dec		dl
+				jne		short .lp2
+				add		edi, byte 4
+				dec		dh
+				jne		short .lp1
+				pop		ebp
+				pop		edi
+				pop		esi
+				pop		ebx
+				ret
+
+	ends
+

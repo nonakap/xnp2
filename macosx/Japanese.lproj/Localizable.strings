@@ -1,0 +1,30 @@
+"Continue" = "続行";
+"The Save Data file is conflicting" = "セーブデータファイルがコンフリクトしています。";
+
+"Reset" = "リセット";
+"Are you sure you want to reset?" = "リセットしてよろしいですか？";
+
+"Couldn't restart" = "再起動できません";
+"An error occured when reading the np2.sav file. Neko Project IIx couldn't restart." = "np2.savファイルを読み込み中にエラーが発生しました。ねこープロジェクトIIを再起動できません。";
+
+"Quit" = "終了";
+"Are you sure you want to quit?" = "終了してよろしいですか？";
+
+"Select Skin..." = "スキン選択...";
+"<Base Skin>" = "<基本スキン>";
+"Close" = "閉じる";
+
+"i286 save" = "i286セーブ";
+"i386 save" = "i386セーブ";
+
+"Choose font file." = "フォントファイルを選択してください。";
+"Choose a skin file for Tool Window." = "ツールウィンドウのスキンファイルを選択してください。";
+
+"Record playing sound as AIFF file." = "再生中のサウンドをAIFFファイルで保存します。";
+"Save the screen as BMP file." = "スクリーンをBMPファイルで保存します。";
+"Log playing sound as S98 file." = "再生中のサウンドのログをS98ファイルで取ります。";
+
+"Help" = "ねこープロジェクト21xヘルプ";
+"About" = "ねこープロジェクト21xについて...";
+"AboutTitle" = "ねこープロジェクト21xについて";
+

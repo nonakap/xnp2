@@ -1,0 +1,28 @@
+XCOMM $Id: config.tmpl,v 1.11 2007/01/23 15:48:20 monaka Exp $
+
+XCOMM
+XCOMM Sound
+XCOMM
+
+XCOMM support SDL sound
+XCOMM
+XCOMM SDL_CONFIG= sdl-config
+#undef	USE_SDLAUDIO
+#undef	USE_SDLMIXER
+
+
+XCOMM
+XCOMM Misc.
+XCOMM
+
+XCOMM big-endian machine (PowerPC based Macintosh, etc...)
+XCOMM
+#undef	BIGENDIAN
+
+XCOMM IA-32 CPU core
+XCOMM
+#undef	CPUCORE_IA32
+
+XCOMM XF86VidMode Extension (for full-screen mode)
+XCOMM
+#undef	USE_XF86VIDMODE

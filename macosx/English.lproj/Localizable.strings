@@ -1,0 +1,29 @@
+"Continue" = "Continue";
+"The Save Data file is conflicting" = "The Save Data file is conflicting";
+
+"Reset" = "Reset";
+"Are you sure you want to reset?" = "Are you sure you want to reset?";
+
+"Couldn't restart" = "Couldn't restart";
+"An error occured when reading the np2.sav file. Neko Project IIx couldn't restart." = "An error occured when reading the np2.sav file. Neko Project IIx couldn't restart.";
+
+"Quit" = "Quit";
+"Are you sure you want to quit?" = "Are you sure you want to quit?";
+
+"Select Skin..." = "Select Skin...";
+"<Base Skin>" = "<Base Skin>";
+"Close" = "Close";
+
+"i286 save" = "i286 save";
+"i286 save" = "i386 save";
+
+"Choose font file." = "Choose font file.";
+"Choose a skin file for Tool Window." = "Choose a skin file for Tool Window.";
+
+"Record playing sound as AIFF file." = "Record playing sound as AIFF file.";
+"Save the screen as BMP file." = "Save the screen as BMP file.";
+"Log playing sound as S98 file." = "Log playing sound as S98 file.";
+
+"Help" = "Neko Project 21x Help";
+"About" = "About Neko Project 21x...";
+"AboutTitle" = "About Neko Project 21x";

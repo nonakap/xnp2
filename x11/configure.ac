@@ -4,9 +4,9 @@ dnl
 
 dnl require autoconf 2.59
 AC_PREREQ(2.59)
-AC_REVISION($Revision: 1.35 $)
+AC_REVISION($Revision: 1.37 $)
 
-AC_INIT(Xnp2,0.83-20120302,nonakap@gmail.com,xnp2)
+AC_INIT(Xnp2,0.83-20120618,nonakap@gmail.com,xnp2)
 AM_INIT_AUTOMAKE([no-define no-dist no-installinfo subdir-objects])
 AC_CONFIG_SRCDIR([../np2ver.h])
 AC_CONFIG_HEADERS(config.h)
@@ -135,9 +135,9 @@ if test x"$enable_xf86vidmode" = "xyes"; then
     XLIB="-lXext $XLIB",,[$X_LIBS $X_PRE_LIBS $XLIB $X_EXTRA_LIBS])
   AC_CHECK_HEADERS(X11/extensions/xf86vmode.h,
     [AC_CHECK_LIB(Xxf86vm,XF86VidModeQueryExtension,
-      X_PRE_LIBS="$X_PRE_LIBS -lXxf86vm"
-      AC_DEFINE(HAVE_XF86VIDMODE,1,[Define to 1 if you have the libXxf86vm library.]),,
-      $X_LIBS $X_PRE_LIBS $XLIB $X_EXTRA_LIBS)],
+      [X_PRE_LIBS="$X_PRE_LIBS -lXxf86vm"
+      AC_DEFINE(HAVE_XF86VIDMODE,1,[Define to 1 if you have the libXxf86vm library.])],,
+      [$X_LIBS $X_PRE_LIBS $XLIB $X_EXTRA_LIBS])],
     ,
     [#include <X11/Xlib.h>])
   CFLAGS=$ac_cv_save_cflags

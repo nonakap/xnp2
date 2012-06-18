@@ -36,12 +36,16 @@ extern "C" {
 /*
  * memory access check
  */
-void MEMCALL cpu_stack_push_check(UINT16 s, descriptor_t *sdp, UINT32 sp, UINT len);
-void MEMCALL cpu_stack_pop_check(UINT16 s, descriptor_t *sdp, UINT32 sp, UINT len);
+void MEMCALL cpu_stack_push_check(UINT16 s, descriptor_t *sdp, UINT32 sp, UINT len, BOOL is32bit);
+void MEMCALL cpu_stack_pop_check(UINT16 s, descriptor_t *sdp, UINT32 sp, UINT len, BOOL is32bit);
+#define	SS_PUSH_CHECK1(sp, len, is32bit) \
+	cpu_stack_push_check(CPU_SS_INDEX, &CPU_SS_DESC, (sp), (len), (is32bit))
+#define	SS_POP_CHECK1(sp, len, is32bit) \
+	cpu_stack_pop_check(CPU_SS_INDEX, &CPU_SS_DESC, (sp), (len), (is32bit))
 #define	SS_PUSH_CHECK(sp, len) \
-	cpu_stack_push_check(CPU_SS_INDEX, &CPU_SS_DESC, (sp), (len))
+	SS_PUSH_CHECK1((sp), (len), CPU_SS_DESC.d)
 #define	SS_POP_CHECK(sp, len) \
-	cpu_stack_pop_check(CPU_SS_INDEX, &CPU_SS_DESC, (sp), (len))
+	SS_POP_CHECK1((sp), (len), CPU_SS_DESC.d)
 
 /*
  * virtual address function

@@ -31,12 +31,12 @@
 /*
  * memory access check
  */
-static int MEMCALL check_limit_upstairs(descriptor_t *sdp, UINT32 offset, UINT len);
+static int MEMCALL check_limit_upstairs(descriptor_t *sdp, UINT32 offset, UINT len, BOOL is32bit);
 static void MEMCALL cpu_memoryread_check(descriptor_t *sdp, UINT32 offset, UINT len, int e);
 static void MEMCALL cpu_memorywrite_check(descriptor_t *sdp, UINT32 offset, UINT len, int e);
 
 static int MEMCALL
-check_limit_upstairs(descriptor_t *sdp, UINT32 offset, UINT len)
+check_limit_upstairs(descriptor_t *sdp, UINT32 offset, UINT len, BOOL is32bit)
 {
 	UINT32 limit;
 	UINT32 end;
@@ -159,7 +159,7 @@ cpu_memoryread_check(descriptor_t *sdp, UINT32 offset, UINT len, int e)
 	case 6:  case 7:	/* rw (expand down) */
 	case 10: case 11:	/* rx */
 	case 14: case 15:	/* rxc */
-		if (!check_limit_upstairs(sdp, offset, len))
+		if (!check_limit_upstairs(sdp, offset, len, SEG_IS_32BIT(sdp)))
 			goto exc;
 		break;
 
@@ -198,7 +198,7 @@ cpu_memorywrite_check(descriptor_t *sdp, UINT32 offset, UINT len, int e)
 	switch (sdp->type) {
 	case 2: case 3:	/* rw */
 	case 6: case 7:	/* rw (expand down) */
-		if (!check_limit_upstairs(sdp, offset, len))
+		if (!check_limit_upstairs(sdp, offset, len, SEG_IS_32BIT(sdp)))
 			goto exc;
 		break;
 
@@ -217,7 +217,8 @@ exc:
 }
 
 void MEMCALL
-cpu_stack_push_check(UINT16 s, descriptor_t *sdp, UINT32 sp, UINT len)
+cpu_stack_push_check(UINT16 s, descriptor_t *sdp, UINT32 sp, UINT len,
+    BOOL is32bit)
 {
 	UINT32 limit;
 	UINT32 start;
@@ -236,7 +237,7 @@ cpu_stack_push_check(UINT16 s, descriptor_t *sdp, UINT32 sp, UINT len)
 	}
 
 	start = sp - len;
-	limit = SEG_IS_32BIT(sdp) ? 0xffffffff : 0x0000ffff;
+	limit = is32bit ? 0xffffffff : 0x0000ffff;
 
 	if (SEG_IS_EXPANDDOWN_DATA(sdp)) {
 		/* expand-down stack */
@@ -335,7 +336,8 @@ exc:
 }
 
 void MEMCALL
-cpu_stack_pop_check(UINT16 s, descriptor_t *sdp, UINT32 sp, UINT len)
+cpu_stack_pop_check(UINT16 s, descriptor_t *sdp, UINT32 sp, UINT len,
+    BOOL is32bit)
 {
 
 	__ASSERT(sdp != NULL);
@@ -349,7 +351,7 @@ cpu_stack_pop_check(UINT16 s, descriptor_t *sdp, UINT32 sp, UINT len)
 		goto exc;
 	}
 
-	if (!check_limit_upstairs(sdp, sp, len))
+	if (!check_limit_upstairs(sdp, sp, len, is32bit))
 		goto exc;
 	return;
 
@@ -505,7 +507,7 @@ cpu_vmemoryread_f(int idx, UINT32 offset)
 	if (!(sdp->flag & CPU_DESC_FLAG_READABLE)) {
 		cpu_memoryread_check(sdp, offset, 10, CHOOSE_EXCEPTION(idx));
 	} else if (!(sdp->flag & CPU_DESC_FLAG_WHOLEADR)) {
-		if (!check_limit_upstairs(sdp, offset, 10))
+		if (!check_limit_upstairs(sdp, offset, 10, SEG_IS_32BIT(sdp)))
 			goto range_failure;
 	} 
 	return cpu_lmemoryread_f(addr, CPU_PAGE_READ_DATA | CPU_STAT_USER_MODE);
@@ -546,7 +548,7 @@ cpu_vmemorywrite_f(int idx, UINT32 offset, const REG80 *value)
 	if (!(sdp->flag & CPU_DESC_FLAG_WRITABLE)) {
 		cpu_memorywrite_check(sdp, offset, 10, CHOOSE_EXCEPTION(idx));
 	} else if (!(sdp->flag & CPU_DESC_FLAG_WHOLEADR)) {
-		if (!check_limit_upstairs(sdp, offset, 10))
+		if (!check_limit_upstairs(sdp, offset, 10, SEG_IS_32BIT(sdp)))
 			goto range_failure;
 	}
 	cpu_lmemorywrite_f(addr, value, CPU_PAGE_WRITE_DATA | CPU_STAT_USER_MODE);

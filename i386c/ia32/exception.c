@@ -409,6 +409,7 @@ interrupt_intr_or_trap(const descriptor_t *gsdp, int intrtype, int errorp, int e
 	UINT32 new_ip, new_sp;
 	UINT32 old_ip, old_sp;
 	UINT16 old_cs, old_ss, new_ss;
+	BOOL is32bit;
 	int exc_errcode;
 	int rv; 
 
@@ -471,6 +472,7 @@ interrupt_intr_or_trap(const descriptor_t *gsdp, int intrtype, int errorp, int e
 		EXCEPTION(NP_EXCEPTION, exc_errcode);
 	}
 
+	is32bit = gsdp->type & CPU_SYSDESC_TYPE_32BIT;
 	if (!SEG_IS_CONFORMING_CODE(&cs_sel.desc) && (cs_sel.desc.dpl < CPU_STAT_CPL)) {
 		stacksize = errorp ? 12 : 10;
 		if (!CPU_STAT_VM86) {
@@ -485,7 +487,7 @@ interrupt_intr_or_trap(const descriptor_t *gsdp, int intrtype, int errorp, int e
 			}
 			stacksize += 8;
 		}
-		if (gsdp->type & CPU_SYSDESC_TYPE_32BIT) {
+		if (is32bit) {
 			stacksize *= 2;
 		}
 
@@ -536,7 +538,7 @@ interrupt_intr_or_trap(const descriptor_t *gsdp, int intrtype, int errorp, int e
 		}
 
 		/* check stack room size */
-		cpu_stack_push_check(ss_sel.idx, &ss_sel.desc, new_sp, stacksize);
+		cpu_stack_push_check(ss_sel.idx, &ss_sel.desc, new_sp, stacksize, ss_sel.desc.d);
 
 		/* out of range */
 		if (new_ip > cs_sel.desc.u.seg.limit) {
@@ -550,7 +552,7 @@ interrupt_intr_or_trap(const descriptor_t *gsdp, int intrtype, int errorp, int e
 		load_cs(cs_sel.selector, &cs_sel.desc, cs_sel.desc.dpl);
 		CPU_EIP = new_ip;
 
-		if (gsdp->type & CPU_SYSDESC_TYPE_32BIT) {
+		if (is32bit) {
 			if (CPU_STAT_VM86) {
 				PUSH0_32(CPU_GS);
 				PUSH0_32(CPU_FS);
@@ -600,7 +602,7 @@ interrupt_intr_or_trap(const descriptor_t *gsdp, int intrtype, int errorp, int e
 		VERBOSE(("interrupt: INTRA-PRIVILEGE-LEVEL-INTERRUPT"));
 
 		stacksize = errorp ? 8 : 6;
-		if (gsdp->type & CPU_SYSDESC_TYPE_32BIT) {
+		if (is32bit) {
 			stacksize *= 2;
 		}
 
@@ -610,7 +612,15 @@ interrupt_intr_or_trap(const descriptor_t *gsdp, int intrtype, int errorp, int e
 		} else {
 			sp = CPU_SP;
 		}
-		SS_PUSH_CHECK(sp, stacksize);
+		/*
+		 * 17.1
+		 * コールゲート、割り込みゲート、またはトラップゲートを通じて
+		 * プログラムの制御を他のコード・セグメントに移行するときは、
+		 * 移行中に使用されるオペランド・サイズは使用されるゲートの
+		 * タイプ（16 ビットまたは32 ビット）によって決まる（移行命
+		 * 令のD フラグ、プリフィックスのいずれにもよらない）。
+		 */
+		SS_PUSH_CHECK1(sp, stacksize, is32bit);
 
 		/* out of range */
 		if (new_ip > cs_sel.desc.u.seg.limit) {
@@ -621,7 +631,7 @@ interrupt_intr_or_trap(const descriptor_t *gsdp, int intrtype, int errorp, int e
 		load_cs(cs_sel.selector, &cs_sel.desc, CPU_STAT_CPL);
 		CPU_EIP = new_ip;
 
-		if (gsdp->type & CPU_SYSDESC_TYPE_32BIT) {
+		if (is32bit) {
 			PUSH0_32(old_flags);
 			PUSH0_32(old_cs);
 			PUSH0_32(old_ip);

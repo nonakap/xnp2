@@ -47,7 +47,7 @@ cpu_vmemoryread_##width(int idx, UINT32 offset) \
 		cpu_memoryread_check(sdp, offset, (length), \
 		    CHOOSE_EXCEPTION(idx)); \
 	} else if (!(sdp->flag & CPU_DESC_FLAG_WHOLEADR)) { \
-		if (!check_limit_upstairs(sdp, offset, (length))) \
+		if (!check_limit_upstairs(sdp, offset, (length), SEG_IS_32BIT(sdp))) \
 			goto range_failure; \
 	} \
 	return cpu_lmemoryread_##width(addr, CPU_PAGE_READ_DATA | CPU_STAT_USER_MODE); \
@@ -85,7 +85,7 @@ cpu_vmemorywrite_##width(int idx, UINT32 offset, valtype value) \
 		cpu_memorywrite_check(sdp, offset, (length), \
 		    CHOOSE_EXCEPTION(idx)); \
 	} else if (!(sdp->flag & CPU_DESC_FLAG_WHOLEADR)) { \
-		if (!check_limit_upstairs(sdp, offset, (length))) \
+		if (!check_limit_upstairs(sdp, offset, (length), SEG_IS_32BIT(sdp))) \
 			goto range_failure; \
 	} \
 	cpu_lmemorywrite_##width(addr, value, CPU_PAGE_WRITE_DATA | CPU_STAT_USER_MODE); \
@@ -128,7 +128,7 @@ cpu_vmemory_RMW_##width(int idx, UINT32 offset, UINT32 (CPUCALL *func)(UINT32, v
 		cpu_memorywrite_check(sdp, offset, (length), \
 		    CHOOSE_EXCEPTION(idx)); \
 	} else if (!(sdp->flag & CPU_DESC_FLAG_WHOLEADR)) { \
-		if (!check_limit_upstairs(sdp, offset, (length))) \
+		if (!check_limit_upstairs(sdp, offset, (length), SEG_IS_32BIT(sdp))) \
 			goto range_failure; \
 	} \
 	return cpu_lmemory_RMW_##width(addr, func, arg); \

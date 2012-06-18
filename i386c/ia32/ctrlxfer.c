@@ -646,7 +646,7 @@ CALLfar_pm_call_gate_more_privilege(const selector_t *callgate_sel, selector_t *
 	} else {
 		stacksize += param_count * 2;
 	}
-	cpu_stack_push_check(ss_sel.idx, &ss_sel.desc, new_esp, stacksize);
+	cpu_stack_push_check(ss_sel.idx, &ss_sel.desc, new_esp, stacksize, ss_sel.desc.d);
 
 	if (callgate_sel->desc.type == CPU_SYSDESC_TYPE_CALL_32) {
 		/* dump param */

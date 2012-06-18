@@ -142,8 +142,8 @@ void
 memory_dump(int idx, UINT32 madr)
 {
 	UINT32 addr;
-	size_t size;
-	size_t s, i;
+	UINT32 size;
+	UINT32 s, i;
 	UINT8 buf[16];
 	UINT8 c;
 

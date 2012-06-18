@@ -30,11 +30,21 @@ ESC1(void)
 		EXCEPTION(NM_EXCEPTION, 0);
 	} else {
 		madr = calc_ea_dst(op);
-		if ((op & 0x38) != 0x38) {
+		switch (op & 0x38) {
+		case 0x28:
+			TRACEOUT(("FLDCW"));
+			(void) cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr);
+			break;
+
+		case 0x38:
+			TRACEOUT(("FSTCW"));
+			cpu_vmemorywrite_w(CPU_INST_SEGREG_INDEX, madr, 0xffff);
+			break;
+
+		default:
 			EXCEPTION(NM_EXCEPTION, 0);
+			break;
 		}
-		TRACEOUT(("FSTCW"));
-		cpu_vmemorywrite_w(CPU_INST_SEGREG_INDEX, madr, 0xffff);
 	}
 }
 

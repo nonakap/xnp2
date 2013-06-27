@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2004 NONAKA Kimihiro
+ * Copyright (c) 2002-2013 NONAKA Kimihiro
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -338,6 +338,7 @@ gtk_window_restore_mode(GtkWidget *widget)
 
 	if (!is_fullscreen)
 		return;
+	is_fullscreen = 0;
 
 #ifdef HAVE_XF86VIDMODE
 	if (use_xvid) {
@@ -364,14 +365,14 @@ gtk_window_restore_mode(GtkWidget *widget)
 			}
 		}
 
-		if (np2running) {
+		if (np2running && GTK_IS_WINDOW(widget)) {
 			gtk_window_move(GTK_WINDOW(widget), orig_x, orig_y);
 		}
 
 		XUnlockDisplay(fs_xdisplay);
 	}
 #endif	/* HAVE_XF86VIDMODE */
-	if (use_netwm) {
+	if (use_netwm && GTK_IS_WINDOW(widget)) {
 		gtk_window_unfullscreen(GTK_WINDOW(widget));
 	}
 }

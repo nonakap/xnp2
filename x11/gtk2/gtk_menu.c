@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2011 NONAKA Kimihiro
+ * Copyright (c) 2004-2013 NONAKA Kimihiro
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -237,6 +237,13 @@ static GtkRadioActionEntry joykey_entries[] = {
 };
 static const guint n_joykey_entries = G_N_ELEMENTS(joykey_entries);
 
+static GtkRadioActionEntry f11key_entries[] = {
+{ "f11none", NULL, "F11 = None",        NULL, NULL, 0 },
+{ "f11menu", NULL, "F11 = Menu toggle", NULL, NULL, 1 },
+{ "f11fscr", NULL, "F11 = Full Screen", NULL, NULL, 2 },
+};
+static const guint n_f11key_entries = G_N_ELEMENTS(f11key_entries);
+
 static GtkRadioActionEntry f12key_entries[] = {
 { "f12mouse", NULL, "F12 = _Mouse",     NULL, NULL, 0 },
 { "f12copy",  NULL, "F12 = Co_py",      NULL, NULL, 1 },
@@ -304,6 +311,7 @@ static GtkRadioActionEntry screensize_entries[] = {
 static const guint n_screensize_entries = G_N_ELEMENTS(screensize_entries);
 
 static void cb_beepvol(gint idx);
+static void cb_f11key(gint idx);
 static void cb_f12key(gint idx);
 static void cb_framerate(gint idx);
 static void cb_joykey(gint idx);
@@ -319,6 +327,7 @@ static const struct {
 	void			(*func)(gint idx);
 } radiomenu_entries[] = {
 	{ beepvol_entries, G_N_ELEMENTS(beepvol_entries), cb_beepvol },
+	{ f11key_entries, G_N_ELEMENTS(f11key_entries), cb_f11key },
 	{ f12key_entries, G_N_ELEMENTS(f12key_entries), cb_f12key },
 	{ framerate_entries, G_N_ELEMENTS(framerate_entries), cb_framerate },
 	{ joykey_entries, G_N_ELEMENTS(joykey_entries), cb_joykey },
@@ -413,6 +422,10 @@ static const gchar *ui_info =
 "    <menuitem action='xshiftkey'/>\n"
 "    <menuitem action='xctrlkey'/>\n"
 "    <menuitem action='xgrphkey'/>\n"
+"    <separator/>\n"
+"    <menuitem action='f11none'/>\n"
+"    <menuitem action='f11menu'/>\n"
+"    <menuitem action='f11fscr'/>\n"
 "    <separator/>\n"
 "    <menuitem action='f12mouse'/>\n"
 "    <menuitem action='f12copy'/>\n"
@@ -531,6 +544,8 @@ xmenu_select_item_by_index(MENU_HDL hdl, GtkRadioActionEntry *entry, guint nentr
 
 #define	xmenu_select_beepvol(v) \
 	xmenu_select_item_by_index(NULL, beepvol_entries, n_beepvol_entries, v);
+#define	xmenu_select_f11key(v) \
+	xmenu_select_item_by_index(NULL, f11key_entries, n_f11key_entries, v);
 #define	xmenu_select_f12key(v) \
 	xmenu_select_item_by_index(NULL, f12key_entries, n_f12key_entries, v);
 #define	xmenu_select_framerate(v) \
@@ -1599,6 +1614,22 @@ cb_beepvol(gint idx)
 }
 
 static void
+cb_f11key(gint idx)
+{
+	guint value;
+
+	if (idx >= 0) {
+		value = f11key_entries[idx].value;
+	} else {
+		value = np2oscfg_default.F11KEY;
+	}
+	if (np2oscfg.F11KEY != value) {
+		np2oscfg.F11KEY = value;
+		sysmng_update(SYS_UPDATEOSCFG);
+	}
+}
+
+static void
 cb_f12key(gint idx)
 {
 	guint value;
@@ -1946,6 +1977,7 @@ create_menu(void)
 	xmenu_toggle_item(NULL, "toolwindow", np2oscfg.toolwin);
 
 	xmenu_select_beepvol(np2cfg.BEEP_VOL);
+	xmenu_select_f11key(np2oscfg.F11KEY);
 	xmenu_select_f12key(np2oscfg.F12KEY);
 	xmenu_select_framerate(np2oscfg.DRAW_SKIP);
 	xmenu_select_joykey(np2cfg.KEY_MODE);

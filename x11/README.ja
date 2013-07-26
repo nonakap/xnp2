@@ -220,7 +220,7 @@ Xnp2 - ねこープロジェクトII for X Window System
   ・このマニュアルや man page に書かれている以上の情報が欲しい場合は、
     以下の URL にあるヘルプを参照すると見つかるかもしれません。
 
-      Xnp2 help URL: http://www.asahi-net.or.jp/~aw9k-nnk/np2/html/help/ja/
+      Xnp2 help URL: http://www.nonakap.org/np2/html/help/ja/
 
 
 9. 問題点
@@ -248,9 +248,7 @@ Xnp2 - ねこープロジェクトII for X Window System
 
 11. 連絡先
 
-  本ソフトウェアの配布元は http://www.asahi-net.or.jp/~aw9k-nnk/np2/ です。
-  また anoncvs を使用して最新のソースを取得できます。
-    cvs -d :pserver:anonymous@retropc.net:/cvs get np2
+  本ソフトウェアの配布元は http://www.nonakap.org/np2/ です。
 
   本ソフトウェアに関する問い合わせは
    NONAKA Kimihiro (埜中公博) / nonakap@gmail.com

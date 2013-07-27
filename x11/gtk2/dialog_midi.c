@@ -578,8 +578,13 @@ create_midi_dialog(void)
 	ok_button = gtk_button_new_from_stock(GTK_STOCK_OK);
 	gtk_widget_show(ok_button);
 	gtk_container_add(GTK_CONTAINER(confirm_widget), ok_button);
+#if GTK_MAJOR_VERSION > 2 || (GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION >= 18)
 	gtk_widget_set_can_default(ok_button, TRUE);
 	gtk_widget_has_default(ok_button);
+#else
+	GTK_WIDGET_SET_FLAGS(ok_button, GTK_CAN_DEFAULT);
+	GTK_WIDGET_SET_FLAGS(ok_button, GTK_HAS_DEFAULT);
+#endif
 	g_signal_connect(GTK_OBJECT(ok_button), "clicked",
 	    G_CALLBACK(ok_button_clicked), (gpointer)midi_dialog);
 	gtk_widget_grab_default(ok_button);
@@ -587,7 +592,11 @@ create_midi_dialog(void)
 	cancel_button = gtk_button_new_from_stock(GTK_STOCK_CANCEL);
 	gtk_widget_show(cancel_button);
 	gtk_container_add(GTK_CONTAINER(confirm_widget), cancel_button);
+#if GTK_MAJOR_VERSION > 2 || (GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION >= 18)
 	gtk_widget_set_can_default(cancel_button, TRUE);
+#else
+	GTK_WIDGET_SET_FLAGS(cancel_button, GTK_CAN_DEFAULT);
+#endif
 	g_signal_connect_swapped(GTK_OBJECT(cancel_button), "clicked",
 	    G_CALLBACK(gtk_widget_destroy), GTK_OBJECT(midi_dialog));
 

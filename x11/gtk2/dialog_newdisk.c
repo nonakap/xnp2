@@ -78,7 +78,11 @@ anex_newdisk_dialog(GtkWidget *dialog)
 		gtk_widget_show(button[i]);
 		gtk_table_attach_defaults(GTK_TABLE(dialog_table),
 		    button[i], i % 2, (i % 2) + 1, (i / 2) + 1, (i / 2) + 2);
+#if GTK_MAJOR_VERSION > 2 || (GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION >= 18)
 		gtk_widget_set_can_focus(button[i], FALSE);
+#else
+		GTK_WIDGET_UNSET_FLAGS(button[i], GTK_CAN_FOCUS);
+#endif
 	}
 	if (last >= NELEMENTS(hddsize)) {
 		last = 0;
@@ -320,7 +324,11 @@ create_newdisk_fd_dialog(const char *filename)
 		    disktype[i].str);
 		gtk_widget_show(button[i]);
 		gtk_box_pack_start(GTK_BOX(hbox), button[i], FALSE, FALSE, 1);
+#if GTK_MAJOR_VERSION > 2 || (GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION >= 18)
 		gtk_widget_set_can_focus(button[i], FALSE);
+#else
+		GTK_WIDGET_UNSET_FLAGS(button[i], GTK_CAN_FOCUS);
+#endif
 	}
 	for (i = 0; i < ndisktype; ++i) {
 		if (disktype[i].fdtype == makefdtype)

@@ -594,7 +594,7 @@ cb_bmpsave(GtkAction *action, gpointer user_data)
 		goto end;
 
 	gtk_file_chooser_set_show_hidden(GTK_FILE_CHOOSER(dialog), TRUE);
-#if GTK_MAJOR_VERSION >= 2 && GTK_MINOR_VERSION >= 8
+#if GTK_MAJOR_VERSION > 2 || (GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION >= 8)
 	gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dialog),
 	    TRUE);
 #endif
@@ -1056,7 +1056,7 @@ cb_newdisk(GtkAction *action, gpointer user_data)
 		goto end;
 
 	gtk_file_chooser_set_show_hidden(GTK_FILE_CHOOSER(dialog), TRUE);
-#if GTK_MAJOR_VERSION >= 2 && GTK_MINOR_VERSION >= 8
+#if GTK_MAJOR_VERSION > 2 || (GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION >= 8)
 	gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dialog),
 	    TRUE);
 #endif
@@ -2016,7 +2016,13 @@ void
 xmenu_toggle_menu(void)
 {
 
-	if (gtk_widget_get_visible(menubar))
+	if (
+#if GTK_MAJOR_VERSION > 2 || (GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION >= 18)
+	    gtk_widget_get_visible(menubar)
+#else
+	    GTK_WIDGET_VISIBLE(menubar)
+#endif
+	)
 		xmenu_hide();
 	else
 		xmenu_show();

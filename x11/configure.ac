@@ -98,6 +98,9 @@ AC_ARG_ENABLE(debug,
 AC_ARG_ENABLE(warning,
   AC_HELP_STRING([--enable-warning],[Enable warning [default=no]]),,
   [enable_warning="no"])
+AC_ARG_ENABLE(gtk-deprecated-api,
+  AC_HELP_STRING([--enable-gtk-deprecated-api],[Enable GTK+ deprecated API [default=yes]]),,
+  [enable_gtk_deprecated_api="yes"])
 
 dnl
 dnl Checks for GTK+
@@ -175,13 +178,26 @@ dnl Checks for warning
 dnl
 AC_MSG_CHECKING([whether to enable warning])
 if test x"$enable_warning" = "xyes"; then
-  CFLAGS="$CFLAGS -Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith"
+  CFLAGS="$CFLAGS -Wall -Wextra"
+  CFLAGS="$CFLAGS -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith"
   CFLAGS="$CFLAGS -Wreturn-type -Wswitch -Wshadow"
   CFLAGS="$CFLAGS -Wcast-qual -Wwrite-strings"
-  CFLAGS="$CFLAGS -Wextra -Wno-unused-parameter"
+  CFLAGS="$CFLAGS -Wno-unused-parameter -Wno-missing-field-initializers"
   CFLAGS="$CFLAGS -Wformat=2"
 fi
 AC_MSG_RESULT($enable_warning)
+
+dnl
+dnl Checks for gtk-deprecated-api
+dnl
+AC_MSG_CHECKING([whether to enable GTK+ deprecated API])
+if test x"$enable_gtk_deprecated_api" != "xyes"; then
+  GTK_CFLAGS="$GTK_CFLAGS -DGTK_DISABLE_DEPRECATED"
+  GTK_CFLAGS="$GTK_CFLAGS -DGDK_DISABLE_DEPRECATED"
+  GTK_CFLAGS="$GTK_CFLAGS -DGLIB_DISABLE_DEPRECATED"
+  CPPFLAGS="$CPPFLAGS -Werror=deprecated-declarations"
+fi
+AC_MSG_RESULT($enable_gtk_deprecated_api)
 
 dnl
 dnl Checks for Xnp2 version

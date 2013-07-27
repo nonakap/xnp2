@@ -5,7 +5,7 @@ dnl
 dnl require autoconf 2.59
 AC_PREREQ(2.59)
 
-AC_INIT(Xnp2,0.83-20130726,nonakap@gmail.com,xnp2)
+AC_INIT(Xnp2,0.83-20130727,nonakap@gmail.com,xnp2)
 AM_INIT_AUTOMAKE([no-define no-dist no-installinfo subdir-objects])
 AC_CONFIG_SRCDIR([../np2ver.h])
 AC_CONFIG_HEADERS(config.h)

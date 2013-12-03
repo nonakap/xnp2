@@ -1,4 +1,4 @@
-.TH Xnp2 1 "17 Nov 2003"
+.TH XNP2 1 "November 17, 2003"
 .SH NAME
 Xnp2 \- PC-9801 series emulator
 .SH SYNOPSIS
@@ -100,17 +100,17 @@ floppy disk seek sound file
 .B @PKGDATADIR@/fddseek1.wav
 another floppy disk seek sound file
 .SH AUTHOR
-Yui <np2@yui.ne.jp>, is
+Yui <np2@yui.ne.jp>, the
 .B Neko Project II
-main developer, who is maintained for MS-Windows, MacOS 8.x and MacOS 9 version.
+main developer, who is maintainer for MS-Windows, MacOS 8.x and MacOS 9 versions.
 .br
-NONAKA Kimihiro <nonakap@gmail.com>, he is ported
+NONAKA Kimihiro <nonakap@gmail.com>, who ported
 .B Neko Project II
-for UNIX platform.
+to the UNIX platform.
 .br
-tk800 <tk_np2x@yahoo.co.jp>, is ported
+tk800 <tk_np2x@yahoo.co.jp>, who ported
 .B Neko Project II
-for MacOS X.
+to MacOS X.
 .SH "SEE ALSO"
 .B Xnp2
 Web site: http://www.asahi-net.or.jp/~aw9k-nnk/np2/ (japanese)

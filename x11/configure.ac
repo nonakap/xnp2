@@ -5,7 +5,7 @@ dnl
 dnl require autoconf 2.59
 AC_PREREQ(2.59)
 
-AC_INIT(Xnp2,0.83-20130727,nonakap@gmail.com,xnp2)
+AC_INIT(Xnp2,0.83-20140531,nonakap@gmail.com,xnp2)
 AM_INIT_AUTOMAKE([no-define no-dist no-installinfo subdir-objects])
 AC_CONFIG_SRCDIR([../np2ver.h])
 AC_CONFIG_HEADERS(config.h)
@@ -19,6 +19,7 @@ AM_PROG_CC_C_O
 AC_PROG_GCC_TRADITIONAL
 AC_PROG_RANLIB
 AC_PROG_INSTALL
+AC_PROG_LN_S
 
 dnl
 dnl Checks for header files.
@@ -92,6 +93,9 @@ AC_ARG_ENABLE(xf86vidmode,
 AC_ARG_ENABLE(ia32,
   AC_HELP_STRING([--enable-ia32],[Use IA-32 emulation [default=no]]),,
   [enable_ia32="no"])
+AC_ARG_ENABLE(build-all,
+  AC_HELP_STRING([--enable-build-all],[Build xnp2(i286 emulation) and xnp21(IA-32 emulation) programs [default=no]]),,
+  [enable_build_all="no"])
 AC_ARG_ENABLE(debug,
   AC_HELP_STRING([--enable-debug],[Enable debugging [default=no]]),,
   [enable_debug="no"])
@@ -151,13 +155,20 @@ dnl
 AC_CHECK_PROGS(nasm,[nasm nasmw],no)
 
 dnl
+dnl Checks for build all programs
+dnl
+AC_MSG_CHECKING([whether to build all programs])
+AM_CONDITIONAL(BUILD_ALL,test x"$enable_build_all" = "xyes")
+if test x"$enable_ia32" != "xyes"; then
+  enable_ia32="yes"
+fi
+AC_MSG_RESULT($enable_build_all)
+
+dnl
 dnl Checks for IA-32 CPU emulation
 dnl
 AC_MSG_CHECKING([whether to use IA-32 emulation])
 AM_CONDITIONAL(CPUCORE_IA32,test x"$enable_ia32" = "xyes")
-if test x"$enable_ia32" = "xyes"; then
-  AC_DEFINE(CPUCORE_IA32,,[Define if use IA-32 emulation])
-fi
 AC_MSG_RESULT($enable_ia32)
 
 dnl

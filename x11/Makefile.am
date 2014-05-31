@@ -8,7 +8,7 @@ dist_pkgdata_DATA=	$(real_topsrcdir)/x11/resources/fddseek.wav \
 			$(real_topsrcdir)/x11/resources/fddseek1.wav
 dist_pkgdata_DATA+=	$(real_topsrcdir)/np2tool/np2tool.d88
 
-xnp2_SOURCES=	$(real_topsrcdir)/x11/main.c \
+COMMON_SOURCES=	$(real_topsrcdir)/x11/main.c \
 		$(real_topsrcdir)/x11/np2.c \
 		$(real_topsrcdir)/x11/dosio.c \
 		$(real_topsrcdir)/x11/ini.c \
@@ -218,6 +218,7 @@ xnp2_SOURCES=	$(real_topsrcdir)/x11/main.c \
 		$(real_topsrcdir)/vram/makegrph.c \
 		$(real_topsrcdir)/vram/scrnbmp.c \
 		$(real_topsrcdir)/vram/makegrex.c
+xnp2_SOURCES=	$(COMMON_SOURCES)
 
 AM_CPPFLAGS=	-I$(real_topsrcdir) \
 		-I$(real_topsrcdir)/x11 \
@@ -238,19 +239,34 @@ AM_CPPFLAGS=	-I$(real_topsrcdir) \
 		-I$(real_topsrcdir)/sound/vermouth \
 		-I$(real_topsrcdir)/vram \
 		$(GTK_CFLAGS) $(SDL_CFLAGS)
+xnp2_CPPFLAGS=	$(AM_CPPFLAGS)
 
 if HAVE_GCC
 AM_CFLAGS=	-fsigned-char
 CFLAGS+=	-fno-strict-aliasing
 endif
 
-xnp2_LDADD=	$(GTK_LIBS) $(SDL_LIBS) \
+LDADD=		$(GTK_LIBS) $(SDL_LIBS) \
 		$(X_LIBS) $(X_PRE_LIBS) $(XLIB) $(X_EXTRA_LIBS)
 
 DEFS=		@DEFS@ -DSYSRESPATH=\""$(pkgdatadir)"\"
 
-if CPUCORE_IA32
-xnp2_SOURCES+=	$(real_topsrcdir)/i386c/cpucore.c \
+I286C_SOURCES=	$(real_topsrcdir)/i286c/i286c.c \
+		$(real_topsrcdir)/i286c/i286c_mn.c \
+		$(real_topsrcdir)/i286c/i286c_ea.c \
+		$(real_topsrcdir)/i286c/i286c_0f.c \
+		$(real_topsrcdir)/i286c/i286c_8x.c \
+		$(real_topsrcdir)/i286c/i286c_sf.c \
+		$(real_topsrcdir)/i286c/i286c_f6.c \
+		$(real_topsrcdir)/i286c/i286c_fe.c \
+		$(real_topsrcdir)/i286c/i286c_rp.c \
+		$(real_topsrcdir)/i286c/memory.c \
+		$(real_topsrcdir)/i286c/v30patch.c \
+		$(real_topsrcdir)/debugsub.c
+
+I286C_CPPFLAGS=	-I$(real_topsrcdir)/i286c
+
+IA32_SOURCES=	$(real_topsrcdir)/i386c/cpucore.c \
 		$(real_topsrcdir)/i386c/memory.c \
 		$(real_topsrcdir)/i386c/ia32/interface.c \
 		$(real_topsrcdir)/i386c/ia32/ia32.c \
@@ -283,25 +299,30 @@ xnp2_SOURCES+=	$(real_topsrcdir)/i386c/cpucore.c \
 		$(real_topsrcdir)/i386c/ia32/instructions/fpu/fpdummy.c \
 		$(real_topsrcdir)/debugsub386.c
 
-AM_CPPFLAGS+=	-I$(real_topsrcdir)/i386c \
+IA32_CPPFLAGS=	-I$(real_topsrcdir)/i386c \
 		-I$(real_topsrcdir)/i386c/ia32 \
 		-I$(real_topsrcdir)/i386c/ia32/instructions \
-		-I$(real_topsrcdir)/i386c/ia32/instructions/fpu
-else
-xnp2_SOURCES+=	$(real_topsrcdir)/i286c/i286c.c \
-		$(real_topsrcdir)/i286c/i286c_mn.c \
-		$(real_topsrcdir)/i286c/i286c_ea.c \
-		$(real_topsrcdir)/i286c/i286c_0f.c \
-		$(real_topsrcdir)/i286c/i286c_8x.c \
-		$(real_topsrcdir)/i286c/i286c_sf.c \
-		$(real_topsrcdir)/i286c/i286c_f6.c \
-		$(real_topsrcdir)/i286c/i286c_fe.c \
-		$(real_topsrcdir)/i286c/i286c_rp.c \
-		$(real_topsrcdir)/i286c/memory.c \
-		$(real_topsrcdir)/i286c/v30patch.c \
-		$(real_topsrcdir)/debugsub.c
+		-I$(real_topsrcdir)/i386c/ia32/instructions/fpu \
+		-DCPUCORE_IA32
 
-AM_CPPFLAGS+=	-I$(real_topsrcdir)/i286c
+if CPUCORE_IA32
+if BUILD_ALL
+bin_PROGRAMS+=	xnp21
+xnp21_SOURCES=	$(COMMON_SOURCES) $(IA32_SOURCES)
+xnp21_CPPFLAGS=	$(AM_CPPFLAGS) $(IA32_CPPFLAGS)
+xnp2_SOURCES+=	$(I286C_SOURCES)
+xnp2_CPPFLAGS+=	$(I286C_CPPFLAGS)
+
+install-data-hook:
+	cd $(DESTDIR)/$(mandir)/man1 && $(LN_S) xnp2.1 xnp21.1
+	cd $(DESTDIR)/$(mandir)/man1 && $(LN_S) xnp2.1j xnp21.1j
+else
+xnp2_SOURCES+=	$(IA32_SOURCES)
+xnp2_CPPFLAGS+=	$(IA32_CPPFLAGS)
+endif
+else
+xnp2_SOURCES+=	$(I286C_SOURCES)
+xnp2_CPPFLAGS+=	$(I286C_CPPFLAGS)
 endif
 
 CLEANFILES+=	make.log

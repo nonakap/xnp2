@@ -130,7 +130,6 @@ char bmpfilefolder[MAX_PATH];
 char modulefile[MAX_PATH];
 char statpath[MAX_PATH];
 
-char np2appname[MAX_PATH] = "np2";
 const char np2flagext[] = "s%02d";
 const char np2resumeext[] = "sav";
 

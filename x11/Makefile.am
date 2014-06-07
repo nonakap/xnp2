@@ -239,6 +239,9 @@ AM_CPPFLAGS=	-I$(real_topsrcdir) \
 		-I$(real_topsrcdir)/sound/vermouth \
 		-I$(real_topsrcdir)/vram \
 		$(GTK_CFLAGS) $(SDL_CFLAGS)
+if BUILD_ALL
+AM_CPPFLAGS+=	-DX11_BUILD_ALL
+endif
 xnp2_CPPFLAGS=	$(AM_CPPFLAGS)
 
 if HAVE_GCC
@@ -308,22 +311,19 @@ IA32_CPPFLAGS=	-I$(real_topsrcdir)/i386c \
 if CPUCORE_IA32
 if BUILD_ALL
 bin_PROGRAMS+=	xnp21
+nodist_man1_MANS+= xnp21.1 xnp21.1j
 xnp21_SOURCES=	$(COMMON_SOURCES) $(IA32_SOURCES)
 xnp21_CPPFLAGS=	$(AM_CPPFLAGS) $(IA32_CPPFLAGS)
 xnp2_SOURCES+=	$(I286C_SOURCES)
 xnp2_CPPFLAGS+=	$(I286C_CPPFLAGS)
-
-install-data-hook:
-	cd $(DESTDIR)/$(mandir)/man1 && $(LN_S) xnp2.1 xnp21.1
-	cd $(DESTDIR)/$(mandir)/man1 && $(LN_S) xnp2.1j xnp21.1j
-else
+else	# !BUILD_ALL
 xnp2_SOURCES+=	$(IA32_SOURCES)
 xnp2_CPPFLAGS+=	$(IA32_CPPFLAGS)
-endif
-else
+endif	# BUILD_ALL
+else	# !CPUCORE_IA32
 xnp2_SOURCES+=	$(I286C_SOURCES)
 xnp2_CPPFLAGS+=	$(I286C_CPPFLAGS)
-endif
+endif	# CPUCORE_IA32
 
 CLEANFILES+=	make.log
 

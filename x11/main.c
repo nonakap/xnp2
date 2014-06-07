@@ -63,6 +63,14 @@
 #include "taskmng.h"
 
 
+static const char appname[] =
+#if defined(CPUCORE_IA32) && defined(X11_BUILD_ALL)
+    "np21"
+#else
+    "np2"
+#endif
+;
+
 /*
  * failure signale handler
  */
@@ -129,9 +137,9 @@ main(int argc, char *argv[])
 	progname = argv[0];
 
 	setlocale(LC_ALL, "");
-	(void) bindtextdomain(np2appname, NP2LOCALEDIR);
-	(void) bind_textdomain_codeset(np2appname, "UTF-8");
-	(void) textdomain(np2appname);
+	(void) bindtextdomain("np2", NP2LOCALEDIR);
+	(void) bind_textdomain_codeset("np2", "UTF-8");
+	(void) textdomain("np2");
 
 	toolkit_initialize();
 	toolkit_arginit(&argc, &argv);
@@ -174,7 +182,7 @@ main(int argc, char *argv[])
 		if (env) {
 			/* base dir */
 			g_snprintf(modulefile, sizeof(modulefile),
-			    "%s/.%s", env, np2appname);
+			    "%s/.np2/", env);
 			if (stat(modulefile, &sb) < 0) {
 				if (mkdir(modulefile, 0700) < 0) {
 					perror(modulefile);
@@ -187,7 +195,8 @@ main(int argc, char *argv[])
 			}
 
 			/* config file */
-			milstr_ncat(modulefile, "/np2rc", sizeof(modulefile));
+			milstr_ncat(modulefile, appname, sizeof(modulefile));
+			milstr_ncat(modulefile, "rc", sizeof(modulefile));
 			if ((stat(modulefile, &sb) >= 0)
 			 && !S_ISREG(sb.st_mode)) {
 				g_printerr("%s isn't regular file.\n",
@@ -218,7 +227,7 @@ main(int argc, char *argv[])
 			    statpath);
 			exit(1);
 		}
-		file_catname(statpath, np2appname, sizeof(statpath));
+		file_catname(statpath, appname, sizeof(statpath));
 	}
 	if (timidity_cfgfile_path[0] == '\0') {
 		file_cpyname(timidity_cfgfile_path, modulefile,

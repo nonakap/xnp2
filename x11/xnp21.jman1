@@ -1,8 +1,8 @@
-.TH Xnp2 1 "June 7, 2014"
+.TH Xnp21 1 "June 7, 2014"
 .SH NAME
-Xnp2 \- PC-9801 シリーズエミュレータ
+Xnp21 \- IA-32 コアを使用した PC-9801 シリーズエミュレータ
 .SH SYNOPSIS
-.B xnp2
+.B xnp21
 [
 .B \--config filename
 ]
@@ -22,43 +22,43 @@ Xnp2 \- PC-9801 シリーズエミュレータ
 ]
 ]
 .SH DESCRIPTION
-.B Xnp2
-は UNIX プラットフォーム向けの PC-9801 シリーズエミュレータです。
+.B Xnp21
+は UNIX プラットフォーム向けの CPU エミュレーションに IA-32 コアを使用した PC-9801 シリーズエミュレータです。
 .SH OPTIONS
 .TP
 .B \--config
 起動時に読み込む設定ファイルを指定します。
-非指定時は $(HOME)/.np2/np2rc を読み込みます。
+非指定時は $(HOME)/.np2/np21rc を読み込みます。
 .TP
 .B \--timidity-config
-.B Xnp2
+.B Xnp21
 に内蔵されている TiMidity 互換のソフトウェア MIDI 音源で使用する音源設定
 ファイルを指定します。
 非指定時は $(HOME)/.np2/timidity.cfg を読み込みます。
 .SH EXAMPLES
 .nf
-設定ファイル np2.cfg を指定
+設定ファイル np21.cfg を指定
 .ft B
-xnp2 --config np2.cfg
+xnp21 --config np21.cfg
 .ft R
 
 TiMidity 音源設定ファイル /usr/local/lib/timidity/timidity.cfg を指定
 .ft B
-xnp2 --timidity-config /usr/local/lib/timidity/timidity.cfg
+xnp21 --timidity-config /usr/local/lib/timidity/timidity.cfg
 .ft R
 
 FDD1 にイメージファイル system.d88、FDD2 に data.d88 を挿入して起動
 .ft B
-xnp2 system.d88 data.d88
+xnp21 system.d88 data.d88
 .ft R
 .fi
 .SH COMMAND
 .TP
 .B マウス中ボタン
-X と Xnp2 間のマウス操作の切替
+X と Xnp21 間のマウス操作の切替
 .SH FILES
 .TP
-.B $(HOME)/.np2/np2rc
+.B $(HOME)/.np2/np21rc
 設定ファイル
 .TP
 .B $(HOME)/.np2/font.tmp

@@ -111,7 +111,6 @@ extern char modulefile[MAX_PATH];
 extern char statpath[MAX_PATH];
 extern char fontname[1024];
 
-extern char np2appname[MAX_PATH];
 extern const char np2flagext[];
 extern const char np2resumeext[];
 

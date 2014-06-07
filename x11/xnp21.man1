@@ -1,8 +1,8 @@
-.TH XNP2 1 "June 7, 2014"
+.TH XNP21 1 "June 7, 2014"
 .SH NAME
-Xnp2 \- PC-9801 series emulator
+Xnp21 \- PC-9801 series emulator with IA-32 emulation
 .SH SYNOPSIS
-.B xnp2
+.B xnp21
 [
 .B \--config filename
 ]
@@ -22,41 +22,41 @@ Xnp2 \- PC-9801 series emulator
 ]
 ]
 .SH DESCRIPTION
-.B PC-9801 series emulator for UNIX platform.
+.B PC-9801 series emulator with IA-32 emulation for UNIX platform.
 .SH OPTIONS
 .TP
 .B \--config
-Indicate Xnp2 configuration file.
-[Default: $(HOME)/.np2/np2rc]
+Indicate Xnp21 configuration file.
+[Default: $(HOME)/.np2/np21rc]
 .TP
 .B \--timidity-config
-Indicate Xnp2 included software MIDI configuration file.
+Indicate Xnp21 included software MIDI configuration file.
 [Default: $(HOME)/.np2/timidity.cfg]
 .SH EXAMPLES
 .nf
-Indicate Xnp2 configuration file "np2.cfg".
+Indicate Xnp21 configuration file "np21.cfg".
 .ft B
-xnp2 --config np2.cfg
+xnp21 --config np21.cfg
 .ft R
 
 Indicate software MIDI configuration file "/usr/local/lib/timidity/timidity.cfg".
 .ft B
-xnp2 --timidity-config /usr/local/lib/timidity/timidity.cfg
+xnp21 --timidity-config /usr/local/lib/timidity/timidity.cfg
 .ft R
 
-Insert system.d88 disk image in floppy disk drive1, insert data.d88 disk image in floopy disk drive2. And Xnp2 is started.
+Insert system.d88 disk image in floppy disk drive1, insert data.d88 disk image in floopy disk drive2. And Xnp21 is started.
 .ft B
-xnp2 system.d88 data.d88
+xnp21 system.d88 data.d88
 .ft R
 .fi
 .SH COMMAND
 .TP
 .B Mouse middle button
-Change mouse operation between X and Xnp2.
+Change mouse operation between X and Xnp21.
 .SH FILES
 .TP
-.B $(HOME)/.np2/np2rc
-Xnp2 configuration file
+.B $(HOME)/.np2/np21rc
+Xnp21 configuration file
 .TP
 .B $(HOME)/.np2/font.tmp
 font bitmap file

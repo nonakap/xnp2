@@ -159,8 +159,10 @@ dnl Checks for build all programs
 dnl
 AC_MSG_CHECKING([whether to build all programs])
 AM_CONDITIONAL(BUILD_ALL,test x"$enable_build_all" = "xyes")
-if test x"$enable_ia32" != "xyes"; then
-  enable_ia32="yes"
+if test x"$enable_build_all" = "xyes"; then
+  if test x"$enable_ia32" != "xyes"; then
+    enable_ia32="yes"
+  fi
 fi
 AC_MSG_RESULT($enable_build_all)
 

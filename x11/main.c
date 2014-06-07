@@ -350,7 +350,7 @@ main(int argc, char *argv[])
 	joymng_deinitialize();
 	S98_trash();
 
-#if !defined(CPUCORE_IA32)
+#if defined(SUPPORT_RESUME)
 	if (np2oscfg.resume) {
 		flagsave(np2resumeext);
 	} else {

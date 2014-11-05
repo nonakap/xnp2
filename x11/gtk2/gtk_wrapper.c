@@ -126,12 +126,24 @@ static gint orig_x, orig_y;
 static inline Bool
 XF86VidModeGetModeInfo(Display *d, int s, XF86VidModeModeInfo *info)
 {
-	XF86VidModeModeLine *line;
+	XF86VidModeModeLine line;
 
 	memset(info, 0, sizeof(*info));
-	line = (void *)((char *)info + sizeof(info->dotclock));
 
-	return XF86VidModeGetModeLine(d, s, (int *)&info->dotclock, line);
+	Bool ret = XF86VidModeGetModeLine(d, s, (int *)&info->dotclock, &line);
+	info->hdisplay = line.hdisplay;
+	info->hsyncstart = line.hsyncstart;
+	info->hsyncend = line.hsyncend;
+	info->htotal = line.htotal;
+	info->vdisplay = line.vdisplay;
+	info->vsyncstart = line.vsyncstart;
+	info->vsyncend = line.vsyncend;
+	info->vtotal = line.vtotal;
+	info->flags = line.flags;
+	info->privsize = line.privsize;
+	info->private = line.private;
+
+	return ret;
 }
 
 static int

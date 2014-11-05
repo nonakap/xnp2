@@ -127,22 +127,25 @@ static inline Bool
 XF86VidModeGetModeInfo(Display *d, int s, XF86VidModeModeInfo *info)
 {
 	XF86VidModeModeLine line;
+	int dotclock;
 
 	memset(info, 0, sizeof(*info));
 
-	Bool ret = XF86VidModeGetModeLine(d, s, (int *)&info->dotclock, &line);
-	info->hdisplay = line.hdisplay;
-	info->hsyncstart = line.hsyncstart;
-	info->hsyncend = line.hsyncend;
-	info->htotal = line.htotal;
-	info->vdisplay = line.vdisplay;
-	info->vsyncstart = line.vsyncstart;
-	info->vsyncend = line.vsyncend;
-	info->vtotal = line.vtotal;
-	info->flags = line.flags;
-	info->privsize = line.privsize;
-	info->private = line.private;
-
+	Bool ret = XF86VidModeGetModeLine(d, s, dotclock, &line);
+	if (ret) {
+		info->dotclock = dotclock;
+		info->hdisplay = line.hdisplay;
+		info->hsyncstart = line.hsyncstart;
+		info->hsyncend = line.hsyncend;
+		info->htotal = line.htotal;
+		info->vdisplay = line.vdisplay;
+		info->vsyncstart = line.vsyncstart;
+		info->vsyncend = line.vsyncend;
+		info->vtotal = line.vtotal;
+		info->flags = line.flags;
+		info->privsize = line.privsize;
+		info->private = line.private;
+	}
 	return ret;
 }
 

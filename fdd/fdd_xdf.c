@@ -7,6 +7,10 @@
 
 
 static const _XDFINFO supportxdf[] = {
+#if 1
+			{0, 160,  8, 2, DISKTYPE_2DD, 0},
+			{0, 160,  9, 2, DISKTYPE_2DD, 0},
+#endif
 #if 0
 			// 256
 			{0, 154, 26, 1, DISKTYPE_2HD, 0},
@@ -170,8 +174,7 @@ BRESULT fddxdf_eject(FDDFILE fdd) {
 
 BRESULT fddxdf_diskaccess(FDDFILE fdd) {
 
-	if ((fdd->type != DISKTYPE_BETA) ||
-		(CTRL_FDMEDIA != fdd->inf.xdf.disktype)) {
+	if (fdd->type != DISKTYPE_BETA) {
 		return(FAILURE);
 	}
 	return(SUCCESS);
@@ -295,6 +298,7 @@ BRESULT fddxdf_readid(FDDFILE fdd) {
 
 	fddlasterror = 0x00;
 	if ((!fdc.mf) ||
+		(CTRL_FDMEDIA != fdd->inf.xdf.disktype) ||
 		(fdc.rpm[fdc.us] != fdd->inf.xdf.rpm) ||
 		(fdc.crcn >= fdd->inf.xdf.sectors)) {
 		fddlasterror = 0xe0;

@@ -193,11 +193,45 @@ static void drvflush(FDDFILE fdd) {
 	}
 }
 
+
+static BRESULT fdd_diskaccess_d88_exact(FDDFILE fdd) {	// ver0.31 (fdd_diskaccess_d88)
+
+	UINT8	rpm;
+
+	rpm = fdc.rpm[fdc.us];
+	switch(fdd->inf.d88.fdtype_major) {
+		case DISKTYPE_2D:
+		case DISKTYPE_2DD:
+			if ((rpm) || (CTRL_FDMEDIA != DISKTYPE_2DD)) {
+				return(FAILURE);
+			}
+			break;
+
+		case DISKTYPE_2HD:
+			if (CTRL_FDMEDIA != DISKTYPE_2HD) {
+				return(FAILURE);
+			}
+			if ((fdd->inf.d88.fdtype_minor == 0) && (rpm)) {
+				return(FAILURE);
+			}
+			break;
+
+		default:
+			return(FAILURE);
+
+	}
+	return(SUCCESS);
+}
+
+
 static BRESULT trkseek(FDDFILE fdd, UINT track) {
 
 	D88TRK	trk;
 	BOOL	r;
 
+	if (fdd_diskaccess_d88_exact(fdd) == FAILURE) {
+		return(FAILURE);
+	}
 	trk = &d88trk;
 	if ((trk->fdd == fdd) && (trk->track == track) &&
 		(trk->type == CTRL_FDMEDIA)) {
@@ -309,34 +343,17 @@ BRESULT fddd88_eject(FDDFILE fdd) {
 }
 
 
-BRESULT fdd_diskaccess_d88(void) {									// ver0.31
+BRESULT fdd_diskaccess_d88(void) {
 
 	FDDFILE	fdd = fddfile + fdc.us;
-	UINT8	rpm;
 
-	rpm = fdc.rpm[fdc.us];
-	switch(fdd->inf.d88.fdtype_major) {
+	if (fdd->type == DISKTYPE_D88) switch(fdd->inf.d88.fdtype_major) {
 		case DISKTYPE_2D:
 		case DISKTYPE_2DD:
-			if ((rpm) || (CTRL_FDMEDIA != DISKTYPE_2DD)) {
-				return(FAILURE);
-			}
-			break;
-
 		case DISKTYPE_2HD:
-			if (CTRL_FDMEDIA != DISKTYPE_2HD) {
-				return(FAILURE);
-			}
-			if ((fdd->inf.d88.fdtype_minor == 0) && (rpm)) {
-				return(FAILURE);
-			}
-			break;
-
-		default:
-			return(FAILURE);
-
+			return (SUCCESS);
 	}
-	return(SUCCESS);
+	return(FAILURE);
 }
 
 BRESULT fdd_seek_d88(void) {

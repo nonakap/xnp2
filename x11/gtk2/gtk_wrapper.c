@@ -131,7 +131,7 @@ XF86VidModeGetModeInfo(Display *d, int s, XF86VidModeModeInfo *info)
 
 	memset(info, 0, sizeof(*info));
 
-	Bool ret = XF86VidModeGetModeLine(d, s, dotclock, &line);
+	Bool ret = XF86VidModeGetModeLine(d, s, &dotclock, &line);
 	if (ret) {
 		info->dotclock = dotclock;
 		info->hdisplay = line.hdisplay;

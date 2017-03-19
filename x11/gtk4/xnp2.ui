@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="Xnp2AppWindow" parent="GtkApplicationWindow">
+    <property name="title" translatable="yes">Neko Project II</property>
+    <property name="default-width">640</property>
+    <property name="default-height">400</property>
+    <child>
+    </child>
+  </template>
+</interface>

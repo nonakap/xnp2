@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="Xnp2AboutDialog" parent="GtkDialog">
+    <property name="title" translatable="yes">About Xnp2</property>
+    <property name="resizable">FALSE</property>
+    <property name="modal">TRUE</property>
+    <child internal-child="content_area">
+      <object class="GtkBox" id="content_area">
+        <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+        <property name="halign">GTK_ALIGN_FILL</property>
+        <property name="valign">GTK_ALIGN_FILL</property>
+        <property name="spacing">12</property>
+        <property name="margin-start">12</property>
+        <property name="margin-end">12</property>
+        <property name="margin-top">12</property>
+        <property name="margin-bottom">12</property>
+        <child>
+          <object class="GtkImage" id="icon">
+            <property name="resource">/org/nonakap/xnp2/resources/np2.png</property>
+            <property name="icon-size">large</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="version"/>
+        </child>
+      </object>
+    </child>
+    <child type="action">
+      <object class="GtkButton" id="button_ok">
+        <property name="label" translatable="yes">OK</property>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="ok" default="true">button_ok</action-widget>
+    </action-widgets>
+  </template>
+</interface>
+<!-- vim: set ts=2 sts=2 sw=2 et : -->

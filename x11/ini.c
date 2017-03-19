@@ -189,10 +189,12 @@ inirdinterp(const char *src, INITBL *ini)
 		*(UINT8 *)ini->value = INTERP_NEAREST;
 	} else if (!milstr_cmp(src, "TILES")) {
 		*(UINT8 *)ini->value = INTERP_TILES;
+	} else if (!milstr_cmp(src, "BILINEAR")) {
+		*(UINT8 *)ini->value = INTERP_BILINEAR;
 	} else if (!milstr_cmp(src, "HYPER")) {
 		*(UINT8 *)ini->value = INTERP_HYPER;
 	} else {
-		*(UINT8 *)ini->value = INTERP_BILINEAR;
+		*(UINT8 *)ini->value = INTERP_NEAREST;
 	}
 }
 
@@ -367,10 +369,12 @@ iniwrinterp(UINT8 interp)
 		return "NEAREST";
 	else if (interp == INTERP_TILES)
 		return "TILES";
+	else if (interp == INTERP_BILINEAR)
+		return "BILINEAR";
 	else if (interp == INTERP_HYPER)
 		return "HYPER";
 	else
-		return "BILINEAR";
+		return "NEAREST";
 }
 
 static BOOL read_iniread_flag(const INITBL *p);
@@ -492,10 +496,10 @@ ini_write(const char *path, const char *title, INITBL *tbl, UINT count, BOOL cre
 }
 
 static const char ini_title[] =
-#if !defined(CPUCORE_IA32)
-	"NekoProjectII";
-#else
+#if defined(CPUCORE_IA32)
 	"NekoProjectII_IA32";
+#else
+	"NekoProjectII";
 #endif
 
 enum {

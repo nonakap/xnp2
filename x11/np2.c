@@ -50,10 +50,10 @@
 
 
 NP2OSCFG np2oscfg = {
-#if !defined(CPUCORE_IA32)		/* titles */
-	"Neko Project II",
+#if defined(SUPPORT_PC9821)	/* titles */
+	"Neko Project 21",
 #else
-	"Neko Project II + IA32",
+	"Neko Project II",
 #endif
 
 	0, 			/* paddingx */

@@ -2,9 +2,9 @@ dnl
 dnl Configure for Xnp2
 dnl
 
-AC_PREREQ(2.69)
+AC_PREREQ([2.71])
 
-AC_INIT(Xnp2,0.86,nonakap@gmail.com,xnp2)
+AC_INIT([Xnp2],[0.86],[nonakap@gmail.com],[xnp2])
 AM_INIT_AUTOMAKE([no-define no-dist no-installinfo subdir-objects])
 AC_CONFIG_SRCDIR([../np2ver.h])
 AC_CONFIG_HEADERS(config.h)
@@ -24,10 +24,14 @@ AC_PROG_LN_S
 dnl
 dnl Checks for header files.
 dnl
-AC_STDC_HEADERS
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
 AC_HEADER_DIRENT
-AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h limits.h malloc.h stddef.h stdlib.h string.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h termios.h unistd.h])
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
+AC_CHECK_HEADERS([fcntl.h limits.h malloc.h stddef.h stdlib.h string.h sys/ioctl.h sys/param.h sys/socket.h termios.h unistd.h])
 
 dnl
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -37,7 +41,7 @@ AC_C_CONST
 AC_C_INLINE
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
-AC_HEADER_TIME
+
 AC_STRUCT_TM
 AC_C_VOLATILE
 AC_CHECK_TYPES([ptrdiff_t])
@@ -69,88 +73,75 @@ AC_CHECK_FUNCS(sqrt,,AC_CHECK_LIB(m,sqrt))
 dnl
 dnl Checks for pthread
 dnl
-ACX_PTHREAD
+AX_PTHREAD
 LIBS="$LIBS $PTHREAD_LIBS"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
 
 dnl
-dnl Checks for X
-dnl
-AC_PATH_X
-AC_PATH_XTRA
-
-dnl
 dnl Xnp2 configure options.
 dnl
-AC_ARG_ENABLE(gtk3,
-  AC_HELP_STRING([--enable-gtk3],[Use GTK+-3 library [default=no]]),,
-  [enable_gtk3="no"])
-
+AC_ARG_ENABLE(gtk4,
+  AS_HELP_STRING([--enable-gtk4],[Use GTK+-4 library [default=yes]]),,
+  [enable_gtk4="yes"])
 AC_ARG_ENABLE(sdl,
-  AC_HELP_STRING([--enable-sdl],[Use SDL 1.2 library [default=yes]]),,
+  AS_HELP_STRING([--enable-sdl],[Use SDL 1.2 library [default=yes]]),,
   [enable_sdl="yes"])
 AC_ARG_ENABLE(sdl2,
-  AC_HELP_STRING([--enable-sdl2],[Use SDL 2.0 library [default=yes]]),,
+  AS_HELP_STRING([--enable-sdl2],[Use SDL 2.0 library [default=yes]]),,
   [enable_sdl2="yes"])
 AC_ARG_ENABLE(sdlmixer,
-  AC_HELP_STRING([--enable-sdlmixer],[Use SDL_mixer library [default=yes]]),,
+  AS_HELP_STRING([--enable-sdlmixer],[Use SDL_mixer library [default=yes]]),,
   [enable_sdlmixer="yes"])
 AC_ARG_ENABLE(libusb1,
-  AC_HELP_STRING([--enable-libusb1],[Use libusb-1.0 library [default=yes]]),,
+  AS_HELP_STRING([--enable-libusb1],[Use libusb-1.0 library [default=yes]]),,
   [enable_libusb1="yes"])
 AC_ARG_ENABLE(xf86vidmode,
-  AC_HELP_STRING([--enable-xf86vidmode],[Use XF86VidMode extension [default=yes]]),,
+  AS_HELP_STRING([--enable-xf86vidmode],[Use XF86VidMode extension if use GTK+-2 library [default=yes]]),,
   [enable_xf86vidmode="yes"])
 AC_ARG_ENABLE(ia32,
-  AC_HELP_STRING([--enable-ia32],[Use IA-32 emulation [default=no]]),,
+  AS_HELP_STRING([--enable-ia32],[Use IA-32 emulation [default=no]]),,
   [enable_ia32="no"])
 AC_ARG_ENABLE(build-all,
-  AC_HELP_STRING([--enable-build-all],[Build xnp2(i286 emulation) and xnp21(IA-32 emulation) programs [default=no]]),,
+  AS_HELP_STRING([--enable-build-all],[Build xnp2(i286 emulation) and xnp21(IA-32 emulation) programs [default=no]]),,
   [enable_build_all="no"])
 AC_ARG_ENABLE(debug,
-  AC_HELP_STRING([--enable-debug],[Enable debugging [default=no]]),,
+  AS_HELP_STRING([--enable-debug],[Enable debugging [default=no]]),,
   [enable_debug="no"])
 AC_ARG_ENABLE(warning,
-  AC_HELP_STRING([--enable-warning],[Enable warning [default=no]]),,
+  AS_HELP_STRING([--enable-warning],[Enable warning [default=no]]),,
   [enable_warning="no"])
 AC_ARG_ENABLE(gtk-deprecated-api,
-  AC_HELP_STRING([--enable-gtk-deprecated-api],[Enable GTK+ deprecated API [default=yes]]),,
+  AS_HELP_STRING([--enable-gtk-deprecated-api],[Enable GTK+ deprecated API [default=yes]]),,
   [enable_gtk_deprecated_api="yes"])
-
-dnl
-dnl Checks for X11
-dnl
-PKG_CHECK_MODULES([X11],[x11],,[AC_MSG_ERROR(Xnp2 needs X11)])
-AC_SUBST(X11_CFLAGS)
-AC_SUBST(X11_LIBS)
-PKG_CHECK_MODULES([XEXT],[xext])
-AC_SUBST(XEXT_CFLAGS)
-AC_SUBST(XEXT_LIBS)
 
 dnl
 dnl Checks for GTK+
 dnl
-AS_IF([test x"$enable_gtk3" = "xyes"],
+enable_gtk2=no
+AS_IF([test x"$enable_gtk4" = "xyes"],
   [
-    PKG_CHECK_MODULES([GTK], [gtk+-3.0],
+    PKG_CHECK_MODULES([GTK], [gtk4],
       [
-        AC_DEFINE(USE_GTK2,1,[Define to 1 if you have the GTK+-2 library.])
-        AC_DEFINE(USE_GTK3,1,[Define to 1 if you have the GTK+-3 library.])
+        AC_DEFINE(USE_GTK4,1,[Define to 1 if you have the GTK+-4 library.])
       ],
-      enable_gtk3=no
+      enable_gtk4=no
     )
   ]
 )
-AS_IF([test x"$enable_gtk3" != "xyes"],
+AS_IF([test x"$enable_gtk3" != "xyes" && test x"$enable_gtk4" != "xyes"],
   [
     PKG_CHECK_MODULES([GTK], [gtk+-2.0],
-      [AC_DEFINE(USE_GTK2,1,[Define to 1 if you have the GTK+-2 library.])]
+      [
+        AC_DEFINE(USE_GTK2,1,[Define to 1 if you have the GTK+-2 library.])
+        enable_gtk2=yes
+      ],
     )
   ]
 )
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
+AM_CONDITIONAL(USE_GTK4,test x"$enable_gtk4" = "xyes")
 
 dnl
 dnl Checks for SDL and SDL_mixer
@@ -193,7 +184,16 @@ AC_SUBST(LIBUSB1_LIBS)
 dnl
 dnl Checks for XF86VidMode extension
 dnl
-if test x"$enable_xf86vidmode" = "xyes"; then
+if test x"${enable_gtk2}" = "xyes" && test x"$enable_xf86vidmode" = "xyes"; then
+  AC_PATH_X
+  AC_PATH_XTRA
+  PKG_CHECK_MODULES([X11],[x11],,[AC_MSG_ERROR(Xnp2 needs X11)])
+  AC_SUBST(X11_CFLAGS)
+  AC_SUBST(X11_LIBS)
+  PKG_CHECK_MODULES([XEXT],[xext])
+  AC_SUBST(XEXT_CFLAGS)
+  AC_SUBST(XEXT_LIBS)
+
   ac_cv_save_cflags=$CFLAGS
   CFLAGS="$CFLAGS $X_CFLAGS"
   AC_CHECK_LIB(Xext,XextCreateExtension,

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Neko Project II
+Icon=np2
+StartupNotify=true
+Exec=@bindir@/np2

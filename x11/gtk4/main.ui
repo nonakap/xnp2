@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <object class="GtkApplicationWindow" id="window">
+    <property name="title">Xnp2</property>
+    <property name="show-menubar">true</property>
+    <child>
+      <object class="GtkDrawingArea" id="drawing_area">
+        <style><class name="xypadding"/></style>
+        <property name="content-width">640</property>
+        <property name="content-height">400</property>
+      </object>
+    </child>
+  </object>
+</interface>
+<!-- vim: set ts=2 sts=2 sw=2 et : -->

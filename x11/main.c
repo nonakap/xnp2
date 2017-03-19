@@ -64,7 +64,7 @@
 
 
 static const char appname[] =
-#if defined(CPUCORE_IA32) && defined(X11_BUILD_ALL)
+#if defined(CPUCORE_IA32)
     "np21"
 #else
     "np2"
@@ -137,9 +137,9 @@ main(int argc, char *argv[])
 	progname = argv[0];
 
 	setlocale(LC_ALL, "");
-	(void) bindtextdomain("np2", NP2LOCALEDIR);
-	(void) bind_textdomain_codeset("np2", "UTF-8");
-	(void) textdomain("np2");
+	bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
+	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+	textdomain(GETTEXT_PACKAGE);
 
 	toolkit_initialize();
 	toolkit_arginit(&argc, &argv);

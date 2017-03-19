@@ -32,6 +32,53 @@ EXTFM_SOURCES=	$(real_topsrcdir)/x11/ext/opl3.cpp \
 		$(real_topsrcdir)/x11/ext/externalopna.cpp \
 		$(real_topsrcdir)/x11/ext/externalpsg.cpp
 
+if USE_GTK4
+GTK_SOURCES=	$(real_topsrcdir)/x11/gtk4/dialog_about.c \
+		$(real_topsrcdir)/x11/gtk4/dialog_calendar.c \
+		$(real_topsrcdir)/x11/gtk4/dialog_config.c \
+		$(real_topsrcdir)/x11/gtk4/dialog_midi.c \
+		$(real_topsrcdir)/x11/gtk4/dialog_newdisk.c \
+		$(real_topsrcdir)/x11/gtk4/dialog_screen.c \
+		$(real_topsrcdir)/x11/gtk4/dialog_sound.c \
+		$(real_topsrcdir)/x11/gtk4/window_keydisp.c \
+		$(real_topsrcdir)/x11/gtk4/window_softkbd.c \
+		$(real_topsrcdir)/x11/gtk4/gtk_drawmng.c \
+		$(real_topsrcdir)/x11/gtk4/gtk_screen.c \
+		$(real_topsrcdir)/x11/gtk4/gtk_font.c \
+		$(real_topsrcdir)/x11/gtk4/gtk_keyboard.c \
+		$(real_topsrcdir)/x11/gtk4/gtk_mouse.c \
+		$(real_topsrcdir)/x11/gtk4/gtk_main.c
+GTK_INCLUDE=	$(real_topsrcdir)/x11/gtk4
+
+GTK_SOURCES+=	$(real_topsrcdir)/x11/gtk4/resources.c
+CLEANFILES+=	$(real_topsrcdir)/x11/gtk4/resources.c
+$(real_topsrcdir)/x11/gtk4/resources.c: \
+    $(real_topsrcdir)/x11/gtk4/xnp2.gresource.xml \
+    $(real_topsrcdir)/x11/gtk4/main.ui \
+    $(real_topsrcdir)/x11/gtk4/menu.ui \
+    $(real_topsrcdir)/x11/gtk4/dialog_about.ui
+	glib-compile-resources $< --target=$@ --generate-source
+else
+GTK_SOURCES=	$(real_topsrcdir)/x11/gtk2/dialog_about.c \
+		$(real_topsrcdir)/x11/gtk2/dialog_calendar.c \
+		$(real_topsrcdir)/x11/gtk2/dialog_config.c \
+		$(real_topsrcdir)/x11/gtk2/dialog_midi.c \
+		$(real_topsrcdir)/x11/gtk2/dialog_newdisk.c \
+		$(real_topsrcdir)/x11/gtk2/dialog_screen.c \
+		$(real_topsrcdir)/x11/gtk2/dialog_sound.c \
+		$(real_topsrcdir)/x11/gtk2/window_keydisp.c \
+		$(real_topsrcdir)/x11/gtk2/window_softkbd.c \
+		$(real_topsrcdir)/x11/gtk2/gtk_drawmng.c \
+		$(real_topsrcdir)/x11/gtk2/gtk_screen.c \
+		$(real_topsrcdir)/x11/gtk2/gtk_font.c \
+		$(real_topsrcdir)/x11/gtk2/gtk_keyboard.c \
+		$(real_topsrcdir)/x11/gtk2/gtk_menu.c \
+		$(real_topsrcdir)/x11/gtk2/gtk_mouse.c \
+		$(real_topsrcdir)/x11/gtk2/gtk_main.c \
+		$(real_topsrcdir)/x11/gtk2/gtk_wrapper.c
+GTK_INCLUDE=	$(real_topsrcdir)/x11/gtk2
+endif
+
 COMMON_SOURCES=	$(real_topsrcdir)/x11/main.c \
 		$(real_topsrcdir)/x11/np2.c \
 		$(real_topsrcdir)/x11/dosio.c \
@@ -51,23 +98,7 @@ COMMON_SOURCES=	$(real_topsrcdir)/x11/main.c \
 		$(real_topsrcdir)/x11/sysmng.c \
 		$(real_topsrcdir)/x11/taskmng.c \
 		$(real_topsrcdir)/x11/timemng.c \
-		$(real_topsrcdir)/x11/gtk2/dialog_about.c \
-		$(real_topsrcdir)/x11/gtk2/dialog_calendar.c \
-		$(real_topsrcdir)/x11/gtk2/dialog_config.c \
-		$(real_topsrcdir)/x11/gtk2/dialog_midi.c \
-		$(real_topsrcdir)/x11/gtk2/dialog_newdisk.c \
-		$(real_topsrcdir)/x11/gtk2/dialog_screen.c \
-		$(real_topsrcdir)/x11/gtk2/dialog_sound.c \
-		$(real_topsrcdir)/x11/gtk2/window_keydisp.c \
-		$(real_topsrcdir)/x11/gtk2/window_softkbd.c \
-		$(real_topsrcdir)/x11/gtk2/gtk_drawmng.c \
-		$(real_topsrcdir)/x11/gtk2/gtk_screen.c \
-		$(real_topsrcdir)/x11/gtk2/gtk_font.c \
-		$(real_topsrcdir)/x11/gtk2/gtk_keyboard.c \
-		$(real_topsrcdir)/x11/gtk2/gtk_menu.c \
-		$(real_topsrcdir)/x11/gtk2/gtk_mouse.c \
-		$(real_topsrcdir)/x11/gtk2/gtk_main.c \
-		$(real_topsrcdir)/x11/gtk2/gtk_wrapper.c \
+		$(GTK_SOURCES) \
 		$(real_topsrcdir)/x11/debug/viewmem.c \
 		$(real_topsrcdir)/x11/misc/threadbase.cpp \
 		$(real_topsrcdir)/x11/misc/tty.cpp \
@@ -260,7 +291,7 @@ xnp2_SOURCES=	$(COMMON_SOURCES)
 
 AM_CPPFLAGS=	-I$(real_topsrcdir) \
 		-I$(real_topsrcdir)/x11 \
-		-I$(real_topsrcdir)/x11/gtk2 \
+		-I$(GTK_INCLUDE) \
 		-I$(real_topsrcdir)/x11/debug \
 		-I$(real_topsrcdir)/common \
 		-I$(real_topsrcdir)/cbus \
@@ -287,7 +318,9 @@ LDADD=		$(GTK_LIBS) $(SDL_LIBS) $(LIBUSB1_LIBS) \
 		$(X11_LIBS) $(XEXT_LIBS) \
 		$(X_LIBS) $(X_PRE_LIBS) $(XLIB) $(X_EXTRA_LIBS)
 
-DEFS=		@DEFS@ -DSYSRESPATH=\""$(pkgdatadir)"\"
+DEFS=		@DEFS@
+DEFS+=		-DSYSRESPATH=\""$(pkgdatadir)"\"
+DEFS+=		-DLOCALEDIR=\""$(localedir)"\"
 
 I286C_SOURCES=	$(real_topsrcdir)/i286c/i286c.c \
 		$(real_topsrcdir)/i286c/cpumem.c \
@@ -358,6 +391,7 @@ xnp2_CPPFLAGS+=	$(I286C_CPPFLAGS)
 endif	# CPUCORE_IA32
 
 CLEANFILES+=	make.log
+CLEANFILES+=	*~
 
 cleandir:: distclean
 

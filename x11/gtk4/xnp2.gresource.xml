@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/org/nonakap/xnp2">
+    <file preprocess="xml-stripblanks">gtk4/main.ui</file>
+    <file preprocess="xml-stripblanks">gtk4/menu.ui</file>
+    <file preprocess="xml-stripblanks">gtk4/dialog_about.ui</file>
+    <file>resources/np2.png</file>
+  </gresource>
+</gresources>

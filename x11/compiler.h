@@ -30,14 +30,9 @@
 #include "config.h"
 #endif
 
+#define GETTEXT_PACKAGE	"xnp2"
 #ifdef ENABLE_NLS
-#include <libintl.h>
-#define _(s)				gettext(s)
-#ifdef gettext_noop
-#define N_(s)				gettext_noop(s)
-#else
-#define N_(s)				(s)
-#endif
+#include <glib/gi18n.h>
 #else /* !ENABLE_NLS */
 #define _(s)				(s)
 #define N_(s) (s)
@@ -236,7 +231,11 @@ G_END_DECLS
 #define	SUPPORT_UTF8
 
 #undef	SUPPORT_8BPP
+#ifdef USE_GTK4
+#undef	SUPPORT_16BPP
+#else
 #define	SUPPORT_16BPP
+#endif
 #define	SUPPORT_24BPP
 #define	SUPPORT_32BPP
 #define	SUPPORT_NORMALDISP

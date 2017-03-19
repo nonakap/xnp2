@@ -43,7 +43,11 @@
 				 |TK_MB_ICON_ERROR \
 				 |TK_MB_ICON_QUESTION)
 
+#if defined(USE_GTK4)
+#include "gtk4/gtk_toolkit.h"
+#else
 #include "gtk2/gtk_toolkit.h"
+#endif
 
 #define	toolkit_initialize()
 #define	toolkit_terminate()

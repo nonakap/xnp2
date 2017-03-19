@@ -1,0 +1,702 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <menu id="menubar">
+    <submenu>
+      <attribute name="label" translatable="yes">Emulate</attribute>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">_Reset</attribute>
+          <attribute name="action">win.reset</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">_Configure...</attribute>
+          <attribute name="action">win.configure</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">_New disk...</attribute>
+          <attribute name="action">win.newdisk</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">_Font...</attribute>
+          <attribute name="action">win.font</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">_Exit</attribute>
+          <attribute name="action">win.exit</attribute>
+        </item>
+      </section>
+    </submenu>
+    <submenu id="stat">
+      <attribute name="label" translatable="yes">Stat</attribute>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Save 0</attribute>
+          <attribute name="action">win.statsave</attribute>
+          <attribute name="target">0</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Save 1</attribute>
+          <attribute name="action">win.statsave</attribute>
+          <attribute name="target">1</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Save 2</attribute>
+          <attribute name="action">win.statsave</attribute>
+          <attribute name="target">2</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Save 3</attribute>
+          <attribute name="action">win.statsave</attribute>
+          <attribute name="target">3</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Save 4</attribute>
+          <attribute name="action">win.statsave</attribute>
+          <attribute name="target">4</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Save 5</attribute>
+          <attribute name="action">win.statsave</attribute>
+          <attribute name="target">5</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Save 6</attribute>
+          <attribute name="action">win.statsave</attribute>
+          <attribute name="target">6</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Save 7</attribute>
+          <attribute name="action">win.statsave</attribute>
+          <attribute name="target">7</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Save 8</attribute>
+          <attribute name="action">win.statsave</attribute>
+          <attribute name="target">8</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Save 9</attribute>
+          <attribute name="action">win.statsave</attribute>
+          <attribute name="target">9</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Load 0</attribute>
+          <attribute name="action">win.statload</attribute>
+          <attribute name="target">0</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Load 1</attribute>
+          <attribute name="action">win.statload</attribute>
+          <attribute name="target">1</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Load 2</attribute>
+          <attribute name="action">win.statload</attribute>
+          <attribute name="target">2</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Load 3</attribute>
+          <attribute name="action">win.statload</attribute>
+          <attribute name="target">3</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Load 4</attribute>
+          <attribute name="action">win.statload</attribute>
+          <attribute name="target">4</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Load 5</attribute>
+          <attribute name="action">win.statload</attribute>
+          <attribute name="target">5</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Load 6</attribute>
+          <attribute name="action">win.statload</attribute>
+          <attribute name="target">6</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Load 7</attribute>
+          <attribute name="action">win.statload</attribute>
+          <attribute name="target">7</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Load 8</attribute>
+          <attribute name="action">win.statload</attribute>
+          <attribute name="target">8</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Load 9</attribute>
+          <attribute name="action">win.statload</attribute>
+          <attribute name="target">9</attribute>
+        </item>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label" translatable="yes">FDD</attribute>
+      <section id="fdd">
+        <submenu id="fdd1">
+          <attribute name="label" translatable="yes">Drive_1</attribute>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">_Open...</attribute>
+              <attribute name="action">win.fddopen</attribute>
+              <attribute name="target">0</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_Remove</attribute>
+              <attribute name="action">win.fddremove</attribute>
+              <attribute name="target">0</attribute>
+            </item>
+          </section>
+        </submenu>
+        <submenu id="fdd2">
+          <attribute name="label" translatable="yes">Drive_2</attribute>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">_Open...</attribute>
+              <attribute name="action">win.fddopen</attribute>
+              <attribute name="target">1</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_Remove</attribute>
+              <attribute name="action">win.fddremove</attribute>
+              <attribute name="target">1</attribute>
+            </item>
+          </section>
+        </submenu>
+        <submenu id="fdd3">
+          <attribute name="label" translatable="yes">Drive_3</attribute>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">_Open...</attribute>
+              <attribute name="action">win.fddopen</attribute>
+              <attribute name="target">2</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_Remove</attribute>
+              <attribute name="action">win.fddremove</attribute>
+              <attribute name="target">2</attribute>
+            </item>
+          </section>
+        </submenu>
+        <submenu id="fdd4">
+          <attribute name="label" translatable="yes">Drive_4</attribute>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">_Open...</attribute>
+              <attribute name="action">win.fddopen</attribute>
+              <attribute name="target">3</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_Remove</attribute>
+              <attribute name="action">win.fddremove</attribute>
+              <attribute name="target">3</attribute>
+            </item>
+          </section>
+        </submenu>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label" translatable="yes">HardDisk</attribute>
+      <section id="harddisk">
+        <submenu id="ata00">
+          <attribute name="label" translatable="yes">IDE0-_0</attribute>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">_Open...</attribute>
+              <attribute name="action">win.ataopen</attribute>
+              <attribute name="target">0</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_Remove</attribute>
+              <attribute name="action">win.ataremove</attribute>
+              <attribute name="target">0</attribute>
+            </item>
+          </section>
+        </submenu>
+        <submenu id="ata01">
+          <attribute name="label" translatable="yes">IDE0-_1</attribute>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">_Open...</attribute>
+              <attribute name="action">win.ataopen</attribute>
+              <attribute name="target">1</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_Remove</attribute>
+              <attribute name="action">win.ataremove</attribute>
+              <attribute name="target">1</attribute>
+            </item>
+          </section>
+        </submenu>
+        <submenu id="atapi0">
+          <attribute name="label" translatable="yes">_CD-ROM</attribute>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">_Open...</attribute>
+              <attribute name="action">win.atapiopen</attribute>
+              <attribute name="target">0</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_Remove</attribute>
+              <attribute name="action">win.atapiremove</attribute>
+              <attribute name="target">0</attribute>
+            </item>
+          </section>
+        </submenu>
+        <submenu id="sasi1">
+          <attribute name="label" translatable="yes">SASI-_1</attribute>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">_Open...</attribute>
+              <attribute name="action">win.sasiopen</attribute>
+              <attribute name="target">0</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_Remove</attribute>
+              <attribute name="action">win.sasiremove</attribute>
+              <attribute name="target">0</attribute>
+            </item>
+          </section>
+        </submenu>
+        <submenu id="sasi2">
+          <attribute name="label" translatable="yes">SASI-_2</attribute>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">_Open...</attribute>
+              <attribute name="action">win.sasiopen</attribute>
+              <attribute name="target">1</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_Remove</attribute>
+              <attribute name="action">win.sasiremove</attribute>
+              <attribute name="target">1</attribute>
+            </item>
+          </section>
+        </submenu>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label" translatable="yes">Screen</attribute>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">_Full screen</attribute>
+          <attribute name="action">win.screenmode</attribute>
+          <attribute name="target">1</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">_Window</attribute>
+          <attribute name="action">win.screenmode</attribute>
+          <attribute name="target">0</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Nor_mal</attribute>
+          <attribute name="action">win.rotate</attribute>
+          <attribute name="target">0x00</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">_Left rotate</attribute>
+          <attribute name="action">win.rotate</attribute>
+          <attribute name="target">0x10</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">_Right rotate</attribute>
+          <attribute name="action">win.rotate</attribute>
+          <attribute name="target">0x30</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">_Disp Vsync</attribute>
+          <attribute name="action">win.dispvsync</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Real _palettes</attribute>
+          <attribute name="action">win.realpalettes</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">_No wait</attribute>
+          <attribute name="action">win.nowait</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">_Auto frame</attribute>
+          <attribute name="action">win.framerate</attribute>
+          <attribute name="target">0</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">_Full frame</attribute>
+          <attribute name="action">win.framerate</attribute>
+          <attribute name="target">1</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">1/_2 frame</attribute>
+          <attribute name="action">win.framerate</attribute>
+          <attribute name="target">2</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">1/_3 frame</attribute>
+          <attribute name="action">win.framerate</attribute>
+          <attribute name="target">3</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">1/_4 frame</attribute>
+          <attribute name="action">win.framerate</attribute>
+          <attribute name="target">4</attribute>
+        </item>
+      </section>
+      <section>
+        <submenu>
+          <attribute name="label" translatable="yes">_Size</attribute>
+          <item>
+            <attribute name="label" translatable="yes">320x240</attribute>
+            <attribute name="action">win.screensize</attribute>
+            <attribute name="target">4</attribute>
+          </item>
+          <item>
+            <attribute name="label" translatable="yes">480x300</attribute>
+            <attribute name="action">win.screensize</attribute>
+            <attribute name="target">6</attribute>
+          </item>
+          <item>
+            <attribute name="label" translatable="yes">640x400</attribute>
+            <attribute name="action">win.screensize</attribute>
+            <attribute name="target">8</attribute>
+          </item>
+          <item>
+            <attribute name="label" translatable="yes">800x500</attribute>
+            <attribute name="action">win.screensize</attribute>
+            <attribute name="target">10</attribute>
+          </item>
+          <item>
+            <attribute name="label" translatable="yes">960x600</attribute>
+            <attribute name="action">win.screensize</attribute>
+            <attribute name="target">12</attribute>
+          </item>
+          <item>
+            <attribute name="label" translatable="yes">1280x800</attribute>
+            <attribute name="action">win.screensize</attribute>
+            <attribute name="target">16</attribute>
+          </item>
+        </submenu>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Screen _option...</attribute>
+          <attribute name="action">win.screenopt</attribute>
+        </item>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label" translatable="yes">Device</attribute>
+      <section>
+        <submenu>
+          <attribute name="label" translatable="yes">_Keyboard</attribute>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">Normal(_K)</attribute>
+              <attribute name="action">win.joykey</attribute>
+              <attribute name="target">0</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">Joykey-_1</attribute>
+              <attribute name="action">win.joykey</attribute>
+              <attribute name="target">1</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">Joykey-_2</attribute>
+              <attribute name="action">win.joykey</attribute>
+              <attribute name="target">2</attribute>
+            </item>
+          </section>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">mechanical _SHIFT</attribute>
+              <attribute name="action">win.mechanical</attribute>
+              <attribute name="target">1</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">mechanical _CTRL</attribute>
+              <attribute name="action">win.mechanical</attribute>
+              <attribute name="target">2</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">mechanical _GRPH</attribute>
+              <attribute name="action">win.mechanical</attribute>
+              <attribute name="target">4</attribute>
+            </item>
+          </section>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">F11 = none</attribute>
+              <attribute name="action">win.f11</attribute>
+              <attribute name="target">0</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">F11 = Menu toggle</attribute>
+              <attribute name="action">win.f11</attribute>
+              <attribute name="target">1</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">F11 = Full Screen</attribute>
+              <attribute name="action">win.f11</attribute>
+              <attribute name="target">2</attribute>
+            </item>
+          </section>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">F12 = _Mouse</attribute>
+              <attribute name="action">win.f12</attribute>
+              <attribute name="target">0</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">F12 = Co_py</attribute>
+              <attribute name="action">win.f12</attribute>
+              <attribute name="target">1</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">F12 = S_top</attribute>
+              <attribute name="action">win.f12</attribute>
+              <attribute name="target">2</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">F12 = _Help</attribute>
+              <attribute name="action">win.f12</attribute>
+              <attribute name="target">7</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">F12 = tenkey [=]</attribute>
+              <attribute name="action">win.f12</attribute>
+              <attribute name="target">4</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">F12 = tenkey [,]</attribute>
+              <attribute name="action">win.f12</attribute>
+              <attribute name="target">3</attribute>
+            </item>
+          </section>
+        </submenu>
+        <submenu>
+          <attribute name="label" translatable="yes">_Sound</attribute>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">Beep _off</attribute>
+              <attribute name="action">win.beep</attribute>
+              <attribute name="target">0</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">Beep _low</attribute>
+              <attribute name="action">win.beep</attribute>
+              <attribute name="target">1</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">Beep _mid</attribute>
+              <attribute name="action">win.beep</attribute>
+              <attribute name="target">2</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">Beep _high</attribute>
+              <attribute name="action">win.beep</attribute>
+              <attribute name="target">3</attribute>
+            </item>
+          </section>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">_Disable boards</attribute>
+              <attribute name="action">win.soundboard</attribute>
+              <attribute name="target">0x00</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">PC-9801-_14</attribute>
+              <attribute name="action">win.soundboard</attribute>
+              <attribute name="target">0x01</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">PC-9801-_26K</attribute>
+              <attribute name="action">win.soundboard</attribute>
+              <attribute name="target">0x02</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">PC-9801-8_6</attribute>
+              <attribute name="action">win.soundboard</attribute>
+              <attribute name="target">0x04</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">PC-9801-26_K + 86</attribute>
+              <attribute name="action">win.soundboard</attribute>
+              <attribute name="target">0x06</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">PC-9801-86 + _Chibi-oto</attribute>
+              <attribute name="action">win.soundboard</attribute>
+              <attribute name="target">0x14</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">PC-9801-11_8</attribute>
+              <attribute name="action">win.soundboard</attribute>
+              <attribute name="target">0x08</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">S_peak board</attribute>
+              <attribute name="action">win.soundboard</attribute>
+              <attribute name="target">0x20</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">Spa_rk board</attribute>
+              <attribute name="action">win.soundboard</attribute>
+              <attribute name="target">0x40</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_AMD98</attribute>
+              <attribute name="action">win.soundboard</attribute>
+              <attribute name="target">0x80</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_Jast sound</attribute>
+              <attribute name="action">win.jastsound</attribute>
+            </item>
+          </section>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">_Seek sound</attribute>
+              <attribute name="action">win.seeksound</attribute>
+            </item>
+          </section>
+        </submenu>
+        <submenu>
+          <attribute name="label" translatable="yes">M_emory</attribute>
+          <section>
+            <item>
+              <attribute name="label" translatable="yes">64_0KB</attribute>
+              <attribute name="action">win.memory</attribute>
+              <attribute name="target">0</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_1.6MB</attribute>
+              <attribute name="action">win.memory</attribute>
+              <attribute name="target">1</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_3.6MB</attribute>
+              <attribute name="action">win.memory</attribute>
+              <attribute name="target">3</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_5.6MB</attribute>
+              <attribute name="action">win.memory</attribute>
+              <attribute name="target">5</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_7.6MB</attribute>
+              <attribute name="action">win.memory</attribute>
+              <attribute name="target">7</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">_9.6MB</attribute>
+              <attribute name="action">win.memory</attribute>
+              <attribute name="target">9</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">13._6MB</attribute>
+              <attribute name="action">win.memory</attribute>
+              <attribute name="target">13</attribute>
+            </item>
+          </section>
+        </submenu>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">_Mouse mode</attribute>
+          <attribute name="action">win.mousemode</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Se_rial option...</attribute>
+          <attribute name="action">win.serialopt</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">MIDI _option...</attribute>
+          <attribute name="action">win.midiopt</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">MIDI _panic</attribute>
+          <attribute name="action">win.midipanic</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">So_und option...</attribute>
+          <attribute name="action">win.soundopt</attribute>
+        </item>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label" translatable="yes">Other</attribute>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">_BMP save...</attribute>
+          <attribute name="action">win.beepsave</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">_S98 logging...</attribute>
+          <attribute name="action">win.s98logging</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Ca_lendar...</attribute>
+          <attribute name="action">win.calendar</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">_Clock disp</attribute>
+          <attribute name="action">win.clockdisp</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">_Frame disp</attribute>
+          <attribute name="action">win.framedisp</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Joy re_verse</attribute>
+          <attribute name="action">win.joyreverse</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Joy _rapid</attribute>
+          <attribute name="action">win.joyrapid</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">_Mouse rapid</attribute>
+          <attribute name="action">win.mouserapid</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">_Tool window</attribute>
+          <attribute name="action">win.toolwindow</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Key display</attribute>
+          <attribute name="action">win.keydisplay</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">S_oftware keyboard</attribute>
+          <attribute name="action">win.softkeyboard</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">_About...</attribute>
+          <attribute name="action">win.about</attribute>
+        </item>
+      </section>
+    </submenu>
+  </menu>
+</interface>
+<!-- vim: set ts=2 sts=2 sw=2 et : -->

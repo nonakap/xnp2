@@ -21,7 +21,7 @@ typedef struct {
 
 // ---- セクタ2048
 
-static long issec2048(FILEH fh) {
+static int issec2048(FILEH fh) {
 
 	long	fpos;
 	UINT8	buf[2048];
@@ -83,7 +83,7 @@ static REG8 sec2048_read(SXSIDEV sxsi, long pos, UINT8 *buf, UINT size) {
 
 // ---- セクタ2352
 
-static long issec2352(FILEH fh) {
+static int issec2352(FILEH fh) {
 
 	long	fpos;
 	UINT8	buf[2048];
@@ -192,7 +192,7 @@ static BRESULT openimg(SXSIDEV sxsi, const OEMCHAR *path,
 
 	FILEH	fh;
 	UINT	type;
-	long	totals;
+	int		totals;
 	CDINFO	cdinfo;
 	UINT	mediatype;
 	UINT	i;

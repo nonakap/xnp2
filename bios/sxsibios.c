@@ -1,11 +1,15 @@
-#include	"compiler.h"
+/**
+ * @file	sxsibios.c
+ * @brief	Implementation of SxSI BIOS
+ */
+
+#include "compiler.h"
+#include "sxsibios.h"
+#include "biosmem.h"
 #include	"cpucore.h"
 #include	"pccore.h"
-#include	"bios.h"
-#include	"biosmem.h"
-#include	"sxsibios.h"
 #include	"scsicmd.h"
-#include	"sxsi.h"
+#include	"fdd/sxsi.h"
 #include	"timing.h"
 
 

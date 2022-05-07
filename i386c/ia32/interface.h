@@ -57,6 +57,7 @@
 #define	CPU_SHUT()			ia32shut()
 #define	CPU_SETEXTSIZE(size)		ia32_setextsize((UINT32)(size) << 20)
 #define CPU_SETEMM(frame, addr)		ia32_setemm(frame, addr)
+#define	CPU_STEPEXEC()				ia32_step()
 
 #define	cpu_memorywrite(a,v)	memp_write8(a,v)
 #define	cpu_memorywrite_b(a,v)	memp_write8(a,v)

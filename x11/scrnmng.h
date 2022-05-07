@@ -10,7 +10,7 @@ enum {
 };
 
 typedef struct {
-	BYTE	*ptr;
+	UINT8	*ptr;
 	int	xalign;
 	int	yalign;
 	int	width;
@@ -36,16 +36,16 @@ enum {
 };
 
 typedef struct {
-	BYTE	flag;
-	BYTE	bpp;
-	BYTE	allflash;
-	BYTE	palchanged;
+	UINT8	flag;
+	UINT8	bpp;
+	UINT8	allflash;
+	UINT8	palchanged;
 } SCRNMNG;
 
 extern SCRNMNG *scrnmngp;
 
 void scrnmng_initialize(void);
-BOOL scrnmng_create(BYTE scrnmode);
+BRESULT scrnmng_create(UINT8 scrnmode);
 void scrnmng_destroy(void);
 
 void scrnmng_setwidth(int posx, int width);
@@ -79,7 +79,7 @@ typedef struct {
 	int		bpp;
 } SCRNMENU;
 
-BOOL scrnmng_entermenu(SCRNMENU *smenu);
+BRESULT scrnmng_entermenu(SCRNMENU *smenu);
 void scrnmng_leavemenu(void);
 void scrnmng_menudraw(const RECT_T *rct);
 

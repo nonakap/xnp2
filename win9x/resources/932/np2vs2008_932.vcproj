@@ -21,7 +21,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\..\..\bin\$(SolutionName)\$(PlatformName)\$(ConfigurationName)n\$(PlatformName)\$(ConfigurationName)\$(SolutionName)"
+			OutputDirectory="..\..\..\bin\$(SolutionName)\$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="..\..\..\obj\$(SolutionName)\$(PlatformName)\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -168,7 +168,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="..\..\..\bin\$(SolutionName)\$(PlatformName)\$(ConfigurationName)n\$(PlatformName)\$(ConfigurationName)\$(SolutionName)"
+			OutputDirectory="..\..\..\bin\$(SolutionName)\$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="..\..\..\obj\$(SolutionName)\$(PlatformName)\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="2"
 			CharacterSet="1"

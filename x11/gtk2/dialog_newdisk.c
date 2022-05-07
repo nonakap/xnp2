@@ -33,8 +33,8 @@
 #include "ini.h"
 #include "pccore.h"
 
-#include "fddfile.h"
-#include "newdisk.h"
+#include "fdd/fddfile.h"
+#include "fdd/newdisk.h"
 
 
 /*
@@ -59,7 +59,13 @@ anex_newdisk_dialog(GtkWidget *dialog)
 	/* dialog table */
 	dialog_table = gtk_table_new(4, 2, FALSE);
 	gtk_table_set_col_spacings(GTK_TABLE(dialog_table), 5);
+#if GTK_MAJOR_VERSION > 2 || (GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION >= 14)
+	gtk_container_add(
+	    GTK_CONTAINER(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
+	    dialog_table);
+#else
 	gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),dialog_table);
+#endif
 	gtk_widget_show(dialog_table);
 
 	/* "HDD Size" label */
@@ -87,7 +93,7 @@ anex_newdisk_dialog(GtkWidget *dialog)
 	if (last >= NELEMENTS(hddsize)) {
 		last = 0;
 	}
-	g_signal_emit_by_name(GTK_OBJECT(button[last]), "clicked");
+	g_signal_emit_by_name(G_OBJECT(button[last]), "clicked");
 
 	gtk_widget_show_all(dialog);
 
@@ -138,7 +144,13 @@ t98_newdisk_dialog(GtkWidget *dialog, const int kind)
 	/* dialog table */
 	dialog_table = gtk_table_new(2, 3, FALSE);
 	gtk_table_set_col_spacings(GTK_TABLE(dialog_table), 5);
+#if GTK_MAJOR_VERSION > 2 || (GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION >= 14)
+	gtk_container_add(
+	    GTK_CONTAINER(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
+	    dialog_table);
+#else
 	gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),dialog_table);
+#endif
 	gtk_widget_show(dialog_table);
 
 	/* "HDD Size" label */
@@ -161,7 +173,7 @@ t98_newdisk_dialog(GtkWidget *dialog, const int kind)
 	gtk_box_pack_start(GTK_BOX(hbox), combo, FALSE, FALSE, 5);
 	gtk_widget_show(combo);
 
-	entry = GTK_BIN(combo)->child;
+	entry = gtk_bin_get_child(GTK_BIN(combo));
 	gtk_editable_set_editable(GTK_EDITABLE(entry), TRUE);
 	gtk_entry_set_max_length(GTK_ENTRY(entry), 3);
 	gtk_entry_set_text(GTK_ENTRY(entry), "");
@@ -291,7 +303,13 @@ create_newdisk_fd_dialog(const char *filename)
 
 	/* dialog table */
 	dialog_table = gtk_table_new(2, 3, FALSE);
+#if GTK_MAJOR_VERSION > 2 || (GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION >= 14)
+	gtk_container_add(
+	    GTK_CONTAINER(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
+	    dialog_table);
+#else
 	gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),dialog_table);
+#endif
 	gtk_table_set_col_spacings(GTK_TABLE(dialog_table), 5);
 	gtk_widget_show(dialog_table);
 
@@ -337,7 +355,7 @@ create_newdisk_fd_dialog(const char *filename)
 	if (i == ndisktype) {
 		i = (i <= 1) ? 0 : 1;	/* 2HD */
 	}
-	g_signal_emit_by_name(GTK_OBJECT(button[i]), "clicked");
+	g_signal_emit_by_name(G_OBJECT(button[i]), "clicked");
 
 	gtk_widget_show_all(dialog);
 

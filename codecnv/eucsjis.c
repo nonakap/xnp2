@@ -1,100 +1,128 @@
-#include	"compiler.h"
-#include	"codecnv.h"
+/**
+ * @file	eucsjis.c
+ * @brief	Implementation of converting EUC to S-JIS
+ */
 
+#include "compiler.h"
+#include "codecnv.h"
 
-UINT codecnv_euctosjis(char *dst, UINT dcnt, const char *src, UINT scnt) {
+static UINT euctosjis(char *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
 
-	UINT	orgdcnt;
-	BOOL	stringmode;
-	UINT	h;
-	UINT	l;
+/**
+ * Maps a EUC string to a S-JIS string
+ * @param[out] lpOutput Pointer to a buffer that receives the converted string
+ * @param[in] cchOutput Size, in characters, of the buffer indicated by lpOutput
+ * @param[in] lpInput Pointer to the character string to convert
+ * @param[in] cchInput Size, in characters, of the buffer indicated by lpInput
+ * @return The number of characters written to the buffer indicated by lpOutput
+ */
+UINT codecnv_euctosjis(char *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput)
+{
+	UINT nLength;
 
-	if (src == NULL) {
-		return(0);
+	if (lpInput == NULL)
+	{
+		return 0;
 	}
-	if (dcnt == 0) {
-		dst = NULL;
-		dcnt = (UINT)-1;
+
+	if (cchOutput == 0)
+	{
+		lpOutput = NULL;
+		cchOutput = (UINT)-1;
 	}
-	orgdcnt = dcnt;
-	stringmode = (((SINT)scnt) < 0);
-	if (stringmode) {
-		dcnt--;
+
+	if (cchInput != (UINT)-1)
+	{
+		// Binary mode
+		return euctosjis(lpOutput, cchOutput, lpInput, cchInput);
 	}
-	while(scnt > 0) {
-		scnt--;
-		h = (UINT8)*src++;
-		if ((h == 0) && (stringmode)) {
-			break;
+	else
+	{
+		// String mode
+		nLength = euctosjis(lpOutput, cchOutput - 1, lpInput, (UINT)strlen(lpInput));
+		if (lpOutput)
+		{
+			lpOutput[nLength] = '\0';
 		}
-		else if (h < 0x80) {			// ascii
-			if (dcnt == 0) {
-				break;
-			}
-			dcnt--;
-			if (dst) {
-				dst[0] = (char)h;
-				dst++;
+		return nLength + 1;
+	}
+}
+
+/**
+ * Maps a EUC string to a S-JIS string (inner)
+ * @param[out] lpOutput Pointer to a buffer that receives the converted string
+ * @param[in] cchOutput Size, in characters, of the buffer indicated by lpOutput
+ * @param[in] lpInput Pointer to the character string to convert
+ * @param[in] cchInput Size, in characters, of the buffer indicated by lpInput
+ * @return The number of characters written to the buffer indicated by lpOutput
+ */
+static UINT euctosjis(char *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput)
+{
+	UINT nRemain;
+	char h;
+	UINT l;
+
+	nRemain = cchOutput;
+	while ((cchInput > 0) && (nRemain > 0))
+	{
+		cchInput--;
+		h = *lpInput++;
+		if ((h & 0x80) == 0)
+		{
+			nRemain--;
+			if (lpOutput)
+			{
+				*lpOutput++ = h;
 			}
 		}
-		else if (h == 0x8e) {
-			if (scnt == 0) {
+		else if (h == (char)0x8e)
+		{
+			if (cchInput == 0)
+			{
 				break;
 			}
-			scnt--;
-			l = (UINT8)*src++;
-			if (!l) {
-				break;
+			cchInput--;
+			h = *lpInput++;
+
+			nRemain--;
+			if (lpOutput)
+			{
+				*lpOutput++ = h;
 			}
-			if (dcnt == 0) {
-				break;
-			}
-			dcnt--;
-			if (dst) {
-				dst[0] = (char)h;
-				dst++;
-			}
+
 		}
-		else {
-			if (scnt == 0) {
+		else
+		{
+			if (cchInput == 0)
+			{
 				break;
 			}
-			scnt--;
-			l = (UINT8)*src++;
-			if (!l) {
+			cchInput--;
+			l = *lpInput++;
+			if (l == 0)
+			{
+				continue;
+			}
+
+			if (nRemain < 2)
+			{
 				break;
 			}
-			if (dcnt < 2) {
-				break;
-			}
-			dcnt -= 2;
-			if (dst) {
+			nRemain -= 2;
+			if (lpOutput)
+			{
 				h &= 0x7f;
 				l &= 0x7f;
 				l += ((h & 1) - 1) & 0x5e;
-				if (l >= 0x60) {
+				if (l >= 0x60)
+				{
 					l++;
 				}
-				h += 0x121;
-				l += 0x1f;
-				h >>= 1;
-				h ^= 0x20;
-				dst[0] = (char)h;
-				dst[1] = (char)l;
-				dst += 2;
+				*lpOutput++ = (char)(((h + 0x121) >> 1) ^ 0x20);
+				*lpOutput++ = (char)(l + 0x1f);
 			}
 		}
 	}
-	if (dst != NULL) {
-		if (stringmode) {
-			*dst = '\0';
-		}
-#if 1	// ˆê‰žŒÝŠ·‚Ìˆ×‚É NULL‚Â‚¯‚é
-		else if (dcnt) {
-			*dst = '\0';
-		}
-#endif
-	}
-	return((UINT)(orgdcnt - dcnt));
-}
 
+	return (UINT)(cchOutput - nRemain);
+}

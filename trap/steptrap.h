@@ -1,3 +1,9 @@
+/**
+ * @file	steptrap.h
+ * @brief	Interface of the step trap
+ */
+
+#pragma once
 
 #if defined(ENABLE_TRAP)
 
@@ -14,4 +20,3 @@ void CPUCALL steptrap(UINT cs, UINT32 eip);
 #endif
 
 #endif
-

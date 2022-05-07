@@ -1,3 +1,11 @@
+/**
+ * @file	dlgabout.h
+ * @brief	Interface of the about dialog
+ */
+
+#pragma once
+
+#include "../menubase/menubase.h"
 
 #if defined(SIZE_QVGA)
 enum {

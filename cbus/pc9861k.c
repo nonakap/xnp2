@@ -53,19 +53,15 @@ static void pc9861k_callback(COMMNG cm, PC9861CH m) {
 
 void pc9861ch1cb(NEVENTITEM item) {
 
-	if (item->flag & NEVENT_SETEVENT) {
-		nevent_set(NEVENT_PC9861CH1, pc9861k.ch1.clk, pc9861ch1cb,
-														NEVENT_RELATIVE);
-	}
+	nevent_set(NEVENT_PC9861CH1, pc9861k.ch1.clk, pc9861ch1cb, NEVENT_RELATIVE);
+
 	pc9861k_callback(cm_pc9861ch1, &pc9861k.ch1);
 }
 
 void pc9861ch2cb(NEVENTITEM item) {
 
-	if (item->flag & NEVENT_SETEVENT) {
-		nevent_set(NEVENT_PC9861CH2, pc9861k.ch2.clk, pc9861ch2cb,
-														NEVENT_RELATIVE);
-	}
+	nevent_set(NEVENT_PC9861CH2, pc9861k.ch2.clk, pc9861ch2cb, NEVENT_RELATIVE);
+
 	pc9861k_callback(cm_pc9861ch2, &pc9861k.ch2);
 }
 

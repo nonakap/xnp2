@@ -39,16 +39,16 @@ int STRCALL mileuc_kanji2nd(const char *str, int pos);
 int STRCALL milutf8_kanji2nd(const char *str, int pos);
 
 // maxlen分だけ文字列をコピー
-void STRCALL milank_ncpy(OEMCHAR *dst, const OEMCHAR *src, int maxlen);
-void STRCALL milsjis_ncpy(char *dst, const char *src, int maxlen);
-void STRCALL mileuc_ncpy(char *dst, const char *src, int maxlen);
-void STRCALL milutf8_ncpy(char *dst, const char *src, int maxlen);
+void STRCALL milank_ncpy(OEMCHAR *dst, const OEMCHAR *src, UINT maxlen);
+void STRCALL milsjis_ncpy(char *dst, const char *src, UINT maxlen);
+void STRCALL mileuc_ncpy(char *dst, const char *src, UINT maxlen);
+void STRCALL milutf8_ncpy(char *dst, const char *src, UINT maxlen);
 
 // maxlen分だけ文字列をキャット
-void STRCALL milank_ncat(OEMCHAR *dst, const OEMCHAR *src, int maxlen);
-void STRCALL milsjis_ncat(char *dst, const char *src, int maxlen);
-void STRCALL mileuc_ncat(char *dst, const char *src, int maxlen);
-void STRCALL milutf8_ncat(char *dst, const char *src, int maxlen);
+void STRCALL milank_ncat(OEMCHAR *dst, const OEMCHAR *src, UINT maxlen);
+void STRCALL milsjis_ncat(char *dst, const char *src, UINT maxlen);
+void STRCALL mileuc_ncat(char *dst, const char *src, UINT maxlen);
+void STRCALL milutf8_ncat(char *dst, const char *src, UINT maxlen);
 
 // 文字を検索
 OEMCHAR * STRCALL milank_chr(const OEMCHAR *str, int c);
@@ -65,7 +65,7 @@ int STRCALL milstr_extendcmp(const OEMCHAR *str, const OEMCHAR *cmp);
 OEMCHAR * STRCALL milstr_nextword(const OEMCHAR *str);
 
 // 文字列からARGの取得
-int STRCALL milstr_getarg(OEMCHAR *str, OEMCHAR *arg[], int maxarg);
+UINT STRCALL milstr_getarg(OEMCHAR *str, OEMCHAR *arg[], UINT maxarg);
 
 // HEX2INT
 long STRCALL milstr_solveHEX(const OEMCHAR *str);

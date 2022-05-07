@@ -34,9 +34,9 @@ G_BEGIN_DECLS
 
 typedef struct {
 	RGB32	mask;
-	BYTE	r16b;
-	BYTE	l16r;
-	BYTE	l16g;
+	UINT8	r16b;
+	UINT8	l16r;
+	UINT8	l16g;
 } PAL16MASK;
 
 typedef struct {

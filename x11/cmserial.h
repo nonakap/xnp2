@@ -7,7 +7,7 @@ G_BEGIN_DECLS
 
 extern const UINT32 cmserial_speed[10];
 
-COMMNG cmserial_create(UINT port, BYTE param, UINT32 speed);
+COMMNG cmserial_create(UINT port, UINT8 param, UINT32 speed);
 
 #if defined(SUPPORT_PC9861K)
 #define	MAX_SERIAL_PORT_NUM	3

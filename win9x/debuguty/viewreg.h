@@ -1,4 +1,29 @@
-LRESULT CALLBACK viewreg_proc(NP2VIEW_T *view,
-								HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+/**
+ * @file	viewreg.h
+ * @brief	レジスタ表示クラスの宣言およびインターフェイスの定義をします
+ */
 
-void viewreg_init(NP2VIEW_T *dst, NP2VIEW_T *src);
+#pragma once
+
+#include <vector>
+#include "viewitem.h"
+
+/**
+ * @brief レジスタ表示クラス
+ */
+class CDebugUtyReg : public CDebugUtyItem
+{
+public:
+	CDebugUtyReg(CDebugUtyView* lpView);
+	virtual ~CDebugUtyReg();
+
+	virtual void Initialize(const CDebugUtyItem* lpItem = NULL);
+	virtual bool Update();
+	virtual bool Lock();
+	virtual void Unlock();
+	virtual bool IsLocked();
+	virtual void OnPaint(HDC hDC, const RECT& rect);
+
+private:
+	std::vector<unsigned char> m_buffer;		//!< バッファ
+};

@@ -22,6 +22,12 @@ void bios0x12(void) {
 		iocore_out8(0x00, 0x20);
 	}
 
+	/* @TODO: 本来はセンスするまでベクタをセットしてはいけない (ココに来てはならない) */
+	if (((baseport >> 4) ^ fdc.chgreg) & 1)
+	{
+		return;
+	}
+
 	status = iocore_inp8(baseport);
 	while(1) {
 		if (!(status & FDCSTAT_CB)) {

@@ -1,5 +1,15 @@
+/**
+ * @file	statsave.h
+ * @brief	Interface of state save
+ */
 
-enum {
+#pragma once
+
+/**
+ * Result code
+ */
+enum
+{
 	STATFLAG_SUCCESS	= 0,
 	STATFLAG_DISKCHG	= 0x0001,
 	STATFLAG_VERCHG		= 0x0002,
@@ -8,29 +18,25 @@ enum {
 	STATFLAG_FAILURE	= -1
 };
 
-typedef struct {
-	char		index[10];
-	UINT16		ver;
-	UINT32		size;
-} STFLAGHDR;
+struct TagStatFlagHandle;
+typedef struct TagStatFlagHandle *STFLAGH;
 
-typedef struct {
-	STFLAGHDR	hdr;
-	UINT		pos;
-	OEMCHAR		*err;
-	int			errlen;
-} _STFLAGH, *STFLAGH;
-
-typedef struct {
-	char	index[10];
+/**
+ * @brief The entry of state flag
+ */
+struct TagStatFlagEntry
+{
+	char	index[12];
 	UINT16	ver;
 	UINT16	type;
 	void	*arg1;
 	UINT	arg2;
-} SFENTRY;
+};
+typedef struct TagStatFlagEntry SFENTRY;
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 int statflag_read(STFLAGH sfh, void *ptr, UINT size);
@@ -44,4 +50,3 @@ int statsave_load(const OEMCHAR *filename);
 #ifdef __cplusplus
 }
 #endif
-

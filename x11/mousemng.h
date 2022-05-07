@@ -25,17 +25,17 @@ G_BEGIN_DECLS
 #define	MOUSE_RIGHTUP	3
 
 
-BYTE mousemng_getstat(short *x, short *y, int clear);
+UINT8 mousemng_getstat(short *x, short *y, int clear);
 void mousemng_callback(void);
 
-BYTE mouse_flag(void);
-void mouse_running(BYTE flg);
-BYTE mouse_btn(BYTE btn);
+UINT8 mouse_flag(void);
+void mouse_running(UINT8 flg);
+UINT8 mouse_btn(UINT8 btn);
 
 /* for X11 */
-int mousemng_initialize(void);
+BRESULT mousemng_initialize(void);
 void mousemng_term(void);
-void mousemng_set_ratio(BYTE);
+void mousemng_set_ratio(UINT8);
 
 enum {
 	MOUSE_RATIO_050 = 0x12,

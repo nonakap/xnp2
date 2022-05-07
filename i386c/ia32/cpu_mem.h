@@ -26,7 +26,7 @@
 #ifndef	IA32_CPU_CPU_MEM_H__
 #define	IA32_CPU_CPU_MEM_H__
 
-#include "memory.h"
+#include "cpumem.h"
 #include "segments.h"
 
 #ifdef __cplusplus

@@ -36,7 +36,7 @@ enum {
 
 static UINT32 ea_bx_si(void) {
 
-	return(LOW16(I286_BX + I286_SI) + DS_FIX);
+	return(LOW16(I286_BX + I286_SI) + I286_DS_FIX);
 }
 
 static UINT32 ea_bx_si_disp8(void) {
@@ -44,7 +44,7 @@ static UINT32 ea_bx_si_disp8(void) {
 	SINT32	adrs;
 
 	GET_PCBYTESD(adrs);
-	return(LOW16(adrs + I286_BX + I286_SI) + DS_FIX);
+	return(LOW16(adrs + I286_BX + I286_SI) + I286_DS_FIX);
 }
 
 static UINT32 ea_bx_si_disp16(void) {
@@ -52,12 +52,12 @@ static UINT32 ea_bx_si_disp16(void) {
 	UINT32	adrs;
 
 	GET_PCWORD(adrs);
-	return(LOW16(adrs + I286_BX + I286_SI) + DS_FIX);
+	return(LOW16(adrs + I286_BX + I286_SI) + I286_DS_FIX);
 }
 
 static UINT32 ea_bx_di(void) {
 
-	return(LOW16(I286_BX + I286_DI) + DS_FIX);
+	return(LOW16(I286_BX + I286_DI) + I286_DS_FIX);
 }
 
 static UINT32 ea_bx_di_disp8(void) {
@@ -65,7 +65,7 @@ static UINT32 ea_bx_di_disp8(void) {
 	SINT32	adrs;
 
 	GET_PCBYTESD(adrs);
-	return(LOW16(adrs + I286_BX + I286_DI) + DS_FIX);
+	return(LOW16(adrs + I286_BX + I286_DI) + I286_DS_FIX);
 }
 
 static UINT32 ea_bx_di_disp16(void) {
@@ -73,12 +73,12 @@ static UINT32 ea_bx_di_disp16(void) {
 	UINT32	adrs;
 
 	GET_PCWORD(adrs);
-	return(LOW16(adrs + I286_BX + I286_DI) + DS_FIX);
+	return(LOW16(adrs + I286_BX + I286_DI) + I286_DS_FIX);
 }
 
 static UINT32 ea_bp_si(void) {
 
-	return(LOW16(I286_BP + I286_SI) + SS_FIX);
+	return(LOW16(I286_BP + I286_SI) + I286_SS_FIX);
 }
 
 static UINT32 ea_bp_si_disp8(void) {
@@ -86,7 +86,7 @@ static UINT32 ea_bp_si_disp8(void) {
 	SINT32	adrs;
 
 	GET_PCBYTESD(adrs);
-	return(LOW16(adrs + I286_BP + I286_SI) + SS_FIX);
+	return(LOW16(adrs + I286_BP + I286_SI) + I286_SS_FIX);
 }
 
 static UINT32 ea_bp_si_disp16(void) {
@@ -94,12 +94,12 @@ static UINT32 ea_bp_si_disp16(void) {
 	UINT32	adrs;
 
 	GET_PCWORD(adrs);
-	return(LOW16(adrs + I286_BP + I286_SI) + SS_FIX);
+	return(LOW16(adrs + I286_BP + I286_SI) + I286_SS_FIX);
 }
 
 static UINT32 ea_bp_di(void) {
 
-	return(LOW16(I286_BP + I286_DI) + SS_FIX);
+	return(LOW16(I286_BP + I286_DI) + I286_SS_FIX);
 }
 
 static UINT32 ea_bp_di_disp8(void) {
@@ -107,7 +107,7 @@ static UINT32 ea_bp_di_disp8(void) {
 	SINT32	adrs;
 
 	GET_PCBYTESD(adrs);
-	return(LOW16(adrs + I286_BP + I286_DI) + SS_FIX);
+	return(LOW16(adrs + I286_BP + I286_DI) + I286_SS_FIX);
 }
 
 static UINT32 ea_bp_di_disp16(void) {
@@ -115,12 +115,12 @@ static UINT32 ea_bp_di_disp16(void) {
 	UINT32	adrs;
 
 	GET_PCWORD(adrs);
-	return(LOW16(adrs + I286_BP + I286_DI) + SS_FIX);
+	return(LOW16(adrs + I286_BP + I286_DI) + I286_SS_FIX);
 }
 
 static UINT32 ea_si(void) {
 
-	return(I286_SI + DS_FIX);
+	return(I286_SI + I286_DS_FIX);
 }
 
 static UINT32 ea_si_disp8(void) {
@@ -128,7 +128,7 @@ static UINT32 ea_si_disp8(void) {
 	SINT32	adrs;
 
 	GET_PCBYTESD(adrs);
-	return(LOW16(adrs + I286_SI) + DS_FIX);
+	return(LOW16(adrs + I286_SI) + I286_DS_FIX);
 }
 
 static UINT32 ea_si_disp16(void) {
@@ -136,12 +136,12 @@ static UINT32 ea_si_disp16(void) {
 	UINT32	adrs;
 
 	GET_PCWORD(adrs);
-	return(LOW16(adrs + I286_SI) + DS_FIX);
+	return(LOW16(adrs + I286_SI) + I286_DS_FIX);
 }
 
 static UINT32 ea_di(void) {
 
-	return(I286_DI + DS_FIX);
+	return(I286_DI + I286_DS_FIX);
 }
 
 static UINT32 ea_di_disp8(void) {
@@ -149,7 +149,7 @@ static UINT32 ea_di_disp8(void) {
 	SINT32	adrs;
 
 	GET_PCBYTESD(adrs);
-	return(LOW16(adrs + I286_DI) + DS_FIX);
+	return(LOW16(adrs + I286_DI) + I286_DS_FIX);
 }
 
 static UINT32 ea_di_disp16(void) {
@@ -157,7 +157,7 @@ static UINT32 ea_di_disp16(void) {
 	UINT32	adrs;
 
 	GET_PCWORD(adrs);
-	return(LOW16(adrs + I286_DI) + DS_FIX);
+	return(LOW16(adrs + I286_DI) + I286_DS_FIX);
 }
 
 static UINT32 ea_disp16(void) {
@@ -165,7 +165,7 @@ static UINT32 ea_disp16(void) {
 	UINT32	adrs;
 
 	GET_PCWORD(adrs);
-	return(adrs + DS_FIX);
+	return(adrs + I286_DS_FIX);
 }
 
 static UINT32 ea_bp_disp8(void) {
@@ -173,7 +173,7 @@ static UINT32 ea_bp_disp8(void) {
 	SINT32	adrs;
 
 	GET_PCBYTESD(adrs);
-	return(LOW16(adrs + I286_BP) + SS_FIX);
+	return(LOW16(adrs + I286_BP) + I286_SS_FIX);
 }
 
 static UINT32 ea_bp_disp16(void) {
@@ -181,12 +181,12 @@ static UINT32 ea_bp_disp16(void) {
 	UINT32	adrs;
 
 	GET_PCWORD(adrs);
-	return(LOW16(adrs + I286_BP) + SS_FIX);
+	return(LOW16(adrs + I286_BP) + I286_SS_FIX);
 }
 
 static UINT32 ea_bx(void) {
 
-	return(I286_BX + DS_FIX);
+	return(I286_BX + I286_DS_FIX);
 }
 
 static UINT32 ea_bx_disp8(void) {
@@ -194,7 +194,7 @@ static UINT32 ea_bx_disp8(void) {
 	SINT32	adrs;
 
 	GET_PCBYTESD(adrs);
-	return(LOW16(adrs + I286_BX) + DS_FIX);
+	return(LOW16(adrs + I286_BX) + I286_DS_FIX);
 }
 
 static UINT32 ea_bx_disp16(void) {
@@ -202,7 +202,7 @@ static UINT32 ea_bx_disp16(void) {
 	UINT32	adrs;
 
 	GET_PCWORD(adrs);
-	return(LOW16(adrs + I286_BX) + DS_FIX);
+	return(LOW16(adrs + I286_BX) + I286_DS_FIX);
 }
 
 static const CALCEA i286c_ea_dst_tbl[] = {
@@ -412,7 +412,7 @@ static const CALCLEA i286c_lea_tbl[] = {
 
 static UINT a_bx_si(UINT32 *seg) {
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	return(LOW16(I286_BX + I286_SI));
 }
 
@@ -420,7 +420,7 @@ static UINT a_bx_si_disp8(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	GET_PCBYTES(adrs);
 	return(LOW16(adrs + I286_BX + I286_SI));
 }
@@ -429,14 +429,14 @@ static UINT a_bx_si_disp16(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	GET_PCWORD(adrs);
 	return(LOW16(adrs + I286_BX + I286_SI));
 }
 
 static UINT a_bx_di(UINT32 *seg) {
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	return(LOW16(I286_BX + I286_DI));
 }
 
@@ -444,7 +444,7 @@ static UINT a_bx_di_disp8(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	GET_PCBYTES(adrs);
 	return(LOW16(adrs + I286_BX + I286_DI));
 }
@@ -453,14 +453,14 @@ static UINT a_bx_di_disp16(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	GET_PCWORD(adrs);
 	return(LOW16(adrs + I286_BX + I286_DI));
 }
 
 static UINT a_bp_si(UINT32 *seg) {
 
-	*seg = SS_FIX;
+	*seg = I286_SS_FIX;
 	return(LOW16(I286_BP + I286_SI));
 }
 
@@ -468,7 +468,7 @@ static UINT a_bp_si_disp8(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = SS_FIX;
+	*seg = I286_SS_FIX;
 	GET_PCBYTES(adrs);
 	return(LOW16(adrs + I286_BP + I286_SI));
 }
@@ -477,14 +477,14 @@ static UINT a_bp_si_disp16(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = SS_FIX;
+	*seg = I286_SS_FIX;
 	GET_PCWORD(adrs);
 	return(LOW16(adrs + I286_BP + I286_SI));
 }
 
 static UINT a_bp_di(UINT32 *seg) {
 
-	*seg = SS_FIX;
+	*seg = I286_SS_FIX;
 	return(LOW16(I286_BP + I286_DI));
 }
 
@@ -492,7 +492,7 @@ static UINT a_bp_di_disp8(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = SS_FIX;
+	*seg = I286_SS_FIX;
 	GET_PCBYTES(adrs);
 	return(LOW16(adrs + I286_BP + I286_DI));
 }
@@ -501,14 +501,14 @@ static UINT a_bp_di_disp16(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = SS_FIX;
+	*seg = I286_SS_FIX;
 	GET_PCWORD(adrs);
 	return(LOW16(adrs + I286_BP + I286_DI));
 }
 
 static UINT a_si(UINT32 *seg) {
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	return(I286_SI);
 }
 
@@ -516,7 +516,7 @@ static UINT a_si_disp8(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	GET_PCBYTES(adrs);
 	return(LOW16(adrs + I286_SI));
 }
@@ -525,14 +525,14 @@ static UINT a_si_disp16(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	GET_PCWORD(adrs);
 	return(LOW16(adrs + I286_SI));
 }
 
 static UINT a_di(UINT32 *seg) {
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	return(I286_DI);
 }
 
@@ -540,7 +540,7 @@ static UINT a_di_disp8(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	GET_PCBYTES(adrs);
 	return(LOW16(adrs + I286_DI));
 }
@@ -549,7 +549,7 @@ static UINT a_di_disp16(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	GET_PCWORD(adrs);
 	return(LOW16(adrs + I286_DI));
 }
@@ -558,7 +558,7 @@ static UINT a_disp16(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	GET_PCWORD(adrs);
 	return(adrs);
 }
@@ -567,7 +567,7 @@ static UINT a_bp_disp8(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = SS_FIX;
+	*seg = I286_SS_FIX;
 	GET_PCBYTES(adrs);
 	return(LOW16(adrs + I286_BP));
 }
@@ -576,14 +576,14 @@ static UINT a_bp_disp16(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = SS_FIX;
+	*seg = I286_SS_FIX;
 	GET_PCWORD(adrs);
 	return(LOW16(adrs + I286_BP));
 }
 
 static UINT a_bx(UINT32 *seg) {
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	return(I286_BX);
 }
 
@@ -591,7 +591,7 @@ static UINT a_bx_disp8(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	GET_PCBYTES(adrs);
 	return(LOW16(adrs + I286_BX));
 }
@@ -600,7 +600,7 @@ static UINT a_bx_disp16(UINT32 *seg) {
 
 	UINT	adrs;
 
-	*seg = DS_FIX;
+	*seg = I286_DS_FIX;
 	GET_PCWORD(adrs);
 	return(LOW16(adrs + I286_BX));
 }
@@ -655,93 +655,93 @@ UINT32 calc_ea_dst(UINT op) {
 
 	switch(((op >> 3) & 0x18) + (op & 0x07)) {
 		case EA_BX_SI:
-			return(LOW16(I286_BX + I286_SI) + DS_FIX);
+			return(LOW16(I286_BX + I286_SI) + I286_DS_FIX);
 
 		case EA_BX_SI_DISP8:
 			GET_PCBYTESD(adrs);
-			return(LOW16(adrs + I286_BX + I286_SI) + DS_FIX);
+			return(LOW16(adrs + I286_BX + I286_SI) + I286_DS_FIX);
 
 		case EA_BX_SI_DISP16:
 			GET_PCWORD(adrs);
-			return(LOW16(adrs + I286_BX + I286_SI) + DS_FIX);
+			return(LOW16(adrs + I286_BX + I286_SI) + I286_DS_FIX);
 
 		case EA_BX_DI:
-			return(LOW16(I286_BX + I286_DI) + DS_FIX);
+			return(LOW16(I286_BX + I286_DI) + I286_DS_FIX);
 
 		case EA_BX_DI_DISP8:
 			GET_PCBYTESD(adrs);
-			return(LOW16(adrs + I286_BX + I286_DI) + DS_FIX);
+			return(LOW16(adrs + I286_BX + I286_DI) + I286_DS_FIX);
 
 		case EA_BX_DI_DISP16:
 			GET_PCWORD(adrs);
-			return(LOW16(adrs + I286_BX + I286_DI) + DS_FIX);
+			return(LOW16(adrs + I286_BX + I286_DI) + I286_DS_FIX);
 
 		case EA_BP_SI:
-			return(LOW16(I286_BP + I286_SI) + SS_FIX);
+			return(LOW16(I286_BP + I286_SI) + I286_SS_FIX);
 
 		case EA_BP_SI_DISP8:
 			GET_PCBYTESD(adrs);
-			return(LOW16(adrs + I286_BP + I286_SI) + SS_FIX);
+			return(LOW16(adrs + I286_BP + I286_SI) + I286_SS_FIX);
 
 		case EA_BP_SI_DISP16:
 			GET_PCWORD(adrs);
-			return(LOW16(adrs + I286_BP + I286_SI) + SS_FIX);
+			return(LOW16(adrs + I286_BP + I286_SI) + I286_SS_FIX);
 
 		case EA_BP_DI:
-			return(LOW16(I286_BP + I286_DI) + SS_FIX);
+			return(LOW16(I286_BP + I286_DI) + I286_SS_FIX);
 
 		case EA_BP_DI_DISP8:
 			GET_PCBYTESD(adrs);
-			return(LOW16(adrs + I286_BP + I286_DI) + SS_FIX);
+			return(LOW16(adrs + I286_BP + I286_DI) + I286_SS_FIX);
 
 		case EA_BP_DI_DISP16:
 			GET_PCWORD(adrs);
-			return(LOW16(adrs + I286_BP + I286_DI) + SS_FIX);
+			return(LOW16(adrs + I286_BP + I286_DI) + I286_SS_FIX);
 
 		case EA_SI:
-			return(I286_SI + DS_FIX);
+			return(I286_SI + I286_DS_FIX);
 
 		case EA_SI_DISP8:
 			GET_PCBYTESD(adrs);
-			return(LOW16(adrs + I286_SI) + DS_FIX);
+			return(LOW16(adrs + I286_SI) + I286_DS_FIX);
 
 		case EA_SI_DISP16:
 			GET_PCWORD(adrs);
-			return(LOW16(adrs + I286_SI) + DS_FIX);
+			return(LOW16(adrs + I286_SI) + I286_DS_FIX);
 
 		case EA_DI:
-			return(I286_DI + DS_FIX);
+			return(I286_DI + I286_DS_FIX);
 
 		case EA_DI_DISP8:
 			GET_PCBYTESD(adrs);
-			return(LOW16(adrs + I286_DI) + DS_FIX);
+			return(LOW16(adrs + I286_DI) + I286_DS_FIX);
 
 		case EA_DI_DISP16:
 			GET_PCWORD(adrs);
-			return(LOW16(adrs + I286_DI) + DS_FIX);
+			return(LOW16(adrs + I286_DI) + I286_DS_FIX);
 
 		case EA_BX:
-			return(I286_BX + DS_FIX);
+			return(I286_BX + I286_DS_FIX);
 
 		case EA_BX_DISP8:
 			GET_PCBYTESD(adrs);
-			return(LOW16(adrs + I286_BX) + DS_FIX);
+			return(LOW16(adrs + I286_BX) + I286_DS_FIX);
 
 		case EA_BX_DISP16:
 			GET_PCWORD(adrs);
-			return(LOW16(adrs + I286_BX) + DS_FIX);
+			return(LOW16(adrs + I286_BX) + I286_DS_FIX);
 
 		case EA_BP_DISP8:
 			GET_PCBYTESD(adrs);
-			return(LOW16(adrs + I286_BP) + SS_FIX);
+			return(LOW16(adrs + I286_BP) + I286_SS_FIX);
 
 		case EA_BP_DISP16:
 			GET_PCWORD(adrs);
-			return(LOW16(adrs + I286_BP) + SS_FIX);
+			return(LOW16(adrs + I286_BP) + I286_SS_FIX);
 
 		case EA_DISP16:
 			GET_PCWORD(adrs);
-			return(adrs + DS_FIX);
+			return(adrs + I286_DS_FIX);
 
 		default:
 			return(0);
@@ -853,115 +853,115 @@ UINT calc_a(UINT op, UINT32 *seg) {
 
 	switch(((op >> 3) & 0x18) + (op & 0x07)) {
 		case EA_BX_SI:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			return(LOW16(I286_BX + I286_SI));
 
 		case EA_BX_SI_DISP8:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			GET_PCBYTESD(adrs);
 			return(LOW16(adrs + I286_BX + I286_SI));
 
 		case EA_BX_SI_DISP16:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			GET_PCWORD(adrs);
 			return(LOW16(adrs + I286_BX + I286_SI));
 
 		case EA_BX_DI:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			return(LOW16(I286_BX + I286_DI));
 
 		case EA_BX_DI_DISP8:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			GET_PCBYTESD(adrs);
 			return(LOW16(adrs + I286_BX + I286_DI));
 
 		case EA_BX_DI_DISP16:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			GET_PCWORD(adrs);
 			return(LOW16(adrs + I286_BX + I286_DI));
 
 		case EA_BP_SI:
-			*seg = SS_FIX;
+			*seg = I286_SS_FIX;
 			return(LOW16(I286_BP + I286_SI));
 
 		case EA_BP_SI_DISP8:
-			*seg = SS_FIX;
+			*seg = I286_SS_FIX;
 			GET_PCBYTESD(adrs);
 			return(LOW16(adrs + I286_BP + I286_SI));
 
 		case EA_BP_SI_DISP16:
-			*seg = SS_FIX;
+			*seg = I286_SS_FIX;
 			GET_PCWORD(adrs);
 			return(LOW16(adrs + I286_BP + I286_SI));
 
 		case EA_BP_DI:
-			*seg = SS_FIX;
+			*seg = I286_SS_FIX;
 			return(LOW16(I286_BP + I286_DI));
 
 		case EA_BP_DI_DISP8:
-			*seg = SS_FIX;
+			*seg = I286_SS_FIX;
 			GET_PCBYTESD(adrs);
 			return(LOW16(adrs + I286_BP + I286_DI));
 
 		case EA_BP_DI_DISP16:
-			*seg = SS_FIX;
+			*seg = I286_SS_FIX;
 			GET_PCWORD(adrs);
 			return(LOW16(adrs + I286_BP + I286_DI));
 
 		case EA_SI:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			return(I286_SI);
 
 		case EA_SI_DISP8:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			GET_PCBYTESD(adrs);
 			return(LOW16(adrs + I286_SI));
 
 		case EA_SI_DISP16:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			GET_PCWORD(adrs);
 			return(LOW16(adrs + I286_SI));
 
 		case EA_DI:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			return(I286_DI);
 
 		case EA_DI_DISP8:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			GET_PCBYTESD(adrs);
 			return(LOW16(adrs + I286_DI));
 
 		case EA_DI_DISP16:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			GET_PCWORD(adrs);
 			return(LOW16(adrs + I286_DI));
 
 		case EA_BX:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			return(I286_BX);
 
 		case EA_BX_DISP8:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			GET_PCBYTESD(adrs);
 			return(LOW16(adrs + I286_BX));
 
 		case EA_BX_DISP16:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			GET_PCWORD(adrs);
 			return(LOW16(adrs + I286_BX));
 
 		case EA_BP_DISP8:
-			*seg = SS_FIX;
+			*seg = I286_SS_FIX;
 			GET_PCBYTESD(adrs);
 			return(LOW16(adrs + I286_BP));
 
 		case EA_BP_DISP16:
-			*seg = SS_FIX;
+			*seg = I286_SS_FIX;
 			GET_PCWORD(adrs);
 			return(LOW16(adrs + I286_BP));
 
 		case EA_DISP16:
-			*seg = DS_FIX;
+			*seg = I286_DS_FIX;
 			GET_PCWORD(adrs);
 			return(adrs);
 

@@ -1,7 +1,10 @@
-#include	"compiler.h"
-#include	"sound.h"
-#include	"adpcm.h"
+/**
+ * @file	adpcmg.c
+ * @brief	Implementation of the OPNA ADPCM
+ */
 
+#include "compiler.h"
+#include "adpcm.h"
 
 #define	ADPCM_NBR	0x80000000
 
@@ -290,3 +293,68 @@ adpcmstop:
 	ad->remain = 0;
 }
 
+/**
+ * Step adpcm
+ * @param[in] ad An instance of ADPCM
+ * @param[out] pcm A pointer to a buffer
+ * @param[in] count The size of the buffer
+ */
+void SOUNDCALL adpcm_getpcm_dummy(ADPCM ad, SINT32 *pcm, UINT count)
+{
+	SINT32	remain;
+
+	if ((count == 0) || (ad->play == 0))
+	{
+		return;
+	}
+	remain = ad->remain;
+	if (ad->step <= ADTIMING)
+	{
+		do
+		{
+			if (remain < 0)
+			{
+				remain += ADTIMING;
+				getadpcmdata(ad);
+				if (ad->play == 0)
+				{
+					if (remain > 0)
+					{
+						do
+						{
+							remain -= ad->step;
+						} while ((remain > 0) && (--count));
+					}
+					goto adpcmstop;
+				}
+			}
+			remain -= ad->step;
+		} while(--count);
+	}
+	else
+	{
+		do
+		{
+			if (remain > 0)
+			{
+				do {
+					getadpcmdata(ad);
+					if (ad->play == 0)
+					{
+						goto adpcmstop;
+					}
+					remain -= ad->pertim;
+				} while (remain > 0);
+			}
+			remain += ADTIMING;
+		} while (--count);
+	}
+	ad->remain = remain;
+	return;
+
+adpcmstop:
+	ad->out0 = 0;
+	ad->out1 = 0;
+	ad->fb = 0;
+	ad->remain = 0;
+}

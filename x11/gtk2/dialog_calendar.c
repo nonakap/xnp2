@@ -45,8 +45,8 @@ static const char *calendar_kind_str[] = {
 
 static struct {
 	GtkWidget	*entry;
-	const BYTE	min;
-	const BYTE	max;
+	const UINT8	min;
+	const UINT8	max;
 } vircal[] = {
 	{ NULL, 0x00, 0x99 },	/* year */
 	{ NULL, 0x01, 0x12 },	/* month */
@@ -58,14 +58,14 @@ static struct {
 
 static GtkWidget *calendar_radiobutton[NELEMENTS(calendar_kind_str)];
 static GtkWidget *now_button;
-static BYTE calendar_kind;
+static UINT8 calendar_kind;
 
 
 static UINT
 getbcd(const char *str, size_t len)
 {
 	UINT val;
-	BYTE c;
+	UINT8 c;
 
 	if (str[0] == '\0') {
 		return 0xff;
@@ -87,10 +87,10 @@ getbcd(const char *str, size_t len)
 static void
 ok_button_clicked(GtkButton *b, gpointer d)
 {
-	BYTE calendar_buf[8];
+	UINT8 calendar_buf[8];
 	const gchar *entryp;
 	BOOL renewal;
-	BYTE val;
+	UINT8 val;
 	int i;
 
 	renewal = FALSE;
@@ -106,7 +106,7 @@ ok_button_clicked(GtkButton *b, gpointer d)
 				if (i == 1) {
 					val = ((val & 0x10) * 10) + (val << 4);
 				}
-				calendar_buf[i] = (BYTE)val;
+				calendar_buf[i] = (UINT8)val;
 			} else {
 				break;
 			}
@@ -137,7 +137,7 @@ dialog_destroy(GtkWidget *w, GtkWidget **wp)
 static void
 set_virtual_calendar(BOOL virtual)
 {
-	BYTE cbuf[8];
+	UINT8 cbuf[8];
 	char buf[8];
 	int i;
 
@@ -197,7 +197,7 @@ create_calendar_dialog(void)
 	gtk_window_set_resizable(GTK_WINDOW(calendar_dialog), FALSE);
 	gtk_container_set_border_width(GTK_CONTAINER(calendar_dialog), 5);
 
-	g_signal_connect(GTK_OBJECT(calendar_dialog), "destroy",
+	g_signal_connect(G_OBJECT(calendar_dialog), "destroy",
 	    G_CALLBACK(dialog_destroy), NULL);
 
 	main_widget = gtk_table_new(4, 6, FALSE);
@@ -220,7 +220,7 @@ create_calendar_dialog(void)
 #else
 		GTK_WIDGET_UNSET_FLAGS(calendar_radiobutton[i], GTK_CAN_FOCUS);
 #endif
-		g_signal_connect(GTK_OBJECT(calendar_radiobutton[i]),
+		g_signal_connect(G_OBJECT(calendar_radiobutton[i]),
 		    "clicked", G_CALLBACK(calendar_radiobutton_clicked),
 		    GUINT_TO_POINTER(i));
 	}
@@ -264,12 +264,12 @@ create_calendar_dialog(void)
 	gtk_container_set_border_width(GTK_CONTAINER(now_button), 5);
 	gtk_table_attach_defaults(GTK_TABLE(calendar_widget), now_button,
 	    6, 7, 1, 2);
-	g_signal_connect(GTK_OBJECT(now_button), "clicked",
+	g_signal_connect(G_OBJECT(now_button), "clicked",
 	    G_CALLBACK(now_button_clicked), NULL);
 
 	/* update to current state */
 	set_virtual_calendar(TRUE);
-	g_signal_emit_by_name(GTK_OBJECT(calendar_radiobutton[np2cfg.calendar ? 0 : 1]), "clicked");
+	g_signal_emit_by_name(G_OBJECT(calendar_radiobutton[np2cfg.calendar ? 0 : 1]), "clicked");
 
 	/*
 	 * OK, Cancel button
@@ -285,7 +285,7 @@ create_calendar_dialog(void)
 	GTK_WIDGET_SET_FLAGS(ok_button, GTK_CAN_DEFAULT);
 	GTK_WIDGET_SET_FLAGS(ok_button, GTK_HAS_DEFAULT);
 #endif
-	g_signal_connect(GTK_OBJECT(ok_button), "clicked",
+	g_signal_connect(G_OBJECT(ok_button), "clicked",
 	    G_CALLBACK(ok_button_clicked), (gpointer)calendar_dialog);
 	gtk_widget_grab_default(ok_button);
 
@@ -294,8 +294,8 @@ create_calendar_dialog(void)
 	gtk_container_set_border_width(GTK_CONTAINER(cancel_button), 3);
 	gtk_table_attach_defaults(GTK_TABLE(main_widget), cancel_button,
 	    4, 6, 1, 2);
-	g_signal_connect_swapped(GTK_OBJECT(cancel_button), "clicked",
-	    G_CALLBACK(gtk_widget_destroy), GTK_OBJECT(calendar_dialog));
+	g_signal_connect_swapped(G_OBJECT(cancel_button), "clicked",
+	    G_CALLBACK(gtk_widget_destroy), G_OBJECT(calendar_dialog));
 
 	gtk_widget_show_all(calendar_dialog);
 }

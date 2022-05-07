@@ -6,13 +6,13 @@
 #include	"i286xrep.h"
 #include	"i286xcts.h"
 #include	"pccore.h"
-#include	"bios.h"
+#include	"bios/bios.h"
 #include	"iocore.h"
 #include	"i286x.mcr"
 #include	"i286xea.mcr"
 #include	"dmax86.h"
 #if defined(ENABLE_TRAP)
-#include	"steptrap.h"
+#include "trap/steptrap.h"
 #endif
 
 
@@ -868,6 +868,8 @@ I286 v30idiv_ea8(void) {						// F6-7 idiv ea8
 	idivcheck:	test	ebp, ebp
 				je		idivovf
 				mov		ax, I286_AX
+				cmp		ax, 0x8000
+				je		idivovf
 				cwd
 				idiv	bp
 				mov		I286_AL, al
@@ -945,9 +947,12 @@ I286 v30idiv_ea16(void) {						// F7-7: idiv ea16
 				align	4
 	idivcheck:	test	ebp, ebp
 				je		idivovf
-				movzx	eax, I286_DX
-				shl		eax, 16
-				mov		ax, I286_AX
+				movzx	edx, I286_DX
+				movzx	eax, I286_AX
+				shl		edx, 16
+				or		eax, edx
+				cmp		eax, 0x80000000
+				je		idivovf
 				cdq
 				idiv	ebp
 				mov		I286_AX, ax

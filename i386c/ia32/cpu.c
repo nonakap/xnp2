@@ -31,7 +31,7 @@
 #include "inst_table.h"
 
 #if defined(ENABLE_TRAP)
-#include "steptrap.h"
+#include "trap/steptrap.h"
 #endif
 
 

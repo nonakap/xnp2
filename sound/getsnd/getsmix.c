@@ -94,7 +94,7 @@ static const GSCNV cnvfunc[] = {
 			(GSCNV)s16s16nr,	(GSCNV)s16s16dn,	(GSCNV)s16s16up};
 
 
-BOOL getsnd_setmixproc(GETSND snd, UINT samprate, UINT channles) {
+BRESULT getsnd_setmixproc(GETSND snd, UINT samprate, UINT channles) {
 
 	int		funcnum;
 

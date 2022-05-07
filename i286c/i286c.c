@@ -7,7 +7,7 @@
 #include	"dmax86.h"
 #include	"i286c.mcr"
 #if defined(ENABLE_TRAP)
-#include	"steptrap.h"
+#include "trap/steptrap.h"
 #endif
 
 
@@ -163,7 +163,7 @@ void i286c_deinitialize(void) {
 static void i286c_initreg(void) {
 
 	I286_CS = 0xf000;
-	CS_BASE = 0xf0000;
+	I286_CS_BASE = 0xf0000;
 	I286_IP = 0xfff0;
 	I286_ADRSMASK = 0xfffff;
 }
@@ -250,7 +250,7 @@ const UINT8	*ptr;
 	ptr = mem + (vect * 4);
 	I286_IP = LOADINTELWORD(ptr+0);				// real mode!
 	I286_CS = LOADINTELWORD(ptr+2);				// real mode!
-	CS_BASE = I286_CS << 4;
+	I286_CS_BASE = I286_CS << 4;
 	I286_WORKCLOCK(20);
 }
 
@@ -259,7 +259,7 @@ void CPUCALL i286c_interrupt(REG8 vect) {
 	UINT	op;
 const UINT8	*ptr;
 
-	op = i286_memoryread(I286_IP + CS_BASE);
+	op = i286_memoryread(I286_IP + I286_CS_BASE);
 	if (op == 0xf4) {							// hlt
 		I286_IP++;
 	}
@@ -273,7 +273,7 @@ const UINT8	*ptr;
 	ptr = mem + (vect * 4);
 	I286_IP = LOADINTELWORD(ptr + 0);			// real mode!
 	I286_CS = LOADINTELWORD(ptr + 2);			// real mode!
-	CS_BASE = I286_CS << 4;
+	I286_CS_BASE = I286_CS << 4;
 	I286_WORKCLOCK(20);
 }
 
@@ -284,7 +284,7 @@ void i286c(void) {
 	if (I286_TRAP) {
 		do {
 #if defined(ENABLE_TRAP)
-			steptrap(CPU_CS, CPU_IP);
+			steptrap(I286_CS, I286_IP);
 #endif
 			GET_PCBYTE(opcode);
 			i286op[opcode]();
@@ -297,7 +297,7 @@ void i286c(void) {
 	else if (dmac.working) {
 		do {
 #if defined(ENABLE_TRAP)
-			steptrap(CPU_CS, CPU_IP);
+			steptrap(I286_CS, I286_IP);
 #endif
 			GET_PCBYTE(opcode);
 			i286op[opcode]();
@@ -307,7 +307,7 @@ void i286c(void) {
 	else {
 		do {
 #if defined(ENABLE_TRAP)
-			steptrap(CPU_CS, CPU_IP);
+			steptrap(I286_CS, I286_IP);
 #endif
 			GET_PCBYTE(opcode);
 			i286op[opcode]();

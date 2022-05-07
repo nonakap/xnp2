@@ -11,7 +11,7 @@ typedef struct {
 } DIPBMP;
 
 
-static UINT8 *getbmp(const char *dat, DIPBMP *dipbmp) {
+static UINT8 *getbmp(const UINT8 *dat, DIPBMP *dipbmp) {
 
 	BMPFILE	*ret;
 

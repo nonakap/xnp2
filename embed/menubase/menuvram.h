@@ -1,3 +1,11 @@
+/**
+ * @file	menuvram.h
+ * @brief	Interface of the vram of the menu
+ */
+
+#pragma once
+
+#include "../vramhdl.h"
 
 enum {
 	MVC_BACK,

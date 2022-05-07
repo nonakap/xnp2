@@ -1,4 +1,4 @@
-.TH Xnp21 1 "June 7, 2014"
+.TH Xnp21 1 "Jan 13, 2016"
 .SH NAME
 Xnp21 \- IA-32 コアを使用した PC-9801 シリーズエミュレータ
 .SH SYNOPSIS
@@ -67,11 +67,23 @@ X と Xnp21 間のマウス操作の切替
 .B $(HOME)/.np2/bios.rom
 実機の BIOS ROM
 .TP
-.B $(HOME)/.np2/font.rom
+.B $(HOME)/.np2/FONT.ROM
 実機のフォント ROM
 .TP
-.B $(HOME)/.np2/sound.rom
-サウンドボードに搭載されている BIOS ROM
+.B $(HOME)/.np2/sound26.rom
+PC-9801-26K に搭載されている BIOS ROM
+.TP
+.B $(HOME)/.np2/sound86.rom
+PC-9801-86 に搭載されている BIOS ROM
+.TP
+.B $(HOME)/.np2/sound118.rom
+PC-9801-118 に搭載されている BIOS ROM
+.TP
+.B $(HOME)/.np2/soundSPB.rom
+スピークボードに搭載されている BIOS ROM
+.TP
+.B $(HOME)/.np2/SCCI.ini
+SCCI (Sound Chip Common Interface) 設定ファイル
 .TP
 .B $(HOME)/.np2/timidity.cfg
 内蔵 TiMidity 互換ソフトウェア MIDI 音源用の音源設定ファイル

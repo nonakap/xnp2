@@ -145,7 +145,7 @@ I286_F6 _call_far_ea16(UINT op) {
 		REGPUSH0(I286_IP)
 		I286_IP = i286_memoryread_w(seg + ad);
 		I286_CS = i286_memoryread_w(seg + LOW16(ad + 2));
-		CS_BASE = SEGSELECT(I286_CS);
+		I286_CS_BASE = SEGSELECT(I286_CS);
 	}
 	else {
 		INT_NUM(6, I286_IP - 2);
@@ -174,7 +174,7 @@ I286_F6 _jmp_far_ea16(UINT op) {
 		ad = GET_EA(op, &seg);
 		I286_IP = i286_memoryread_w(seg + ad);
 		I286_CS = i286_memoryread_w(seg + LOW16(ad + 2));
-		CS_BASE = SEGSELECT(I286_CS);
+		I286_CS_BASE = SEGSELECT(I286_CS);
 	}
 	else {
 		INT_NUM(6, I286_IP - 2);

@@ -1,3 +1,11 @@
+/**
+ * @file	menures.h
+ * @brief	Interface of the resources of the menu
+ */
+
+#pragma once
+
+#include "menuvram.h"
 
 #ifdef __cplusplus
 extern "C" {

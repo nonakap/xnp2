@@ -28,6 +28,15 @@
 
 #include <gdk/gdkkeysyms.h>
 
+#if GTK_MAJOR_VERSION <= 2
+#ifndef	GDK_KEY_F11
+#define	GDK_KEY_F11	GDK_F11
+#endif
+#ifndef	GDK_KEY_F12
+#define	GDK_KEY_F12	GDK_F12
+#endif
+#endif
+
 #include "kbdmng.h"
 
 #include "gtk2/xnp2.h"

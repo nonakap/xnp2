@@ -1,15 +1,19 @@
-#include	"compiler.h"
-#include	"strres.h"
-#include	"dosio.h"
-#include	"soundmng.h"
-#include	"pccore.h"
-#include	"diskdrv.h"
-#include	"fddfile.h"
-#include	"filesel.h"
-#include	"vramhdl.h"
-#include	"menubase.h"
-#include	"menustr.h"
+/**
+ * @file	filesel.c
+ * @brief	Implementation of the selection of files
+ */
 
+#include "compiler.h"
+#include "filesel.h"
+#include "../menubase/menudlg.h"
+#include "../menubase/menures.h"
+#include "../menubase/menuicon.h"
+#include "strres.h"
+#include "dosio.h"
+#include "soundmng.h"
+#include "pccore.h"
+#include "fdd/diskdrv.h"
+#include "fdd/fddfile.h"
 
 enum {
 	DID_FOLDER	= DID_USER,
@@ -378,9 +382,9 @@ const OEMCHAR	*title;
 
 static const OEMCHAR diskfilter[] = OEMTEXT("All supported files");
 static const OEMCHAR fddtitle[] = OEMTEXT("Select floppy image");
-static const OEMCHAR fddext[] = OEMTEXT("d88\00088d\0d98\00098d\0fdi\0xdf\0hdm\0dup\0002hd\0tfd\0");
+static const OEMCHAR fddext[] = OEMTEXT("d88\0") OEMTEXT("88d\0") OEMTEXT("d98\0") OEMTEXT("98d\0") OEMTEXT("fdi\0") OEMTEXT("xdf\0") OEMTEXT("hdm\0") OEMTEXT("dup\0") OEMTEXT("2hd\0") OEMTEXT("tfd\0");
 static const OEMCHAR hddtitle[] = OEMTEXT("Select HDD image");
-static const OEMCHAR sasiext[] = OEMTEXT("thd\0nhd\0hdi\0");
+static const OEMCHAR sasiext[] = OEMTEXT("thd\0") OEMTEXT("nhd\0") OEMTEXT("hdi\0");
 
 static const FSELPRM fddprm = {fddtitle, diskfilter, fddext};
 static const FSELPRM sasiprm = {hddtitle, diskfilter, sasiext};
@@ -427,7 +431,7 @@ const FSELPRM	*prm;
 	}
 #endif
 	if ((prm) && (selectfile(prm, path, NELEMENTS(path), p))) {
-		diskdrv_sethdd(drv, path);
+		diskdrv_setsxsi(drv, path);
 	}
 }
 

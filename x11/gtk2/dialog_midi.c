@@ -73,7 +73,7 @@ static GtkWidget *mpu98_midiin_entry;
 static GtkWidget *mpu98_module_entry;
 static GtkWidget *mpu98_mimpi_def_checkbutton;
 static GtkWidget *mpu98_mimpi_def_entry;
-static BYTE mpuopt;
+static UINT8 mpuopt;
 
 
 static void
@@ -139,7 +139,7 @@ ok_button_clicked(GtkButton *b, gpointer d)
 			if (milstr_cmp(np2oscfg.mpu.def, p)) {
 				milstr_ncpy(np2oscfg.mpu.def, p, sizeof(np2oscfg.mpu.def));
 				if (cm_mpu98) {
-					(*cm_mpu98->msg)(cm_mpu98, COMMSG_MIMPIDEFFILE, (long)p);
+					(*cm_mpu98->msg)(cm_mpu98, COMMSG_MIMPIDEFFILE, (INTPTR)p);
 				}
 				update |= SYS_UPDATEOSCFG;
 			}
@@ -182,7 +182,7 @@ mpu98_ioport_entry_changed(GtkEditable *e, gpointer d)
 {
 	const gchar *utf8;
 	gchar *p;
-	BYTE val;
+	UINT8 val;
 
 	utf8 = gtk_entry_get_text(GTK_ENTRY(e));
 	if (utf8 != NULL) {
@@ -203,7 +203,7 @@ mpu98_intr_entry_changed(GtkEditable *e, gpointer d)
 {
 	const gchar *utf8;
 	gchar *p;
-	BYTE val;
+	UINT8 val;
 
 	utf8 = gtk_entry_get_text(GTK_ENTRY(e));
 	if (utf8 != NULL) {
@@ -325,7 +325,7 @@ create_midi_dialog(void)
 	gtk_window_set_modal(GTK_WINDOW(midi_dialog), TRUE);
 	gtk_window_set_resizable(GTK_WINDOW(midi_dialog), FALSE);
 
-	g_signal_connect(GTK_OBJECT(midi_dialog), "destroy",
+	g_signal_connect(G_OBJECT(midi_dialog), "destroy",
 	    G_CALLBACK(dialog_destroy), NULL);
 
 	main_widget = gtk_table_new(10, 6, FALSE);
@@ -349,9 +349,9 @@ create_midi_dialog(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(ioport_combo), mpu98_ioport_str[i]);
 	}
 
-	mpu98_ioport_entry = GTK_BIN(ioport_combo)->child;
+	mpu98_ioport_entry = gtk_bin_get_child(GTK_BIN(ioport_combo));
 	gtk_widget_show(mpu98_ioport_entry);
-	g_signal_connect(GTK_OBJECT(mpu98_ioport_entry), "changed",
+	g_signal_connect(G_OBJECT(mpu98_ioport_entry), "changed",
 	    G_CALLBACK(mpu98_ioport_entry_changed), NULL);
 	gtk_editable_set_editable(GTK_EDITABLE(mpu98_ioport_entry), FALSE);
 	gtk_entry_set_text(GTK_ENTRY(mpu98_ioport_entry),
@@ -373,9 +373,9 @@ create_midi_dialog(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(intr_combo), mpu98_intr_str[i]);
 	}
 
-	mpu98_intr_entry = GTK_BIN(intr_combo)->child;
+	mpu98_intr_entry = gtk_bin_get_child(GTK_BIN(intr_combo));
 	gtk_widget_show(mpu98_intr_entry);
-	g_signal_connect(GTK_OBJECT(mpu98_intr_entry), "changed",
+	g_signal_connect(G_OBJECT(mpu98_intr_entry), "changed",
 	    G_CALLBACK(mpu98_intr_entry_changed), NULL);
 	gtk_editable_set_editable(GTK_EDITABLE(mpu98_intr_entry), FALSE);
 	gtk_entry_set_text(GTK_ENTRY(mpu98_intr_entry),
@@ -449,7 +449,7 @@ create_midi_dialog(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(midiout_combo), mpu98_midiout_str[i]);
 	}
 
-	mpu98_midiout_entry = GTK_BIN(midiout_combo)->child;
+	mpu98_midiout_entry = gtk_bin_get_child(GTK_BIN(midiout_combo));
 	gtk_widget_show(mpu98_midiout_entry);
 	gtk_editable_set_editable(GTK_EDITABLE(mpu98_midiout_entry), FALSE);
 	for (i = 0; i < NELEMENTS(mpu98_midiout_str); i++) {
@@ -484,7 +484,7 @@ create_midi_dialog(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(midiin_combo), mpu98_midiin_str[i]);
 	}
 
-	mpu98_midiin_entry = GTK_BIN(midiin_combo)->child;
+	mpu98_midiin_entry = gtk_bin_get_child(GTK_BIN(midiin_combo));
 	gtk_widget_show(mpu98_midiin_entry);
 	gtk_editable_set_editable(GTK_EDITABLE(mpu98_midiin_entry), FALSE);
 	for (i = 0; i < NELEMENTS(mpu98_midiin_str); i++) {
@@ -521,7 +521,7 @@ create_midi_dialog(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(module_combo), cmmidi_mdlname[i]);
 	}
 
-	mpu98_module_entry = GTK_BIN(module_combo)->child;
+	mpu98_module_entry = gtk_bin_get_child(GTK_BIN(module_combo));
 	gtk_widget_show(mpu98_module_entry);
 	gtk_editable_set_editable(GTK_EDITABLE(mpu98_module_entry), TRUE);
 	gtk_entry_set_text(GTK_ENTRY(mpu98_module_entry), np2oscfg.mpu.mdl);
@@ -552,7 +552,7 @@ create_midi_dialog(void)
 	gtk_widget_show(mimpi_button);
 	gtk_table_attach(GTK_TABLE(assignframe_widget), mimpi_button,
 	    5, 6, 4, 5, GTK_FILL, GTK_FILL, 3, 3);
-	g_signal_connect(GTK_OBJECT(mimpi_button), "clicked",
+	g_signal_connect(G_OBJECT(mimpi_button), "clicked",
 	    G_CALLBACK(mpu98_mimpi_def_button_clicked), midi_dialog);
 
 	/*
@@ -562,7 +562,7 @@ create_midi_dialog(void)
 	gtk_widget_show(mpu98_default_button);
 	gtk_table_attach(GTK_TABLE(main_widget), mpu98_default_button,
 	    2, 3, 1, 2, GTK_SHRINK, GTK_SHRINK, 5, 5);
-	g_signal_connect_swapped(GTK_OBJECT(mpu98_default_button), "clicked",
+	g_signal_connect_swapped(G_OBJECT(mpu98_default_button), "clicked",
 	    G_CALLBACK(mpu98_default_button_clicked), NULL);
 
 	/*
@@ -585,7 +585,7 @@ create_midi_dialog(void)
 	GTK_WIDGET_SET_FLAGS(ok_button, GTK_CAN_DEFAULT);
 	GTK_WIDGET_SET_FLAGS(ok_button, GTK_HAS_DEFAULT);
 #endif
-	g_signal_connect(GTK_OBJECT(ok_button), "clicked",
+	g_signal_connect(G_OBJECT(ok_button), "clicked",
 	    G_CALLBACK(ok_button_clicked), (gpointer)midi_dialog);
 	gtk_widget_grab_default(ok_button);
 
@@ -597,8 +597,8 @@ create_midi_dialog(void)
 #else
 	GTK_WIDGET_SET_FLAGS(cancel_button, GTK_CAN_DEFAULT);
 #endif
-	g_signal_connect_swapped(GTK_OBJECT(cancel_button), "clicked",
-	    G_CALLBACK(gtk_widget_destroy), GTK_OBJECT(midi_dialog));
+	g_signal_connect_swapped(G_OBJECT(cancel_button), "clicked",
+	    G_CALLBACK(gtk_widget_destroy), G_OBJECT(midi_dialog));
 
 	gtk_widget_show_all(midi_dialog);
 }

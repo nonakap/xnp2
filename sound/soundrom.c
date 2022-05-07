@@ -1,9 +1,13 @@
-#include	"compiler.h"
-#include	"dosio.h"
-#include	"cpucore.h"
-#include	"pccore.h"
-#include	"soundrom.h"
+/**
+ * @file	soundrom.c
+ * @brief	Implementation of the sound rom
+ */
 
+#include "compiler.h"
+#include "soundrom.h"
+#include "cpucore.h"
+#include "pccore.h"
+#include "dosio.h"
 
 	SOUNDROM	soundrom;
 

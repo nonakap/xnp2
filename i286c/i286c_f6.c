@@ -1,6 +1,7 @@
 #include	"compiler.h"
 #include	"cpucore.h"
 #include	"i286c.h"
+#include <limits.h>
 #include	"i286c.mcr"
 
 
@@ -302,7 +303,7 @@ I286_F6 _idiv_ea16(UINT op) {
 		src = i286_memoryread_w(CALC_EA(op));
 	}
 	tmp = (SINT32)((I286_DX << 16) + I286_AX);
-	if (src) {
+	if ((src) && (tmp != INT_MIN)) {
 		r = tmp / src;
 		if (!((r + 0x8000) & 0xffff0000)) {
 			I286_AX = (SINT16)r;

@@ -1,3 +1,9 @@
+/**
+ * @file	vramhdl.h
+ * @brief	Interface of the vram
+ */
+
+#pragma once
 
 #define	DEFAULT_BPP		0
 

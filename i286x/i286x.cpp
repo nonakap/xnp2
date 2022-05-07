@@ -10,11 +10,11 @@
 #include	"i286x.mcr"
 #include	"i286xea.mcr"
 #include	"v30patch.h"
-#include	"bios.h"
+#include	"bios/bios.h"
 #include	"dmax86.h"
 #if defined(ENABLE_TRAP)
-#include	"steptrap.h"
-#include	"inttrap.h"
+#include "trap/inttrap.h"
+#include "trap/steptrap.h"
 #endif
 
 
@@ -2358,7 +2358,7 @@ I286 xchg_ea_r8(void) {								// 86: xchg EA, REG8
 		memory_eareg8:
 				I286CLOCK(5)
 				call	p_ea_dst[eax*4]
-				cmp		ecx, I286_MEMREADMAX
+				cmp		ecx, I286_MEMWRITEMAX
 				jae		extmem_eareg8
 				mov		dl, I286_REG[edi]
 				xchg	I286_MEM[ecx], dl
@@ -2393,7 +2393,7 @@ I286 xchg_ea_r16(void) {							// 87: xchg EA, REG16
 		memory_eareg16:
 				I286CLOCK(5)
 				call	p_ea_dst[eax*4]
-				cmp		ecx, (I286_MEMREADMAX-1)
+				cmp		ecx, (I286_MEMWRITEMAX-1)
 				jae		extmem_eareg16
 				mov		dx, word ptr I286_MEM[ecx]
 				xchg	dx, I286_REG[edi]

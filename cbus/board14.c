@@ -1,177 +1,197 @@
-#include	"compiler.h"
-#include	"pccore.h"
-#include	"iocore.h"
-#include	"cbuscore.h"
-#include	"board14.h"
-#include	"sound.h"
-#include	"fmboard.h"
+/**
+ * @file	board14.c
+ * @brief	Implementation of PC-9801-14
+ */
 
+#include "compiler.h"
+#include "pccore.h"
+#include "iocore.h"
+#include "board14.h"
+#include "cbuscore.h"
+#include "sound.h"
+#include "soundrom.h"
+#include "tms3631.h"
 
-// どうも 8253C-2は 4MHz/16らすい？
-// とりあえず 1996800/8を入力してみる... (ver0.71)
+/* どうも 8253C-2は 4MHz/16らすい？ */
+/* とりあえず 1996800/8を入力してみる... (ver0.71) */
 
+		MUSICGEN	g_musicgen;
+static	_TMS3631	s_tms3631;
 
-// ---- 8253C-2
+/* ---- 8253C-2 */
 
-UINT board14_pitcount(void) {
-
+/**
+ * Get counter
+ * @return The counter
+ */
+UINT board14_pitcount(void)
+{
 	SINT32	clk;
 
 	clk = nevent_getremain(NEVENT_MUSICGEN);
-	if (clk >= 0) {
+	if (clk >= 0)
+	{
 		clk /= pccore.multiple;
 		clk /= 8;
-		if (!(pccore.cpumode & CPUMODE_8MHZ)) {
+		if (!(pccore.cpumode & CPUMODE_8MHZ))
+		{
 			clk = clk * 13 / 16;
 		}
-		return(clk);
+		return clk;
 	}
-	return(0);
+	return 0;
 }
 
 
-// ---- intr
+/* ---- intr */
 
-static void setmusicgenevent(UINT32 cnt, BOOL absolute) {
-
-	if (cnt > 4) {								// 根拠なし
+static void setmusicgenevent(UINT32 cnt, NEVENTPOSITION absolute)
+{
+	if (cnt > 4)								/* 根拠なし */
+	{
 		cnt *= pccore.multiple;
 	}
-	else {
+	else
+	{
 		cnt = pccore.multiple << 16;
 	}
-	if (!(pccore.cpumode & CPUMODE_8MHZ)) {
-		cnt = cnt * 16 / 13;					// cnt * 2457600 / 1996800
+	if (!(pccore.cpumode & CPUMODE_8MHZ))
+	{
+		cnt = cnt * 16 / 13;					/* cnt * 2457600 / 1996800 */
 	}
 	cnt *= 8;
 	nevent_set(NEVENT_MUSICGEN, cnt, musicgenint, absolute);
 }
 
-void musicgenint(NEVENTITEM item) {
-
-	PITCH	pitch;
-
-	if (item->flag & NEVENT_SETEVENT) {
-		pitch = pit.ch + 3;
-		if ((pitch->ctrl & 0x0c) == 0x04) {
-			// レートジェネレータ
-			setmusicgenevent(pitch->value, NEVENT_RELATIVE);
-		}
-	}
-	pic_setirq(0x0c);
-	(void)item;
-}
-
-
-// ---- I/O
-
-static void IOOUTCALL musicgen_o088(UINT port, REG8 dat) {
-
-	musicgen.porta = dat;
-	(void)port;
-}
-
-static void IOOUTCALL musicgen_o08a(UINT port, REG8 dat) {
-
-	musicgen.portb = dat;
-	(void)port;
-}
-
-static void IOOUTCALL musicgen_o08c(UINT port, REG8 dat) {
-
-	if (dat & 0x80) {
-		if (!(musicgen.portc & 0x80)) {
-			musicgen.sync = 1;
-			musicgen.ch = 0;
-		}
-		else if (musicgen.sync) {
-			musicgen.sync = 0;
-			sound_sync();
-			musicgen.key[musicgen.ch] = dat;
-			tms3631_setkey(&tms3631, (REG8)musicgen.ch, dat);
-		}
-		else if ((!(dat & 0x40)) && (musicgen.portc & 0x40)) {
-			musicgen.sync = 1;
-			musicgen.ch = (musicgen.ch + 1) & 7;
-		}
-	}
-	musicgen.portc = dat;
-	(void)port;
-}
-
-static void IOOUTCALL musicgen_o188(UINT port, REG8 dat) {
-
-	sound_sync();
-	musicgen.mask = dat;
-	tms3631_setenable(&tms3631, dat);
-	(void)port;
-}
-
-static void IOOUTCALL musicgen_o18c(UINT port, REG8 dat) {
-
+/**
+ * Interrupt
+ * @param[in] item A pointer to an event-item structure
+ */
+void musicgenint(NEVENTITEM item)
+{
 	PITCH	pitch;
 
 	pitch = pit.ch + 3;
-	if (!pit_setcount(pitch, dat)) {
+	if ((pitch->ctrl & 0x0c) == 0x04)
+	{
+		/* レートジェネレータ */
+		setmusicgenevent(pitch->value, NEVENT_RELATIVE);
+	}
+	pic_setirq(0x0c);
+}
+
+
+/* ---- I/O */
+
+static void IOOUTCALL musicgen_o088(UINT port, REG8 dat)
+{
+	g_musicgen.porta = dat;
+	(void)port;
+}
+
+static void IOOUTCALL musicgen_o08a(UINT port, REG8 dat)
+{
+	g_musicgen.portb = dat;
+	(void)port;
+}
+
+static void IOOUTCALL musicgen_o08c(UINT port, REG8 dat)
+{
+	if (dat & 0x80)
+	{
+		if (!(g_musicgen.portc & 0x80))
+		{
+			g_musicgen.sync = 1;
+			g_musicgen.ch = 0;
+		}
+		else if (g_musicgen.sync)
+		{
+			g_musicgen.sync = 0;
+			sound_sync();
+			g_musicgen.key[g_musicgen.ch] = dat;
+			tms3631_setkey(&s_tms3631, (REG8)g_musicgen.ch, dat);
+		}
+		else if ((!(dat & 0x40)) && (g_musicgen.portc & 0x40))
+		{
+			g_musicgen.sync = 1;
+			g_musicgen.ch = (g_musicgen.ch + 1) & 7;
+		}
+	}
+	g_musicgen.portc = dat;
+	(void)port;
+}
+
+static void IOOUTCALL musicgen_o188(UINT port, REG8 dat)
+{
+	sound_sync();
+	g_musicgen.mask = dat;
+	tms3631_setenable(&s_tms3631, dat);
+	(void)port;
+}
+
+static void IOOUTCALL musicgen_o18c(UINT port, REG8 dat)
+{
+	PITCH	pitch;
+
+	pitch = pit.ch + 3;
+	if (!pit_setcount(pitch, dat))
+	{
 		setmusicgenevent(pitch->value, NEVENT_ABSOLUTE);
 	}
 	(void)port;
 }
 
-static void IOOUTCALL musicgen_o18e(UINT port, REG8 dat) {
-
+static void IOOUTCALL musicgen_o18e(UINT port, REG8 dat)
+{
 	pit_setflag(pit.ch + 3, dat);
 	(void)port;
 }
 
-static REG8 IOINPCALL musicgen_i088(UINT port) {
-
+static REG8 IOINPCALL musicgen_i088(UINT port)
+{
 	(void)port;
-	return(musicgen.porta);
+	return g_musicgen.porta;
 }
 
-static REG8 IOINPCALL musicgen_i08a(UINT port) {
-
+static REG8 IOINPCALL musicgen_i08a(UINT port)
+{
 	(void)port;
-	return(musicgen.portb);
+	return g_musicgen.portb;
 }
 
-static REG8 IOINPCALL musicgen_i08c(UINT port) {
-
+static REG8 IOINPCALL musicgen_i08c(UINT port)
+{
 	(void)port;
-	return(musicgen.portc);
+	return g_musicgen.portc;
 }
 
-static REG8 IOINPCALL musicgen_i08e(UINT port) {
+static REG8 IOINPCALL musicgen_i08e(UINT port)
+{
 
 	(void)port;
-	return(0x08);
+	return 0x08;
 }
 
-static REG8 IOINPCALL musicgen_i188(UINT port) {
-
+static REG8 IOINPCALL musicgen_i188(UINT port)
+{
 	(void)port;
-	return(musicgen.mask);
+	return g_musicgen.mask;
 }
 
-static REG8 IOINPCALL musicgen_i18c(UINT port) {
-
+static REG8 IOINPCALL musicgen_i18c(UINT port)
+{
 	(void)port;
-	return(pit_getstat(pit.ch + 3));
+	return pit_getstat(pit.ch + 3);
 }
 
-static REG8 IOINPCALL musicgen_i18e(UINT port) {
-
+static REG8 IOINPCALL musicgen_i18e(UINT port)
+{
 	(void)port;
-#if 1
-	return(0x80);					// INT-5
-#else
-	return(0x40);					// INT-5
-#endif
+	return 0x80;					/* INT-5 */
 }
 
 
-// ----
+/* ---- interface */
 
 static const IOOUT musicgen_o0[4] = {
 		musicgen_o088,	musicgen_o08a,	musicgen_o08c,	NULL};
@@ -186,27 +206,42 @@ static const IOINP musicgen_i1[4] = {
 		musicgen_i188,	musicgen_i188,	musicgen_i18c,	musicgen_i18e};
 
 
-void board14_reset(const NP2CFG *pConfig) {
+/**
+ * Reset
+ * @param[in] pConfig A pointer to a configure structure
+ * @param[in] bEnable Indicates whether to enable or disable the board
+ */
+void board14_reset(const NP2CFG *pConfig, BOOL bEnable)
+{
+	memset(&g_musicgen, 0, sizeof(g_musicgen));
+	tms3631_reset(&s_tms3631);
 
-	ZeroMemory(&musicgen, sizeof(musicgen));
-	soundrom_load(0xcc000, OEMTEXT("14"));
-
+	if (bEnable)
+	{
+		soundrom_load(0xcc000, OEMTEXT("14"));
+	}
 	(void)pConfig;
 }
 
-void board14_bind(void) {
-
-	sound_streamregist(&tms3631, (SOUNDCB)tms3631_getpcm);
+/**
+ * Bind
+ */
+void board14_bind(void)
+{
+	sound_streamregist(&s_tms3631, (SOUNDCB)tms3631_getpcm);
 	cbuscore_attachsndex(0x088, musicgen_o0, musicgen_i0);
 	cbuscore_attachsndex(0x188, musicgen_o1, musicgen_i1);
 }
 
-void board14_allkeymake(void) {
-
+/**
+ * Restore
+ */
+void board14_allkeymake(void)
+{
 	REG8	i;
 
-	for (i=0; i<8; i++) {
-		tms3631_setkey(&tms3631, i, musicgen.key[i]);
+	for (i = 0; i < 8; i++)
+	{
+		tms3631_setkey(&s_tms3631, i, g_musicgen.key[i]);
 	}
 }
-

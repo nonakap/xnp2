@@ -1,14 +1,14 @@
+/**
+ * @file	menubase.h
+ * @brief	Interface of the base of the menu
+ */
+
+#pragma once
+
+#include "../vramhdl.h"
 
 typedef unsigned short		MENUID;
 typedef unsigned short		MENUFLG;
-
-#include	"menuvram.h"
-#include	"menuicon.h"
-#include	"menusys.h"
-#include	"menudlg.h"
-#include	"menumbox.h"
-#include	"menures.h"
-
 
 enum {
 	MENU_DISABLE		= 0x0001,

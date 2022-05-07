@@ -8,9 +8,9 @@
 G_BEGIN_DECLS
 
 typedef struct {
-	BYTE	port;
-	BYTE	def_en;
-	BYTE	param;
+	UINT8	port;
+	UINT8	def_en;
+	UINT8	param;
 	UINT32	speed;
 	char	mout[MAX_PATH];
 	char	min[MAX_PATH];
@@ -24,48 +24,48 @@ typedef struct {
 	UINT	paddingx;
 	UINT	paddingy;
 
-	BYTE	NOWAIT;
-	BYTE	DRAW_SKIP;
+	UINT8	NOWAIT;
+	UINT8	DRAW_SKIP;
 
-	BYTE	DISPCLK;
+	UINT8	DISPCLK;
 
-	BYTE	KEYBOARD;
-	BYTE	F12KEY;
+	UINT8	KEYBOARD;
+	UINT8	F12KEY;
 
-	BYTE	MOUSE_SW;
-	BYTE	JOYPAD1;
-	BYTE	JOYPAD2;
-	BYTE	JOY1BTN[JOY_NBUTTON];
-	BYTE	JOYAXISMAP[2][JOY_NAXIS];
-	BYTE	JOYBTNMAP[2][JOY_NBUTTON];
+	UINT8	MOUSE_SW;
+	UINT8	JOYPAD1;
+	UINT8	JOYPAD2;
+	UINT8	JOY1BTN[JOY_NBUTTON];
+	UINT8	JOYAXISMAP[2][JOY_NAXIS];
+	UINT8	JOYBTNMAP[2][JOY_NBUTTON];
 	char	JOYDEV[2][MAX_PATH];
 
 	COMCFG	mpu;
 	COMCFG	com[3];
 
-	BYTE	confirm;
+	UINT8	confirm;
 
-	BYTE	resume;						// ver0.30
+	UINT8	resume;						// ver0.30
 
-	BYTE	statsave;
-	BYTE	toolwin;
-	BYTE	keydisp;
-	BYTE	softkbd;
-	BYTE	hostdrv_write;
-	BYTE	jastsnd;
-	BYTE	I286SAVE;
+	UINT8	statsave;
+	UINT8	toolwin;
+	UINT8	keydisp;
+	UINT8	softkbd;
+	UINT8	hostdrv_write;
+	UINT8	jastsnd;
+	UINT8	I286SAVE;
 
-	BYTE	snddrv;
+	UINT8	snddrv;
 	char	MIDIDEV[2][MAX_PATH];
 	UINT32	MIDIWAIT;
 
-	BYTE	mouse_move_ratio;
+	UINT8	mouse_move_ratio;
 
-	BYTE	disablemmx;
-	BYTE	drawinterp;
-	BYTE	F11KEY;
+	UINT8	disablemmx;
+	UINT8	drawinterp;
+	UINT8	F11KEY;
 
-	BYTE	cfgreadonly;
+	UINT8	cfgreadonly;
 } NP2OSCFG;
 
 
@@ -92,7 +92,7 @@ enum {
 /* np2.c */
 extern volatile sig_atomic_t np2running;
 extern NP2OSCFG np2oscfg;
-extern BYTE scrnmode;
+extern UINT8 scrnmode;
 extern int ignore_fullscreen_mode;
 
 extern UINT framecnt;
@@ -118,7 +118,7 @@ int flagload(const char* ext, const char* title, BOOL force);
 int flagsave(const char* ext);
 void flagdelete(const char* ext);
 
-void changescreen(BYTE newmode);
+void changescreen(UINT8 newmode);
 void framereset(UINT cnt);
 void processwait(UINT cnt);
 int mainloop(void *);

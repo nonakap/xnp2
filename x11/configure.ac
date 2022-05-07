@@ -2,10 +2,9 @@ dnl
 dnl Configure for Xnp2
 dnl
 
-dnl require autoconf 2.59
-AC_PREREQ(2.59)
+AC_PREREQ(2.69)
 
-AC_INIT(Xnp2,0.83-20140607,nonakap@gmail.com,xnp2)
+AC_INIT(Xnp2,0.86,nonakap@gmail.com,xnp2)
 AM_INIT_AUTOMAKE([no-define no-dist no-installinfo subdir-objects])
 AC_CONFIG_SRCDIR([../np2ver.h])
 AC_CONFIG_HEADERS(config.h)
@@ -16,6 +15,7 @@ dnl Checks for programs.
 dnl
 AC_PROG_CC
 AM_PROG_CC_C_O
+AC_PROG_CXX
 AC_PROG_GCC_TRADITIONAL
 AC_PROG_RANLIB
 AC_PROG_INSTALL
@@ -67,26 +67,38 @@ AC_CHECK_FUNCS(pow,,AC_CHECK_LIB(m,pow))
 AC_CHECK_FUNCS(sqrt,,AC_CHECK_LIB(m,sqrt))
 
 dnl
+dnl Checks for pthread
+dnl
+ACX_PTHREAD
+LIBS="$LIBS $PTHREAD_LIBS"
+CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
+
+dnl
 dnl Checks for X
 dnl
 AC_PATH_X
 AC_PATH_XTRA
-AC_SUBST(XLIB,"")
-if test x"$no_x" != x"yes"; then
-  XLIB="-lX11"
-elif test x"$have_x" = x"no"; then
-  PKG_CHECK_MODULES([X],[x11 xext],[have_x=yes;no_x=no],[have_x=no;no_x=yes])
-fi
 
 dnl
 dnl Xnp2 configure options.
 dnl
+AC_ARG_ENABLE(gtk3,
+  AC_HELP_STRING([--enable-gtk3],[Use GTK+-3 library [default=no]]),,
+  [enable_gtk3="no"])
+
 AC_ARG_ENABLE(sdl,
-  AC_HELP_STRING([--enable-sdl],[Use SDL library [default=yes]]),,
+  AC_HELP_STRING([--enable-sdl],[Use SDL 1.2 library [default=yes]]),,
   [enable_sdl="yes"])
+AC_ARG_ENABLE(sdl2,
+  AC_HELP_STRING([--enable-sdl2],[Use SDL 2.0 library [default=yes]]),,
+  [enable_sdl2="yes"])
 AC_ARG_ENABLE(sdlmixer,
   AC_HELP_STRING([--enable-sdlmixer],[Use SDL_mixer library [default=yes]]),,
   [enable_sdlmixer="yes"])
+AC_ARG_ENABLE(libusb1,
+  AC_HELP_STRING([--enable-libusb1],[Use libusb-1.0 library [default=yes]]),,
+  [enable_libusb1="yes"])
 AC_ARG_ENABLE(xf86vidmode,
   AC_HELP_STRING([--enable-xf86vidmode],[Use XF86VidMode extension [default=yes]]),,
   [enable_xf86vidmode="yes"])
@@ -107,21 +119,58 @@ AC_ARG_ENABLE(gtk-deprecated-api,
   [enable_gtk_deprecated_api="yes"])
 
 dnl
+dnl Checks for X11
+dnl
+PKG_CHECK_MODULES([X11],[x11],,[AC_MSG_ERROR(Xnp2 needs X11)])
+AC_SUBST(X11_CFLAGS)
+AC_SUBST(X11_LIBS)
+PKG_CHECK_MODULES([XEXT],[xext])
+AC_SUBST(XEXT_CFLAGS)
+AC_SUBST(XEXT_LIBS)
+
+dnl
 dnl Checks for GTK+
 dnl
-AM_PATH_GTK_2_0(2.6.0,,
-  AC_MSG_ERROR(Test for GTK failed. See the file 'x11/INSTALL.ja' for help))
+AS_IF([test x"$enable_gtk3" = "xyes"],
+  [
+    PKG_CHECK_MODULES([GTK], [gtk+-3.0],
+      [
+        AC_DEFINE(USE_GTK2,1,[Define to 1 if you have the GTK+-2 library.])
+        AC_DEFINE(USE_GTK3,1,[Define to 1 if you have the GTK+-3 library.])
+      ],
+      enable_gtk3=no
+    )
+  ]
+)
+AS_IF([test x"$enable_gtk3" != "xyes"],
+  [
+    PKG_CHECK_MODULES([GTK], [gtk+-2.0],
+      [AC_DEFINE(USE_GTK2,1,[Define to 1 if you have the GTK+-2 library.])]
+    )
+  ]
+)
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
-AC_DEFINE(USE_GTK2,1,[Define to 1 if you have the GTK+-2 library.])
 
 dnl
 dnl Checks for SDL and SDL_mixer
 dnl
-if test x"$enable_sdl" = "xyes"; then
+no_sdl=yes
+if test x"$enable_sdl2" = "xyes"; then
+  AM_PATH_SDL2(2.0.0)
+  if test x"$no_sdl" != "xyes"; then
+    AC_DEFINE(USE_SDLAUDIO,,[Define if you have the SDL 1.2/2.0 library.])
+    if test x"$enable_sdlmixer" = "xyes"; then
+      AC_CHECK_LIB(SDL2_mixer,Mix_OpenAudio,
+        AC_DEFINE(USE_SDLMIXER,,[Define if you have the SDL_mixer library.])
+        SDL_LIBS="$SDL_LIBS -lSDL2_mixer",,$SDL_LIBS)
+    fi
+  fi
+fi
+if test x"$no_sdl" = "xyes" -a x"$enable_sdl" = "xyes"; then
   AM_PATH_SDL(1.2.0)
   if test x"$no_sdl" != "xyes"; then
-    AC_DEFINE(USE_SDLAUDIO,,[Define if you have the SDL library.])
+    AC_DEFINE(USE_SDLAUDIO,,[Define if you have the SDL 1.2/2.0 library.])
     if test x"$enable_sdlmixer" = "xyes"; then
       AC_CHECK_LIB(SDL_mixer,Mix_OpenAudio,
         AC_DEFINE(USE_SDLMIXER,,[Define if you have the SDL_mixer library.])
@@ -130,6 +179,16 @@ if test x"$enable_sdl" = "xyes"; then
   fi
 fi
 
+dnl
+dnl Checks for libusb-1.0
+dnl
+if test x"$enable_libusb1" = "xyes"; then
+  PKG_CHECK_MODULES([LIBUSB1], [libusb-1.0],
+    [AC_DEFINE(USE_LIBUSB1,1,[Define to 1 if you have the libusb-1.0 library.])]
+  )
+fi
+AC_SUBST(LIBUSB1_CFLAGS)
+AC_SUBST(LIBUSB1_LIBS)
 
 dnl
 dnl Checks for XF86VidMode extension
@@ -178,11 +237,12 @@ dnl Checks for debug mode
 dnl
 AC_MSG_CHECKING([whether to enable debugging])
 if test x"$enable_debug" = "xyes"; then
-  CFLAGS="$CFLAGS -g -DDEBUG -DTRACE"
+  CPPFLAGS="$CPPFLAGS -g -DDEBUG -DTRACE"
   CFLAGS="$CFLAGS -Wstack-protector -fstack-protector --param ssp-buffer-size=1"
+  CXXFLAGS="$CXXFLAGS -Wstack-protector -fstack-protector --param ssp-buffer-size=1"
   enable_warning=yes
 else
-  CFLAGS="$CFLAGS -DNDEBUG"
+  CPPFLAGS="$CPPFLAGS -DNDEBUG"
 fi
 AC_MSG_RESULT($enable_debug)
 
@@ -197,6 +257,12 @@ if test x"$enable_warning" = "xyes"; then
   CFLAGS="$CFLAGS -Wcast-qual -Wwrite-strings"
   CFLAGS="$CFLAGS -Wno-unused-parameter -Wno-missing-field-initializers"
   CFLAGS="$CFLAGS -Wformat=2"
+  CXXFLAGS="$CXXFLAGS -Wall -Wextra"
+  CXXFLAGS="$CXXFLAGS -Wpointer-arith"
+  CXXFLAGS="$CXXFLAGS -Wreturn-type -Wswitch -Wshadow"
+  CXXFLAGS="$CXXFLAGS -Wcast-qual -Wwrite-strings"
+  CXXFLAGS="$CXXFLAGS -Wno-unused-parameter -Wno-missing-field-initializers"
+  CXXFLAGS="$CXXFLAGS -Wformat=2"
 fi
 AC_MSG_RESULT($enable_warning)
 

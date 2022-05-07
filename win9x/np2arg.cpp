@@ -1,71 +1,83 @@
-#include	"compiler.h"
-#include	"np2arg.h"
-#include	"oemtext.h"
-#include	"dosio.h"
+/**
+ *	@file	np2arg.cpp
+ *	@brief	引数情報クラスの動作の定義を行います
+ */
 
-												// ver0.26 np2arg.cpp append
-// コマンドラインの解析
+#include "compiler.h"
+#include "np2arg.h"
+#include "dosio.h"
 
-// OS依存しそうなので　切り分けます。
+#define	MAXARG		32				//!< 最大引数エントリ数
+#define	ARG_BASE	1				//!< win32 の lpszCmdLine の場合の開始エントリ
 
+//! 唯一のインスタンスです
+Np2Arg Np2Arg::sm_instance;
 
-#define	MAXARG		32
-#define	ARG_BASE	1				// win32のlpszCmdLineの場合
-									// 実行ファイル名無し
+/**
+ * コンストラクタ
+ */
+Np2Arg::Np2Arg()
+{
+	ZeroMemory(this, sizeof(*this));
+}
 
-	NP2ARG_T	np2arg = {{NULL, NULL, NULL, NULL},
-							NULL, FALSE};
+/**
+ * デストラクタ
+ */
+Np2Arg::~Np2Arg()
+{
+	free(m_lpArg);
+}
 
-// ---------------------------------------------------------------------
+/**
+ * パース
+ */
+void Np2Arg::Parse()
+{
+	// 引数読み出し
+	free(m_lpArg);
+	m_lpArg = _tcsdup(::GetCommandLine());
 
-static	OEMCHAR	argstrtmp[2048];
+	LPTSTR argv[MAXARG];
+	const int argc = ::milstr_getarg(m_lpArg, argv, _countof(argv));
 
-void np2arg_analize(void) {
+	int nDrive = 0;
 
-	int			np2argc;
-	OEMCHAR		*np2argv[MAXARG];
-	int			i;
-	int			drv = 0;
-	OEMCHAR		c;
-const OEMCHAR	*p;
-
-#if defined(OSLANG_UTF8)
-	tchartooem(argstrtmp, NELEMENTS(argstrtmp), GetCommandLine(), -1);
-#else
-	milstr_ncpy(argstrtmp, GetCommandLine(), NELEMENTS(argstrtmp));
-#endif
-	np2argc = milstr_getarg(argstrtmp, np2argv, NELEMENTS(np2argv));
-
-	for (i=ARG_BASE; i<np2argc; i++) {
-		c = np2argv[i][0];
-		if ((c == '/') || (c == '-')) {
-			switch(np2argv[i][1]) {
-				case 'F':
+	for (int i = ARG_BASE; i < argc; i++)
+	{
+		LPCTSTR lpArg = argv[i];
+		if ((lpArg[0] == TEXT('/')) || (lpArg[0] == TEXT('-')))
+		{
+			switch (_totlower(lpArg[1]))
+			{
 				case 'f':
-					np2arg.fullscreen = TRUE;
+					m_fFullscreen = true;
 					break;
 
-				case 'I':
 				case 'i':
-					if (!np2arg.ini) {
-						np2arg.ini = np2argv[i];
-					}
+					m_lpIniFile = &lpArg[2];
 					break;
 			}
 		}
-		else {														// ver0.29
-			p = file_getext(np2argv[i]);
-			if (!file_cmpname(p, OEMTEXT("ini"))) {
-				if (!np2arg.ini) {
-					np2arg.ini = np2argv[i];
-				}
+		else
+		{
+			LPCTSTR lpExt = ::file_getext(lpArg);
+			if (::file_cmpname(lpExt, TEXT("ini")) == 0)
+			{
+				m_lpIniFile = lpArg;
 			}
-			else {
-				if (drv < 4) {
-					np2arg.disk[drv++] = np2argv[i];
-				}
+			else if (nDrive < _countof(m_lpDisk))
+			{
+				m_lpDisk[nDrive++] = lpArg;
 			}
 		}
 	}
 }
 
+/**
+ * ディスク情報をクリア
+ */
+void Np2Arg::ClearDisk()
+{
+	ZeroMemory(m_lpDisk, sizeof(m_lpDisk));
+}

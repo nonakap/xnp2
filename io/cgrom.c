@@ -2,7 +2,7 @@
 #include	"cpucore.h"
 #include	"pccore.h"
 #include	"iocore.h"
-#include	"font.h"
+#include	"font/font.h"
 
 
 static void cgwindowset(CGROM cr) {
@@ -45,13 +45,8 @@ static void cgwindowset(CGROM cr) {
 	else {
 		high = low;
 	}
-#if !defined(CGWND_FONTPTR)
 	cgwindow.low = low;
 	cgwindow.high = high;
-#else
-	cgwindow.fontlow = fontrom + low;
-	cgwindow.fonthigh = fontrom + high;
-#endif
 }
 
 
@@ -153,13 +148,8 @@ void cgrom_reset(const NP2CFG *pConfig) {
 
 	cgw = &cgwindow;
 	ZeroMemory(cgw, sizeof(cgrom));
-#if !defined(CGWND_FONTPTR)
 	cgw->low = 0x7fff0;
 	cgw->high = 0x7fff0;
-#else
-	cgw->fontlow = fontrom + 0x7fff0;
-	cgw->fonthigh = fontrom + 0x7fff0;
-#endif
 	cgw->writable = 0;
 
 	(void)pConfig;

@@ -10,26 +10,23 @@
 
 void keyboard_callback(NEVENTITEM item) {
 
-	if (item->flag & NEVENT_SETEVENT) {
-		if ((keybrd.ctrls) || (keybrd.buffers)) {
-			if (!(keybrd.status & 2)) {
-				keybrd.status |= 2;
-				if (keybrd.ctrls) {
-					keybrd.ctrls--;
-					keybrd.data = keybrd.ctr[keybrd.ctrpos];
-					keybrd.ctrpos = (keybrd.ctrpos + 1) & KB_CTRMASK;
-				}
-				else if (keybrd.buffers) {
-					keybrd.buffers--;
-					keybrd.data = keybrd.buf[keybrd.bufpos];
-					keybrd.bufpos = (keybrd.bufpos + 1) & KB_BUFMASK;
-				}
-//				TRACEOUT(("recv -> %02x", keybrd.data));
+	if ((keybrd.ctrls) || (keybrd.buffers)) {
+		if (!(keybrd.status & 2)) {
+			keybrd.status |= 2;
+			if (keybrd.ctrls) {
+				keybrd.ctrls--;
+				keybrd.data = keybrd.ctr[keybrd.ctrpos];
+				keybrd.ctrpos = (keybrd.ctrpos + 1) & KB_CTRMASK;
 			}
-			pic_setirq(1);
-			nevent_set(NEVENT_KEYBOARD, keybrd.xferclock,
-										keyboard_callback, NEVENT_RELATIVE);
+			else if (keybrd.buffers) {
+				keybrd.buffers--;
+				keybrd.data = keybrd.buf[keybrd.bufpos];
+				keybrd.bufpos = (keybrd.bufpos + 1) & KB_BUFMASK;
+			}
+//			TRACEOUT(("recv -> %02x", keybrd.data));
 		}
+		pic_setirq(1);
+		nevent_set(NEVENT_KEYBOARD, keybrd.xferclock, keyboard_callback, NEVENT_RELATIVE);
 	}
 }
 

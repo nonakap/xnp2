@@ -113,7 +113,7 @@ ia32_setextsize(UINT32 size)
 void
 ia32_setemm(UINT frame, UINT32 addr) {
 
-	BYTE	*ptr;
+	UINT8	*ptr;
 
 	frame &= 3;
 	if (addr < USE_HIMEM) {

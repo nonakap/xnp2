@@ -1,4 +1,10 @@
+/**
+ * @file	scrnsave.c
+ * @brief	Implementation of the screen saver
+ */
+
 #include	"compiler.h"
+#include	"scrnsave.h"
 #include	"bmpdata.h"
 #include	"dosio.h"
 #include	"pccore.h"
@@ -6,8 +12,17 @@
 #include	"scrndraw.h"
 #include	"dispsync.h"
 #include	"palettes.h"
-#include	"scrnsave.h"
 
+/**
+ * @brief The structure of screen saver
+ */
+struct tagScrnSave
+{
+	int		width;
+	int		height;
+	UINT	pals;
+	UINT	type;
+};
 
 #if defined(SUPPORT_PC9821)
 typedef	unsigned short	PALNUM;
@@ -25,7 +40,7 @@ typedef struct {
 	int		height;
 	UINT	pals;
 	UINT	type;
-	BMPPAL	pal[NP2PAL_TOTAL];
+	BMPPAL	pal[NP2PAL_MAX];
 	PALNUM	dat[SURFACE_WIDTH * SURFACE_HEIGHT];
 } SCRNDATA;
 
@@ -99,8 +114,12 @@ static void screenmix4(PALNUM *dest, const UINT8 *src1, const UINT8 *src2) {
 
 // ----
 
-SCRNSAVE scrnsave_get(void) {
-
+/**
+ * Create
+ * @return The handle of saver
+ */
+SCRNSAVE scrnsave_create(void)
+{
 	int			width;
 	int			height;
 	SCRNDATA	*sd;
@@ -112,8 +131,8 @@ SCRNSAVE scrnsave_get(void) {
 	void		(*mix)(PALNUM *dest, const UINT8 *src1, const UINT8 *src2);
 	PALNUM		*s;
 	UINT		pals;
-	PALNUM		remap[NP2PAL_TOTAL];
-	UINT8		remapflag[NP2PAL_TOTAL];
+	PALNUM		remap[NP2PAL_MAX];
+	UINT8		remapflag[NP2PAL_MAX];
 	int			x;
 	int			y;
 	PALNUM		col;
@@ -214,13 +233,33 @@ ssg_err:
 	return(NULL);
 }
 
-void scrnsave_trash(SCRNSAVE hdl) {
-
-	if (hdl) {
+/**
+ * Destroy
+ * @param[in] hdl The handle of saver
+ */
+void scrnsave_destroy(SCRNSAVE hdl)
+{
+	if (hdl)
+	{
 		_MFREE(hdl);
 	}
 }
 
+/**
+ * Get BPP
+ * @param[in] hdl The handle of saver
+ * @return bpp
+ */
+int scrnsave_gettype(SCRNSAVE hdl)
+{
+	int ret = 0;
+
+	if (hdl)
+	{
+		ret = hdl->type;
+	}
+	return ret;
+}
 
 // ---- BMP
 

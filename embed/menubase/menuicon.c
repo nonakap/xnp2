@@ -1,7 +1,10 @@
-#include	"compiler.h"
-#include	"vramhdl.h"
-#include	"menubase.h"
+/**
+ * @file	menuicon.c
+ * @brief	Implementation of the icons of the menu
+ */
 
+#include "compiler.h"
+#include "menuicon.h"
 
 #define	MICON_MAX			16
 #define	MICON_CACHE			8
@@ -250,7 +253,7 @@ const MENURES	*res;
 			if (ic->count == 0) {
 				vram_destroy(ic->hdl);
 				while(ic > icorg) {
-					CopyMemory(ic, ic - 1, sizeof(ICONCACHE));
+					*ic = *(ic - 1);
 					ic--;
 				}
 				ic->id = id;

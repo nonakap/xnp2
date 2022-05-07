@@ -714,7 +714,7 @@ static void VERMOUTHCL _allresetmidi(MIDIHDL hdl)
 
 // ----
 
-VEXTERN UINT VEXPORT midiout_getver(char *string, int leng) {
+VEXTERN UINT VEXPORT midiout_getver(char *string, UINT leng) {
 
 	leng = min(leng, sizeof(vermouthver));
 	CopyMemory(string, vermouthver, leng);
@@ -729,8 +729,8 @@ VEXTERN MIDIHDL VEXPORT midiout_create(MIDIMOD mod, UINT worksize) {
 	if (mod == NULL) {
 		return(NULL);
 	}
-	worksize = min(worksize, 512);
-	worksize = max(worksize, 16384);
+	worksize = min(worksize, 512U);
+	worksize = max(worksize, 16384U);
 	size = sizeof(_MIDIHDL);
 	size += sizeof(SINT32) * 2 * worksize;
 	size += sizeof(_SAMPLE) * worksize;

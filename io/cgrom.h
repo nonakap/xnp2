@@ -6,13 +6,8 @@ typedef struct {
 } _CGROM, *CGROM;
 
 typedef struct {
-#if !defined(CGWND_FONTPTR)
 	UINT32	low;
 	UINT32	high;
-#else
-	BYTE	*fontlow;
-	BYTE	*fonthigh;
-#endif
 	UINT8	writable;
 } _CGWINDOW, *CGWINDOW;
 

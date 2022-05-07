@@ -1,9 +1,14 @@
-#include	"compiler.h"
-#include	"fontmng.h"
-#include	"vramhdl.h"
-#include	"menudeco.inc"
-#include	"menubase.h"
+/**
+ * @file	menumbox.c
+ * @brief	Implementation of the message box
+ */
 
+#include "compiler.h"
+#include "menumbox.h"
+#include "menudeco.inc"
+#include "menudlg.h"
+#include "menures.h"
+#include "fontmng.h"
 
 typedef struct {
 	int		ret;
@@ -145,7 +150,7 @@ const UINT8	*btn;
 	posx = MENUMBOX_SX + MENUMBOX_PXTEXT;
 	posy = 0;
 	if (mb->type & 0xf0) {
-		menudlg_append(DLGTYPE_ICON, 0, 0, (void *)((mb->type >> 4) & 0xf),
+		menudlg_append(DLGTYPE_ICON, 0, 0, (void *)(INTPTR)((mb->type >> 4) & 0xf),
 				MENUMBOX_SX, MENUMBOX_SY, MENUMBOX_SZICON, MENUMBOX_SZICON);
 		posx += MENUMBOX_CXICON;
 		posy = MENUMBOX_CYICON - (mb->lines * mb->fontsize);

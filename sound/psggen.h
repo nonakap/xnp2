@@ -1,3 +1,11 @@
+/**
+ * @file	psggen.h
+ * @brief	Interface of the PSG
+ */
+
+#pragma once
+
+#include "sound.h"
 
 enum {
 	PSGFREQPADBIT		= 12,
@@ -21,9 +29,9 @@ typedef struct {
 } PSGTONE;
 
 typedef struct {
-	SINT32	freq;
-	SINT32	count;
-	UINT	base;
+	UINT32	freq;			/*!< frequency */
+	UINT32	count;			/*!< counter */
+	UINT	lfsr;			/*!< linear feedback shift register */
 } PSGNOISE;
 
 typedef struct {
@@ -78,4 +86,3 @@ void SOUNDCALL psggen_getpcm(PSGGEN psg, SINT32 *pcm, UINT count);
 #ifdef __cplusplus
 }
 #endif
-

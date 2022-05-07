@@ -1,112 +1,137 @@
-#include	"compiler.h"
-#include	"resource.h"
-#include	"np2.h"
-#include	"oemtext.h"
-#include	"np2class.h"
-#include	"dialog.h"
-#include	"dialogs.h"
-#include	"np2ver.h"
-#include	"pccore.h"
-#include	"np2info.h"
+/**
+ * @file	d_about.cpp
+ * @brief	バージョン情報ダイアログ
+ */
 
+#include "compiler.h"
+#include "resource.h"
+#include "dialog.h"
+#include "np2class.h"
+#include "np2.h"
+#include "misc/DlgProc.h"
+#include "pccore.h"
+#include "np2ver.h"
+#include "generic/np2info.h"
 
-static	SIZE	s_szAbout;
+//! タイトル
+static const TCHAR s_np2title[] = TEXT(PROJECTNAME) TEXT(PROJECTSUBNAME) TEXT("  ");
 
-static const OEMCHAR str_np2title[] = OEMTEXT(PROJECTNAME) \
-										OEMTEXT(PROJECTSUBNAME) \
-										OEMTEXT("  ");
-static const OEMCHAR np2infostr[] = OEMTEXT("CPU: %CPU% %CLOCK%\nMEM: %MEM1%\nGDC: %GDC%\n     %GDC2%\nTEXT: %TEXT%\nGRPH: %GRPH%\nSOUND: %EXSND%\n\nBIOS: %BIOS%\nRHYTHM: %RHYTHM%\n\nSCREEN: %DISP%");
+//! 情報
+static const TCHAR s_np2infostr[] = TEXT("CPU: %CPU% %CLOCK%\nMEM: %MEM1%\nGDC: %GDC%\n     %GDC2%\nTEXT: %TEXT%\nGRPH: %GRPH%\nSOUND: %EXSND%\n\nBIOS: %BIOS%\nRHYTHM: %RHYTHM%\n\nSCREEN: %DISP%");
 
-
-static void onInitDialog(HWND hWnd)
+/**
+ * @brief バージョン情報ダイアログ
+ * @param[in] hwndParent 親ウィンドウ
+ */
+class CAboutDlg : public CDlgProc
 {
-	OEMCHAR	szWork[128];
-	RECT	rect;
-	RECT	rectMore;
-	RECT	rectInfo;
-	int		nHeight;
-	POINT	pt;
-#if defined(OSLANG_UTF8)
-	TCHAR	szWork2[128];
-#endif	// defined(OSLANG_UTF8)
+public:
+	CAboutDlg(HWND hwndParent);
 
-	milstr_ncpy(szWork, str_np2title, NELEMENTS(szWork));
-	milstr_ncat(szWork, np2version, NELEMENTS(szWork));
+protected:
+	virtual BOOL OnInitDialog();
+	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
+
+private:
+	SIZE m_szAbout;			//!< ウィンドウのサイズ
+	void GetDlgItemRect(UINT nID, RECT& rect);
+};
+
+/**
+ * コンストラクタ
+ * @param[in] hwndParent 親ウィンドウ
+ */
+CAboutDlg::CAboutDlg(HWND hwndParent)
+	: CDlgProc(IDD_ABOUT, hwndParent)
+{
+	ZeroMemory(&m_szAbout, sizeof(m_szAbout));
+}
+
+/**
+ * このメソッドは WM_INITDIALOG のメッセージに応答して呼び出されます
+ * @retval TRUE 最初のコントロールに入力フォーカスを設定
+ * @retval FALSE 既に設定済
+ */
+BOOL CAboutDlg::OnInitDialog()
+{
+	TCHAR szWork[128];
+	milstr_ncpy(szWork, s_np2title, _countof(szWork));
+	milstr_ncat(szWork, np2version, _countof(szWork));
 #if defined(NP2VER_WIN9X)
-	milstr_ncat(szWork, NP2VER_WIN9X, NELEMENTS(szWork));
+	milstr_ncat(szWork, NP2VER_WIN9X, _countof(szWork));
 #endif
-#if defined(OSLANG_UTF8)
-	oemtotchar(szWork2, NELEMENTS(szWork2), szWork, -1);
-	SetDlgItemText(hWnd, IDC_NP2VER, szWork2);
-#else
-	SetDlgItemText(hWnd, IDC_NP2VER, szWork);
-#endif
+	SetDlgItemText(IDC_NP2VER, szWork);
 
-	GetWindowRect(hWnd, &rect);
-	s_szAbout.cx = rect.right - rect.left;
-	s_szAbout.cy = rect.bottom - rect.top;
+	RECT rect;
+	GetWindowRect(&rect);
+	m_szAbout.cx = rect.right - rect.left;
+	m_szAbout.cy = rect.bottom - rect.top;
 
-	if ((dlgs_getitemrect(hWnd, IDC_MORE, &rectMore)) &&
-		(dlgs_getitemrect(hWnd, IDC_NP2INFO, &rectInfo)))
-	{
-		nHeight = s_szAbout.cy - (rectInfo.bottom - rectMore.bottom);
-		GetClientRect(GetParent(hWnd), &rect);
-		pt.x = (rect.right - rect.left - s_szAbout.cx) / 2;
-		pt.y = (rect.bottom - rect.top - s_szAbout.cy) / 2;
-		ClientToScreen(GetParent(hWnd), &pt);
-		np2class_move(hWnd, pt.x, pt.y, s_szAbout.cx, nHeight);
-	}
 
-	SetFocus(GetDlgItem(hWnd, IDOK));
+	RECT rectMore;
+	GetDlgItemRect(IDC_MORE, rectMore);
+	RECT rectInfo;
+	GetDlgItemRect(IDC_NP2INFO, rectInfo);
+	const int nHeight = m_szAbout.cy - (rectInfo.bottom - rectMore.bottom);
+
+	CWndBase wndParent = GetParent();
+	wndParent.GetClientRect(&rect);
+
+	POINT pt;
+	pt.x = (rect.right - rect.left - m_szAbout.cx) / 2;
+	pt.y = (rect.bottom - rect.top - m_szAbout.cy) / 2;
+	wndParent.ClientToScreen(&pt);
+	np2class_move(m_hWnd, pt.x, pt.y, m_szAbout.cx, nHeight);
+
+	GetDlgItem(IDOK).SetFocus();
+
+	return TRUE;
 }
 
-static void onMore(HWND hWnd)
+/**
+ * ユーザーがメニューの項目を選択したときに、フレームワークによって呼び出されます
+ * @param[in] wParam パラメタ
+ * @param[in] lParam パラメタ
+ * @retval TRUE アプリケーションがこのメッセージを処理した
+ */
+BOOL CAboutDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-	OEMCHAR	szInfo[1024];
-	RECT	rect;
-#if defined(OSLANG_UTF8)
-	TCHAR	szInfo2[1024];
-#endif	// defined(OSLANG_UTF8)
-
-	np2info(szInfo, np2infostr, NELEMENTS(szInfo), NULL);
-#if defined(OSLANG_UTF8)
-	oemtotchar(szInfo2, NELEMENTS(szInfo2), szInfo, -1);
-	SetDlgItemText(hWnd, IDC_NP2INFO, szInfo2);
-#else
-	SetDlgItemText(hWnd, IDC_NP2INFO, szInfo);
-#endif
-	EnableWindow(GetDlgItem(hWnd, IDC_MORE), FALSE);
-	GetWindowRect(hWnd, &rect);
-	np2class_move(hWnd, rect.left, rect.top, s_szAbout.cx, s_szAbout.cy);
-	SetFocus(GetDlgItem(hWnd, IDOK));
-}
-
-LRESULT CALLBACK AboutDialogProc(HWND hWnd, UINT uMsg,
-												WPARAM wParam, LPARAM lParam)
-{
-	switch(uMsg)
+	if (LOWORD(wParam) == IDC_MORE)
 	{
-		case WM_INITDIALOG:
-			onInitDialog(hWnd);
-			break;
+		TCHAR szInfo[1024];
+		np2info(szInfo, s_np2infostr, _countof(szInfo), NULL);
 
-		case WM_COMMAND:
-			switch (LOWORD(wParam))
-			{
-				case IDOK:
-					EndDialog(hWnd, IDOK);
-					return TRUE;
+		SetDlgItemText(IDC_NP2INFO, szInfo);
+		GetDlgItem(IDC_MORE).EnableWindow(FALSE);
 
-				case IDC_MORE:
-					onMore(hWnd);
-					break;
-			}
-			break;
+		RECT rect;
+		GetWindowRect(&rect);
+		np2class_move(m_hWnd, rect.left, rect.top, m_szAbout.cx, m_szAbout.cy);
+		GetDlgItem(IDOK).SetFocus();
 
-		case WM_CLOSE:
-			PostMessage(hWnd, WM_COMMAND, IDOK, 0);
-			break;
+		return TRUE;
 	}
 	return FALSE;
 }
 
+/**
+ * アイテムの領域を得る
+ * @param[in] nID ID
+ * @param[out] rect 領域
+ */
+void CAboutDlg::GetDlgItemRect(UINT nID, RECT& rect)
+{
+	CWndBase wnd = GetDlgItem(nID);
+	wnd.GetWindowRect(&rect);
+	::MapWindowPoints(HWND_DESKTOP, m_hWnd, reinterpret_cast<LPPOINT>(&rect), 2);
+}
+
+/**
+ * バージョン情報ダイアログ
+ * @param[in] hwndParent 親ウィンドウ
+ */
+void dialog_about(HWND hwndParent)
+{
+	CAboutDlg dlg(hwndParent);
+	dlg.DoModal();
+}

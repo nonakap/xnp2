@@ -40,8 +40,10 @@ static const UINT8 defsyncs15[8] = {0x06,0x26,0x03,0x11,0x86,0x0f,0xc8,0x94};
 static const UINT8 defsyncm24[8] = {0x10,0x4e,0x07,0x25,0x07,0x07,0x90,0x65};
 static const UINT8 defsyncs24[8] = {0x06,0x26,0x03,0x11,0x83,0x07,0x90,0x65};
 
+#if 0
 static const UINT8 defsyncm31[8] = {0x10,0x4e,0x47,0x0c,0x07,0x0d,0x90,0x89};
 static const UINT8 defsyncs31[8] = {0x06,0x26,0x41,0x0c,0x83,0x0d,0x90,0x89};
+#endif	/* 0 */
 
 
 static const UINT8 defdegpal[4] = {0x04,0x15,0x26,0x37};
@@ -91,7 +93,7 @@ void gdc_setanalogpal(int color, int rgb, REG8 value) {
 		if (palevent.events < PALEVENTMAX) {
 			if (!gdc.vsync) {
 				event = palevent.event + palevent.events;
-				event->clock = nevent.item[NEVENT_FLAMES].clock -
+				event->clock = g_nevent.item[NEVENT_FLAMES].clock -
 											(CPU_BASECLOCK - CPU_REMCLOCK);
 				event->color = (UINT16)((color * sizeof(RGB32)) + rgb);
 				event->value = (UINT8)value;
@@ -647,7 +649,7 @@ static REG8 IOINPCALL gdc_i60(UINT port) {
 	}
 #endif
 #ifdef TURE_SYNC				// クロックイベントの誤差修正
-	if (nevent.item[NEVENT_FLAMES].clock < (CPU_BASECLOCK - CPU_REMCLOCK)) {
+	if (g_nevent.item[NEVENT_FLAMES].clock < (CPU_BASECLOCK - CPU_REMCLOCK)) {
 		ret ^= 0x20;
 	}
 #endif
@@ -776,7 +778,7 @@ static REG8 IOINPCALL gdc_ia0(UINT port) {
 	}
 #endif
 #ifdef TURE_SYNC				// クロックイベントの誤差修正
-	if (nevent.item[NEVENT_FLAMES].clock < (CPU_BASECLOCK - CPU_REMCLOCK)) {
+	if (g_nevent.item[NEVENT_FLAMES].clock < (CPU_BASECLOCK - CPU_REMCLOCK)) {
 		ret ^= 0x20;
 	}
 #endif
@@ -1134,13 +1136,12 @@ void gdc_reset(const NP2CFG *pConfig) {
 	ZeroMemory(&gdc, sizeof(gdc));
 	ZeroMemory(&gdcs, sizeof(gdcs));
 
-#if defined(SUPPORT_PC9821)
-	gdc.display |= (1 << GDCDISP_ANALOG);
-#else
-	if (np2cfg.color16 & 1) {
+#if !defined(SUPPORT_PC9821)
+	if (pConfig->color16 & 1)
+#endif
+	{
 		gdc.display |= (1 << GDCDISP_ANALOG);
 	}
-#endif
 	if (!(pccore.dipsw[0] & 0x04)) {			// dipsw1-3 on
 		gdc.display |= (1 << GDCDISP_PLAZMA2);
 	}

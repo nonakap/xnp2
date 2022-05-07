@@ -46,7 +46,7 @@ do { \
 
 void sysmng_workclockreset(void);
 BOOL sysmng_workclockrenewal(void);
-void sysmng_updatecaption(BYTE flag);
+void sysmng_updatecaption(UINT8 flag);
 
 G_END_DECLS
 

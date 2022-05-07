@@ -1,21 +1,28 @@
+/**
+ * @file	codecnv.h
+ * @brief	Interface of converting buffer
+ */
 
 #if !defined(NP2_CODECNV_H__)
-#define	NP2_CODECNV_H__
+#define NP2_CODECNV_H__
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-UINT codecnv_sjistoeuc(char *dst, UINT dcnt, const char *src, UINT scnt);
-UINT codecnv_sjistoucs2(UINT16 *dst, UINT dcnt, const char *src, UINT scnt);
-UINT codecnv_sjis2utf(UINT16 *dst, UINT dcnt, const char *src, UINT scnt);
+UINT codecnv_sjistoeuc(char *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
+UINT codecnv_sjistoucs2(UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
+UINT codecnv_sjistoutf8(char *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
 
-UINT codecnv_euctosjis(char *dst, UINT dcnt, const char *src, UINT scnt);
-UINT codecnv_euctoucs2(UINT16 *dst, UINT dcnt, const char *src, UINT scnt);
+UINT codecnv_euctosjis(char *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
+UINT codecnv_euctoucs2(UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
 
-UINT codecnv_utf8toucs2(UINT16 *dst, UINT dcnt, const char *src, UINT scnt);
+UINT codecnv_utf8toucs2(UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
+UINT codecnv_utf8tosjis(char *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
 
-UINT codecnv_ucs2toutf8(char *dst, UINT dcnt, const UINT16 *src, UINT scnt);
+UINT codecnv_ucs2tosjis(char *lpOutput, UINT cchOutput, const UINT16 *lpInput, UINT cchInput);
+UINT codecnv_ucs2toutf8(char *lpOutput, UINT cchOutput, const UINT16 *lpInput, UINT cchInput);
 
 #ifdef __cplusplus
 }

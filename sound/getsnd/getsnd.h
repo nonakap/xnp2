@@ -15,10 +15,10 @@ typedef UINT (*GSDEC)(GETSND self, void *buf);
 typedef void (*GSDECEND)(GETSND self);
 typedef void *(*GSCNV)(GETSND self, void *buf, void *bufterm);
 
-BOOL getwave_open(GETSND snd, UINT8 *ptr, UINT size);
-BOOL getmp3_open(GETSND snd, UINT8 *ptr, UINT size);
+BRESULT getwave_open(GETSND snd, UINT8 *ptr, UINT size);
+BRESULT getmp3_open(GETSND snd, UINT8 *ptr, UINT size);
 BOOL getogg_open(GETSND snd, UINT8 *ptr, UINT size);
-BOOL getsnd_setmixproc(GETSND snd, UINT samprate, UINT channles);
+BRESULT getsnd_setmixproc(GETSND snd, UINT samprate, UINT channles);
 
 struct _getsnd {
 	UINT8		*work;					// data load用バッファ

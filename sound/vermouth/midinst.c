@@ -171,6 +171,8 @@ static void VERMOUTHCL resample(MIDIMOD mod, INSTLAYER inst, int freq) {
 		if ((dstterm - dst) != newcnt) {
 			TRACEOUT(("resample error %d %d", newcnt, dstterm - dst));
 		}
+#else
+		(void)dstterm;
 #endif
 		inst->datasize = newcnt << FREQ_SHIFT;
 		inst->loopstart = 0;

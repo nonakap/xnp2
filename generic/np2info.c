@@ -7,7 +7,7 @@
 #include	"sound.h"
 #include	"fmboard.h"
 #include	"np2info.h"
-
+#include "sound/soundrom.h"
 
 static const OEMCHAR str_comma[] = OEMTEXT(", ");
 static const OEMCHAR str_2halfMHz[] = OEMTEXT("2.5MHz");
@@ -23,7 +23,6 @@ static const OEMCHAR str_grcgchip[] = OEMTEXT("\0GRCG \0GRCG CG-Window \0EGC CG-
 static const OEMCHAR str_vrammode[] = OEMTEXT("Digital\0Analog\000256colors");
 static const OEMCHAR str_vrampage[] = OEMTEXT(" page-0\0 page-1\0 page-all");
 static const OEMCHAR str_chpan[] = OEMTEXT("none\0Mono-R\0Mono-L\0Stereo");
-static const OEMCHAR str_fmboard[] = OEMTEXT("none\0PC-9801-14\0PC-9801-26\0PC-9801-86\0PC-9801-26 + 86\0PC-9801-118\0PC-9801-86 + Chibi-oto\0Speak board\0Spark board\0AMD-98");
 
 static const OEMCHAR str_clockfmt[] = OEMTEXT("%d.%1dMHz");
 static const OEMCHAR str_memfmt[] = OEMTEXT("%3uKB");
@@ -201,49 +200,75 @@ const OEMCHAR	*p;
 	(void)ex;
 }
 
-static void info_sound(OEMCHAR *str, int maxlen, const NP2INFOEX *ex) {
+static void info_sound(OEMCHAR *str, int maxlen, const NP2INFOEX *ex)
+{
+	const OEMCHAR *lpBoard;
 
-	UINT	type;
-
-	type = 0;
-	switch(usesound) {
-		case 0x01:
-			type = 1;
+	lpBoard = OEMTEXT("none");
+	switch (g_nSoundID)
+	{
+		case SOUNDID_NONE:
 			break;
 
-		case 0x02:
-			type = 2;
+		case SOUNDID_PC_9801_14:
+			lpBoard = OEMTEXT("PC-9801-14");
 			break;
 
-		case 0x04:
-			type = 3;
+		case SOUNDID_PC_9801_26K:
+			lpBoard = OEMTEXT("PC-9801-26");
 			break;
 
-		case 0x06:
-			type = 4;
+		case SOUNDID_PC_9801_86:
+			lpBoard = OEMTEXT("PC-9801-86");
 			break;
 
-		case 0x08:
-			type = 5;
+		case SOUNDID_PC_9801_86_26K:
+			lpBoard = OEMTEXT("PC-9801-26 + 86");
 			break;
 
-		case 0x14:
-			type = 6;
+		case SOUNDID_PC_9801_118:
+			lpBoard = OEMTEXT("PC-9801-118");
 			break;
 
-		case 0x20:
-			type = 7;
+		case SOUNDID_PC_9801_86_ADPCM:
+			lpBoard = OEMTEXT("C-9801-86 + Chibi-oto");
 			break;
 
-		case 0x40:
-			type = 8;
+		case SOUNDID_SPEAKBOARD:
+			lpBoard = OEMTEXT("Speak board");
 			break;
 
-		case 0x80:
-			type = 9;
+		case SOUNDID_SPARKBOARD:
+			lpBoard = OEMTEXT("Spark board");
+			break;
+
+		case SOUNDID_AMD98:
+			lpBoard = OEMTEXT("AMD-98");
+			break;
+
+		case SOUNDID_SOUNDORCHESTRA:
+			lpBoard = OEMTEXT("SOUND ORCHESTRA");
+			break;
+
+		case SOUNDID_SOUNDORCHESTRAV:
+			lpBoard = OEMTEXT("SOUND ORCHESTRA-V");
+			break;
+
+#if defined(SUPPORT_PX)
+		case SOUNDID_PX1:
+			lpBoard = OEMTEXT("Otomi-chanx2");
+			break;
+
+		case SOUNDID_PX2:
+			lpBoard = OEMTEXT("Otomi-chanx2 + 86");
+			break;
+#endif	// defined(SUPPORT_PX)
+
+		default:
+			lpBoard = OEMTEXT("unknown");
 			break;
 	}
-	milstr_ncpy(str, milstr_list(str_fmboard, type), maxlen);
+	milstr_ncpy(str, lpBoard, maxlen);
 	(void)ex;
 }
 
@@ -252,15 +277,15 @@ static void info_extsnd(OEMCHAR *str, int maxlen, const NP2INFOEX *ex) {
 	OEMCHAR	buf[64];
 
 	info_sound(str, maxlen, ex);
-	if (usesound & 4) {
+	if (g_nSoundID & 4) {
 		milstr_ncat(str, ex->cr, maxlen);
 		OEMSPRINTF(buf, str_pcm86a,
-							pcm86rate8[pcm86.fifo & 7] >> 3,
-							(16 - ((pcm86.dactrl >> 3) & 8)),
-							milstr_list(str_chpan, (pcm86.dactrl >> 4) & 3));
+							pcm86rate8[g_pcm86.cFifoCtrl & 7] >> 3,
+							(16 - ((g_pcm86.cDacCtrl >> 3) & 8)),
+							milstr_list(str_chpan, (g_pcm86.cDacCtrl >> 4) & 3));
 		milstr_ncat(str, buf, maxlen);
 		milstr_ncat(str, ex->cr, maxlen);
-		OEMSPRINTF(buf, str_pcm86b, pcm86.virbuf, pcm86.fifosize);
+		OEMSPRINTF(buf, str_pcm86b, g_pcm86.nFifoRemain, g_pcm86.nFifoIntrSize);
 		milstr_ncat(str, buf, maxlen);
 	}
 }
@@ -351,7 +376,7 @@ void np2info(OEMCHAR *dst, const OEMCHAR *src, int maxlen,
 
 	NP2INFOEX	statex;
 	OEMCHAR		c;
-	int			leng;
+	UINT		leng;
 	OEMCHAR		infwork[12];
 const INFOPROC	*inf;
 const INFOPROC	*infterm;
@@ -399,7 +424,7 @@ const INFOPROC	*infterm;
 				if (c == '%') {
 					break;
 				}
-				if (leng < (int)(NELEMENTS(infwork) - 1)) {
+				if (leng < (NELEMENTS(infwork) - 1)) {
 					infwork[leng++] = c;
 				}
 			}
@@ -419,7 +444,7 @@ const INFOPROC	*infterm;
 				}
 			}
 		}
-		leng = OEMSTRLEN(dst);
+		leng = (UINT)OEMSTRLEN(dst);
 		dst += leng;
 		maxlen -= leng;
 	}

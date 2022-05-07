@@ -26,7 +26,7 @@
 #include "compiler.h"
 
 #include "np2.h"
-#include "codecnv.h"
+#include "codecnv/codecnv.h"
 
 #include "fontmng.h"
 
@@ -45,7 +45,7 @@ typedef struct {
 } _FNTMNG, *FNTMNG;
 
 
-BOOL
+BRESULT
 fontmng_init(void)
 {
 
@@ -62,14 +62,14 @@ fontmng_terminate(void)
 }
 
 void
-fontmng_setdeffontname(const TCHAR *fontface)
+fontmng_setdeffontname(const OEMCHAR *fontface)
 {
 
 	milstr_ncpy(fontname, fontface, sizeof(fontname));
 }
 
 void *
-fontmng_create(int size, UINT type, const TCHAR *fontface)
+fontmng_create(int size, UINT type, const OEMCHAR *fontface)
 {
 	char buf[256];
 	_FNTMNG fnt;
@@ -214,7 +214,7 @@ getfont1(FNTMNG fhdl, FNTDAT fdat, const char *str, int len)
 	}
 }
 
-BOOL
+BRESULT
 fontmng_getsize(void *hdl, const char *str, POINT_T *pt)
 {
 	FNTMNG fhdl = (FNTMNG)hdl;
@@ -243,7 +243,7 @@ fontmng_getsize(void *hdl, const char *str, POINT_T *pt)
 	return SUCCESS;
 }
 
-BOOL
+BRESULT
 fontmng_getdrawsize(void *hdl, const char *str, POINT_T *pt)
 {
 	FNTMNG fhdl = (FNTMNG)hdl;

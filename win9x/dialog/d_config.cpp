@@ -1,268 +1,425 @@
-#include	"compiler.h"
-#include	"strres.h"
-#include	"resource.h"
-#include	"np2.h"
-#include	"oemtext.h"
-#include	"dosio.h"
-#include	"sysmng.h"
-#include	"dialog.h"
-#include	"dialogs.h"
-#include	"pccore.h"
+/**
+ * @file	d_config.cpp
+ * @brief	設定ダイアログ
+ */
 
+#include "compiler.h"
+#include "resource.h"
+#include "dialog.h"
+#include "c_combodata.h"
+#include "np2.h"
+#include "soundmng.h"
+#include "sysmng.h"
+#include "misc/DlgProc.h"
+#if defined(SUPPORT_ASIO)
+#include "soundmng/sdasio.h"
+#endif	// defined(SUPPORT_ASIO)
+#include "soundmng/sddsound3.h"
+#if defined(SUPPORT_WASAPI)
+#include "soundmng\sdwasapi.h"
+#endif	// defined(SUPPORT_WASAPI)
+#include "pccore.h"
+#include "common/strres.h"
 
-static const CBPARAM cpBase[] =
+/**
+ * @brief 設定ダイアログ
+ * @param[in] hwndParent 親ウィンドウ
+ */
+class CConfigureDlg : public CDlgProc
+{
+public:
+	CConfigureDlg(HWND hwndParent);
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void OnOK();
+	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
+
+private:
+	CComboData m_baseClock;			//!< ベース クロック
+	CComboData m_multiple;			//!< 倍率
+	CComboData m_type;				//!< タイプ
+	CComboData m_name;				//!< デバイス名
+	CComboData m_rate;				//!< レート
+	std::vector<LPCTSTR> m_dsound3;	//!< DSound3
+	std::vector<LPCTSTR> m_wasapi;	//!< WASAPI
+	std::vector<LPCTSTR> m_asio;	//!< ASIO
+	void SetClock(UINT nMultiple = 0);
+	void UpdateDeviceList();
+};
+
+//! コンボ ボックス アイテム
+static const CComboData::Entry s_baseclock[] =
 {
 	{MAKEINTRESOURCE(IDS_2_0MHZ),	PCBASECLOCK20},
 	{MAKEINTRESOURCE(IDS_2_5MHZ),	PCBASECLOCK25},
 };
-static const UINT32 mulval[10] = {1, 2, 4, 5, 6, 8, 10, 12, 16, 20};
+
+//! 倍率リスト
+static const UINT32 s_mulval[10] = {1, 2, 4, 5, 6, 8, 10, 12, 16, 20};
+
+//! クロック フォーマット
 static const TCHAR str_clockfmt[] = _T("%2u.%.4u");
 
+//! サンプリング レート
+static const UINT32 s_nSamplingRate[] = {11025, 22050, 44100, 48000, 88200, 96000};
 
-static void setclock(HWND hWnd, UINT uMultiple)
+/**
+ * コンストラクタ
+ * @param[in] hwndParent 親ウィンドウ
+ */
+CConfigureDlg::CConfigureDlg(HWND hwndParent)
+	: CDlgProc(IDD_CONFIG, hwndParent)
 {
-	UINT	uClock;
-	TCHAR	szWork[32];
-
-	uClock = dlgs_getcbcur(hWnd, IDC_BASECLOCK, PCBASECLOCK20);
-
-	if (uMultiple == 0)
-	{
-		GetDlgItemText(hWnd, IDC_MULTIPLE, szWork, NELEMENTS(szWork));
-		uMultiple = (UINT)miltchar_solveINT(szWork);
-	}
-	uMultiple = max(uMultiple, 1);
-	uMultiple = min(uMultiple, 32);
-
-	uClock = (uClock / 100) * uMultiple;
-	wsprintf(szWork, str_clockfmt, uClock / 10000, uClock % 10000);
-	SetDlgItemText(hWnd, IDC_CLOCKMSG, szWork);
 }
 
-static void cfgcreate(HWND hWnd) {
+/**
+ * このメソッドは WM_INITDIALOG のメッセージに応答して呼び出されます
+ * @retval TRUE 最初のコントロールに入力フォーカスを設定
+ * @retval FALSE 既に設定済
+ */
+BOOL CConfigureDlg::OnInitDialog()
+{
+	m_baseClock.SubclassDlgItem(IDC_BASECLOCK, this);
+	m_baseClock.Add(s_baseclock, _countof(s_baseclock));
+	const UINT32 nBaseClock = (np2cfg.baseclock == PCBASECLOCK20) ? PCBASECLOCK20 : PCBASECLOCK25;
+	m_baseClock.SetCurItemData(nBaseClock);
 
-	TCHAR	work[32];
-	UINT	val;
+	m_multiple.SubclassDlgItem(IDC_MULTIPLE, this);
+	m_multiple.Add(s_mulval, _countof(s_mulval));
+	SetDlgItemInt(IDC_MULTIPLE, np2cfg.multiple, FALSE);
 
-	dlgs_setcbitem(hWnd, IDC_BASECLOCK, cpBase, NELEMENTS(cpBase));
-	if (np2cfg.baseclock < AVE(PCBASECLOCK25, PCBASECLOCK20))
-	{
-		val = PCBASECLOCK20;
-	}
-	else
-	{
-		val = PCBASECLOCK25;
-	}
-	dlgs_setcbcur(hWnd, IDC_BASECLOCK, val);
-
-	SETLISTUINT32(hWnd, IDC_MULTIPLE, mulval);
-	wsprintf(work, tchar_u, np2cfg.multiple);
-	SetDlgItemText(hWnd, IDC_MULTIPLE, work);
-
+	UINT nModel;
 	if (!milstr_cmp(np2cfg.model, str_VM))
 	{
-		val = IDC_MODELVM;
+		nModel = IDC_MODELVM;
 	}
 	else if (!milstr_cmp(np2cfg.model, str_EPSON))
 	{
-		val = IDC_MODELEPSON;
+		nModel = IDC_MODELEPSON;
 	}
 	else
 	{
-		val = IDC_MODELVX;
+		nModel = IDC_MODELVX;
 	}
-	SetDlgItemCheck(hWnd, val, TRUE);
+	CheckDlgButton(nModel, BST_CHECKED);
 
-	if (np2cfg.samplingrate < AVE(11025, 22050))
-	{
-		val = IDC_RATE11;
-	}
-	else if (np2cfg.samplingrate < AVE(22050, 44100))
-	{
-		val = IDC_RATE22;
-	}
-	else
-	{
-		val = IDC_RATE44;
-	}
-	SetDlgItemCheck(hWnd, val, TRUE);
-	wsprintf(work, tchar_u, np2cfg.delayms);
-	SetDlgItemText(hWnd, IDC_SOUNDBUF, work);
+	// サウンド関係
+	m_type.SubclassDlgItem(IDC_SOUND_DEVICE_TYPE, this);
 
-	SetDlgItemCheck(hWnd, IDC_ALLOWRESIZE, np2oscfg.thickframe);
+	CSoundDeviceDSound3::EnumerateDevices(m_dsound3);
+#if defined(SUPPORT_WASAPI)
+	CSoundDeviceWasapi::EnumerateDevices(m_wasapi);
+#endif	// defined(SUPPORT_WASAPI)
+#if defined(SUPPORT_ASIO)
+	CSoundDeviceAsio::EnumerateDevices(m_asio);
+#endif	// defined(SUPPORT_ASIO)
+
+	const CSoundMng::DeviceType nType = static_cast<CSoundMng::DeviceType>(np2oscfg.cSoundDeviceType);
+	if (np2oscfg.szSoundDeviceName[0] != '\0')
+	{
+		std::vector<LPCTSTR>* pDevices = NULL;
+		switch (nType)
+		{
+			case CSoundMng::kDSound3:
+				pDevices = &m_dsound3;
+				break;
+
+			case CSoundMng::kWasapi:
+				pDevices = &m_wasapi;
+				break;
+
+			case CSoundMng::kAsio:
+				pDevices = &m_asio;
+				break;
+		}
+		if (pDevices)
+		{
+			std::vector<LPCTSTR>::iterator it = pDevices->begin();
+			while ((it != pDevices->end()) && (::lstrcmpi(np2oscfg.szSoundDeviceName, *it) != 0))
+			{
+				++it;
+			}
+			if (it == pDevices->end())
+			{
+				pDevices->push_back(np2oscfg.szSoundDeviceName);
+			}
+		}
+	}
+	m_type.Add(TEXT("Direct Sound"), CSoundMng::kDSound3);
+	if ((nType == CSoundMng::kWasapi) || (!m_wasapi.empty()))
+	{
+		m_type.Add(TEXT("WASAPI"), CSoundMng::kWasapi);
+	}
+	if ((nType == CSoundMng::kAsio) || (!m_asio.empty()))
+	{
+		m_type.Add(TEXT("ASIO"), CSoundMng::kAsio);
+	}
+	if (!m_type.SetCurItemData(nType))
+	{
+		int nIndex = m_type.Add(TEXT("Unknown"), CSoundMng::kDefault);
+		m_type.SetCurSel(nIndex);
+	}
+
+	m_name.SubclassDlgItem(IDC_SOUND_DEVICE_NAME, this);
+	UpdateDeviceList();
+
+	m_rate.SubclassDlgItem(IDC_SOUND_RATE, this);
+	m_rate.Add(s_nSamplingRate, _countof(s_nSamplingRate));
+	int nIndex = m_rate.FindItemData(np2cfg.samplingrate);
+	if (nIndex == CB_ERR)
+	{
+		nIndex = m_rate.Add(np2cfg.samplingrate);
+	}
+	m_rate.SetCurSel(nIndex);
+
+	SetDlgItemInt(IDC_SOUND_BUFFER, np2cfg.delayms, FALSE);
+
+	CheckDlgButton(IDC_ALLOWRESIZE, (np2oscfg.thickframe) ? BST_CHECKED : BST_UNCHECKED);
+
 #if !defined(_WIN64)
 	if (mmxflag & MMXFLAG_NOTSUPPORT)
 	{
-		EnableWindow(GetDlgItem(hWnd, IDC_DISABLEMMX), FALSE);
-		SetDlgItemCheck(hWnd, IDC_DISABLEMMX, TRUE);
+		GetDlgItem(IDC_DISABLEMMX).EnableWindow(FALSE);
+		CheckDlgButton(IDC_DISABLEMMX, BST_CHECKED);
 	}
 	else
 	{
-		SetDlgItemCheck(hWnd, IDC_DISABLEMMX, np2oscfg.disablemmx);
+		CheckDlgButton(IDC_DISABLEMMX, (np2oscfg.disablemmx) ? BST_CHECKED : BST_UNCHECKED);
 	}
-#endif
-	SetDlgItemCheck(hWnd, IDC_COMFIRM, np2oscfg.comfirm);
-	SetDlgItemCheck(hWnd, IDC_RESUME, np2oscfg.resume);
-	setclock(hWnd, 0);
-	SetFocus(GetDlgItem(hWnd, IDC_BASECLOCK));
+#else	// !defined(_WIN64)
+	GetDlgItem(IDC_DISABLEMMX).EnableWindow(FALSE);
+#endif	// !defined(_WIN64)
+
+	CheckDlgButton(IDC_COMFIRM, (np2oscfg.comfirm) ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(IDC_RESUME, (np2oscfg.resume) ? BST_CHECKED : BST_UNCHECKED);
+	SetClock();
+	m_baseClock.SetFocus();
+
+	return FALSE;
 }
 
-static void cfgupdate(HWND hWnd)
+/**
+ * リスト更新
+ */
+void CConfigureDlg::UpdateDeviceList()
 {
-	UINT		update;
-	TCHAR		work[32];
-	UINT		val;
-const OEMCHAR	*str;
+	const CSoundMng::DeviceType nType = static_cast<CSoundMng::DeviceType>(m_type.GetCurItemData(np2oscfg.cSoundDeviceType));
 
-	update = 0;
-
-	val = dlgs_getcbcur(hWnd, IDC_BASECLOCK, PCBASECLOCK20);
-	if (np2cfg.baseclock != val)
+	m_name.ResetContent();
+	if (nType != CSoundMng::kAsio)
 	{
-		np2cfg.baseclock = val;
-		update |= SYS_UPDATECFG | SYS_UPDATECLOCK;
+		m_name.Add(TEXT("Default"), FALSE);
 	}
 
-	GetDlgItemText(hWnd, IDC_MULTIPLE, work, sizeof(work));
-	val = (UINT)miltchar_solveINT(work);
-	if (val < 1) {
-		val = 1;
+	std::vector<LPCTSTR>* pDevices = NULL;
+	switch (nType)
+	{
+		case CSoundMng::kDSound3:
+			pDevices = &m_dsound3;
+			break;
+
+		case CSoundMng::kWasapi:
+			pDevices = &m_wasapi;
+			break;
+
+		case CSoundMng::kAsio:
+			pDevices = &m_asio;
+			break;
 	}
-	else if (val > 32) {
-		val = 32;
-	}
-	if (np2cfg.multiple != val) {
-		np2cfg.multiple = val;
-		update |= SYS_UPDATECFG | SYS_UPDATECLOCK;
+	if (pDevices)
+	{
+		for (std::vector<LPCTSTR>::const_iterator it = pDevices->begin(); it != pDevices->end(); ++it)
+		{
+			m_name.Add(*it, TRUE);
+		}
 	}
 
-	if (GetDlgItemCheck(hWnd, IDC_MODELVM)) {
+	int nIndex = m_name.FindStringExact(-1, np2oscfg.szSoundDeviceName);
+	if (nIndex == CB_ERR)
+	{
+		nIndex = 0;
+	}
+	m_name.SetCurSel(nIndex);
+}
+
+/**
+ * ユーザーが OK のボタン (IDOK ID がのボタン) をクリックすると呼び出されます
+ */
+void CConfigureDlg::OnOK()
+{
+	UINT nUpdated = 0;
+
+	const UINT nBaseClock = m_baseClock.GetCurItemData(PCBASECLOCK20);
+	if (np2cfg.baseclock != nBaseClock)
+	{
+		np2cfg.baseclock = nBaseClock;
+		nUpdated |= SYS_UPDATECFG | SYS_UPDATECLOCK;
+	}
+
+	UINT nMultiple = GetDlgItemInt(IDC_MULTIPLE, NULL, FALSE);
+	nMultiple = max(nMultiple, 1);
+	nMultiple = min(nMultiple, 32);
+	if (np2cfg.multiple != nMultiple)
+	{
+		np2cfg.multiple = nMultiple;
+		nUpdated |= SYS_UPDATECFG | SYS_UPDATECLOCK;
+	}
+
+	LPCTSTR str;
+	if (IsDlgButtonChecked(IDC_MODELVM) != BST_UNCHECKED)
+	{
 		str = str_VM;
 	}
-	else if (GetDlgItemCheck(hWnd, IDC_MODELEPSON)) {
+	else if (IsDlgButtonChecked(IDC_MODELEPSON) != BST_UNCHECKED)
+	{
 		str = str_EPSON;
 	}
 	else {
 		str = str_VX;
 	}
-	if (milstr_cmp(np2cfg.model, str)) {
+	if (milstr_cmp(np2cfg.model, str))
+	{
 		milstr_ncpy(np2cfg.model, str, NELEMENTS(np2cfg.model));
-		update |= SYS_UPDATECFG;
+		nUpdated |= SYS_UPDATECFG;
 	}
 
-	if (GetDlgItemCheck(hWnd, IDC_RATE11)) {
-		val = 11025;
+	const CSoundMng::DeviceType nOldType = static_cast<CSoundMng::DeviceType>(np2oscfg.cSoundDeviceType);
+	const CSoundMng::DeviceType nType = static_cast<CSoundMng::DeviceType>(m_type.GetCurItemData(nOldType));
+	TCHAR szName[MAX_PATH];
+	ZeroMemory(szName, sizeof(szName));
+	if (m_name.GetCurItemData(FALSE))
+	{
+		m_name.GetWindowText(szName, _countof(szName));
 	}
-	else if (GetDlgItemCheck(hWnd, IDC_RATE22)) {
-		val = 22050;
-	}
-	else {
-		val = 44100;
-	}
-	if (np2cfg.samplingrate != (UINT16)val) {
-		np2cfg.samplingrate = (UINT16)val;
-		update |= SYS_UPDATECFG | SYS_UPDATERATE;
+	if ((nType != nOldType) || (::lstrcmpi(szName, np2oscfg.szSoundDeviceName) != 0))
+	{
+		np2oscfg.cSoundDeviceType = static_cast<UINT8>(nType);
+		::lstrcpyn(np2oscfg.szSoundDeviceName, szName, _countof(np2oscfg.szSoundDeviceName));
+		nUpdated |= SYS_UPDATEOSCFG | SYS_UPDATESNDDEV;
 		soundrenewal = 1;
 	}
 
-	GetDlgItemText(hWnd, IDC_SOUNDBUF, work, NELEMENTS(work));
-	val = (UINT)miltchar_solveINT(work);
-	if (val < 40) {
-		val = 40;
-	}
-	else if (val > 1000) {
-		val = 1000;
-	}
-	if (np2cfg.delayms != (UINT16)val) {
-		np2cfg.delayms = (UINT16)val;
-		update |= SYS_UPDATECFG | SYS_UPDATESBUF;
+	const UINT nSamplingRate = m_rate.GetCurItemData(np2cfg.samplingrate);
+	if (np2cfg.samplingrate != nSamplingRate)
+	{
+		np2cfg.samplingrate = nSamplingRate;
+		nUpdated |= SYS_UPDATECFG | SYS_UPDATERATE;
 		soundrenewal = 1;
 	}
 
-	val = GetDlgItemCheck(hWnd, IDC_ALLOWRESIZE);
-	if (np2oscfg.thickframe != (UINT8)val) {
-		np2oscfg.thickframe = (UINT8)val;
-		update |= SYS_UPDATEOSCFG;
+	UINT nBuffer = GetDlgItemInt(IDC_SOUND_BUFFER, NULL, FALSE);
+	nBuffer = max(nBuffer, 40);
+	nBuffer = min(nBuffer, 1000);
+	if (np2cfg.delayms != static_cast<UINT16>(nBuffer))
+	{
+		np2cfg.delayms = static_cast<UINT16>(nBuffer);
+		nUpdated |= SYS_UPDATECFG | SYS_UPDATESBUF;
+		soundrenewal = 1;
+	}
+
+	const UINT8 bAllowResize = (IsDlgButtonChecked(IDC_ALLOWRESIZE) != BST_UNCHECKED) ? 1 : 0;
+	if (np2oscfg.thickframe != bAllowResize)
+	{
+		np2oscfg.thickframe = bAllowResize;
+		nUpdated |= SYS_UPDATEOSCFG;
 	}
 
 #if !defined(_WIN64)
 	if (!(mmxflag & MMXFLAG_NOTSUPPORT))
 	{
-		val = GetDlgItemCheck(hWnd, IDC_DISABLEMMX);
-		if (np2oscfg.disablemmx != (UINT8)val)
+		const UINT8 bDisableMMX = (IsDlgButtonChecked(IDC_DISABLEMMX) != BST_UNCHECKED) ? 1 : 0;
+		if (np2oscfg.disablemmx != bDisableMMX)
 		{
-			np2oscfg.disablemmx = (UINT8)val;
+			np2oscfg.disablemmx = bDisableMMX;
 			mmxflag &= ~MMXFLAG_DISABLE;
-			mmxflag |= (val)?MMXFLAG_DISABLE:0;
-			update |= SYS_UPDATEOSCFG;
+			mmxflag |= (bDisableMMX) ? MMXFLAG_DISABLE : 0;
+			nUpdated |= SYS_UPDATEOSCFG;
 		}
 	}
 #endif
 
-	val = GetDlgItemCheck(hWnd, IDC_COMFIRM);
-	if (np2oscfg.comfirm != (UINT8)val)
+	const UINT8 bConfirm = (IsDlgButtonChecked(IDC_COMFIRM) != BST_UNCHECKED) ? 1 : 0;
+	if (np2oscfg.comfirm != bConfirm)
 	{
-		np2oscfg.comfirm = (UINT8)val;
-		update |= SYS_UPDATEOSCFG;
+		np2oscfg.comfirm = bConfirm;
+		nUpdated |= SYS_UPDATEOSCFG;
 	}
 
-	val = GetDlgItemCheck(hWnd, IDC_RESUME);
-	if (np2oscfg.resume != (UINT8)val)
+	const UINT8 bResume = (IsDlgButtonChecked(IDC_RESUME) != BST_UNCHECKED) ? 1 : 0;
+	if (np2oscfg.resume != bResume)
 	{
-		np2oscfg.resume = (UINT8)val;
-		update |= SYS_UPDATEOSCFG;
+		np2oscfg.resume = bResume;
+		nUpdated |= SYS_UPDATEOSCFG;
 	}
-	sysmng_update(update);
+	sysmng_update(nUpdated);
+
+	CDlgProc::OnOK();
 }
 
-LRESULT CALLBACK CfgDialogProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
+/**
+ * ユーザーがメニューの項目を選択したときに、フレームワークによって呼び出されます
+ * @param[in] wParam パラメタ
+ * @param[in] lParam パラメタ
+ * @retval TRUE アプリケーションがこのメッセージを処理した
+ */
+BOOL CConfigureDlg::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+	switch (LOWORD(wParam))
+	{
+		case IDC_BASECLOCK:
+			SetClock();
+			return TRUE;
 
-	switch (msg) {
-		case WM_INITDIALOG:
-			cfgcreate(hWnd);
-			return(FALSE);
-
-		case WM_COMMAND:
-			switch(LOWORD(wp)) {
-				case IDOK:
-					cfgupdate(hWnd);
-					EndDialog(hWnd, IDOK);
-					break;
-
-				case IDCANCEL:
-					EndDialog(hWnd, IDCANCEL);
-					break;
-
-				case IDC_BASECLOCK:
-					setclock(hWnd, 0);
-					return(FALSE);
-
-				case IDC_MULTIPLE:
-					if (HIWORD(wp) == CBN_SELCHANGE) {
-						UINT val;
-						val = (UINT)SendDlgItemMessage(hWnd, IDC_MULTIPLE,
-														CB_GETCURSEL, 0, 0);
-						if (val < NELEMENTS(mulval)) {
-							setclock(hWnd, mulval[val]);
-						}
-					}
-					else {
-						setclock(hWnd, 0);
-					}
-					return(FALSE);
-
-				default:
-					return(FALSE);
+		case IDC_MULTIPLE:
+			if (HIWORD(wParam) == CBN_SELCHANGE)
+			{
+				const int nIndex = m_multiple.GetCurSel();
+				if ((nIndex >= 0) && (nIndex < _countof(s_mulval)))
+				{
+					SetClock(s_mulval[nIndex]);
+				}
 			}
-			break;
+			else
+			{
+				SetClock(0);
+			}
+			return TRUE;
 
-		case WM_CLOSE:
-			PostMessage(hWnd, WM_COMMAND, IDCANCEL, 0);
-			break;
-
-		default:
-			return(FALSE);
+		case IDC_SOUND_DEVICE_TYPE:
+			UpdateDeviceList();
+			return TRUE;
 	}
-	return(TRUE);
+	return FALSE;
 }
 
+/**
+ * クロックを設定する
+ * @param[in] nMultiple 倍率
+ */
+void CConfigureDlg::SetClock(UINT nMultiple)
+{
+	const UINT nBaseClock = m_baseClock.GetCurItemData(PCBASECLOCK20);
+	if (nMultiple == 0)
+	{
+		nMultiple = GetDlgItemInt(IDC_MULTIPLE, NULL, FALSE);
+	}
+	nMultiple = max(nMultiple, 1);
+	nMultiple = min(nMultiple, 32);
+
+	const UINT nClock = (nBaseClock / 100) * nMultiple;
+
+	TCHAR szWork[32];
+	wsprintf(szWork, str_clockfmt, nClock / 10000, nClock % 10000);
+	SetDlgItemText(IDC_CLOCKMSG, szWork);
+}
+
+/**
+ * 設定ダイアログ
+ * @param[in] hwndParent 親ウィンドウ
+ */
+void dialog_configure(HWND hwndParent)
+{
+	CConfigureDlg dlg(hwndParent);
+	dlg.DoModal();
+}

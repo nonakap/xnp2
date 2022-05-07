@@ -1,6 +1,11 @@
-#include	"compiler.h"
+/**
+ * @file	dmac.c
+ * @brief	Implementation of the DMA controller
+ */
+
+#include "compiler.h"
+#include "dmac.h"
 #include	"cpucore.h"
-#include	"pccore.h"
 #include	"iocore.h"
 #include	"sound.h"
 #include	"cs4231.h"

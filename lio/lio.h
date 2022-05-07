@@ -1,3 +1,9 @@
+/**
+ * @file	lio.h
+ * @brief	Interface of LIO
+ */
+
+#pragma once
 
 enum {
 	LIO_SEGMENT		= 0xf990,

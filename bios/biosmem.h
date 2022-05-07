@@ -1,7 +1,14 @@
+/**
+ * @file	biosmem.h
+ * @brief	Defines of BIOS memory
+ */
+
+#pragma once
 
 enum {
 	MEMB_EXPMMSZ			= 0x00401,
 	MEMB_SYS_TYPE			= 0x00480,
+	MEMB_BIOS_FLAG3			= 0x00481,
 	MEMB_DISK_EQUIPS		= 0x00482,
 	MEMB_F2HD_MODE			= 0x00493,
 

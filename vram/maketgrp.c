@@ -9,7 +9,7 @@
 #include	"maketext.h"
 #include	"maketgrp.h"
 #include	"makegrph.h"
-#include	"font.h"
+#include	"font/font.h"
 #include	"makegrph.mcr"
 
 

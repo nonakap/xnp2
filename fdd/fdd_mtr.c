@@ -3,7 +3,7 @@
 #include	"pccore.h"
 #include	"fdd_mtr.h"
 #if defined(SUPPORT_SWSEEKSND)
-#include	"sound.h"
+#include	"sound/pcmmix.h"
 #include	"fdd_mtr.res"
 #endif
 

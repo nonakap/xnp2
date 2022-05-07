@@ -1447,6 +1447,8 @@ I286 idiv_ea8(void) {
 	idivcheck:	test	ebp, ebp
 				je		idivovf
 				mov		ax, I286_AX
+				cmp		ax, 0x8000
+				je		idivovf
 				cwd
 				idiv	bp
 				mov		I286_AL, al
@@ -1633,9 +1635,12 @@ I286 idiv_ea16(void) {
 				align	4
 	idivcheck:	test	ebp, ebp
 				je		idivovf
-				movzx	eax, I286_DX
-				shl		eax, 16
-				mov		ax, I286_AX
+				movzx	edx, I286_DX
+				movzx	eax, I286_AX
+				shl		edx, 16
+				or		eax, edx
+				cmp		eax, 0x80000000
+				je		idivovf
 				cdq
 				idiv	ebp
 				mov		I286_AX, ax

@@ -417,7 +417,7 @@ const UINT8	*p;
 	y = sdraw->y;
 	do {
 		if (sdraw->dirty[y]) {
-			SDSETPIXEL(q, p[0] + NP2PAL_TEXT3);
+			SDSETPIXEL(q, (p[0] >> 4) + NP2PAL_TEXT3);
 			q += sdraw->xalign;
 			for (x=1; x<sdraw->width; x++) {
 				SDSETPIXEL(q, p[x] + NP2PAL_GRPH);
@@ -748,7 +748,7 @@ const UINT8	*p;
 	y = sdraw->y;
 	do {
 		if (sdraw->dirty[y]) {
-			c = p[0] + NP2PAL_TEXT3;
+			c = (p[0] >> 4) + NP2PAL_TEXT3;
 			SDSETPIXEL(q, c);
 			SDSETPIXEL((q + a), c);
 			q += sdraw->xalign;

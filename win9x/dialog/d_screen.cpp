@@ -1,278 +1,432 @@
 /**
  * @file	d_screen.cpp
- * @brief	Screen configure dialog procedure
- *
- * @author	$Author: yui $
- * @date	$Date: 2011/03/07 09:54:11 $
+ * @brief	スクリーン設定ダイアログ
  */
 
 #include "compiler.h"
-#include <commctrl.h>
-#include <prsht.h>
-#include "strres.h"
 #include "resource.h"
+#include "dialog.h"
+#include "c_combodata.h"
+#include "c_slidervalue.h"
+#include "np2class.h"
 #include "np2.h"
-#include "oemtext.h"
 #include "scrnmng.h"
 #include "sysmng.h"
-#include "np2class.h"
-#include "dialog.h"
-#include "dialogs.h"
+#include "misc\PropProc.h"
 #include "pccore.h"
 #include "iocore.h"
-#include "scrndraw.h"
-#include "palettes.h"
+#include "common\strres.h"
+#include "vram\scrndraw.h"
+#include "vram\palettes.h"
 
-#if !defined(__GNUC__)
-#pragma comment(lib, "comctl32.lib")
-#endif	// !defined(__GNUC__)
+/**
+ * @brief Video ページ
+ */
+class ScrOptVideoPage : public CPropPageProc
+{
+public:
+	ScrOptVideoPage();
+	virtual ~ScrOptVideoPage();
 
-static LRESULT CALLBACK Scropt1DlgProc(HWND hWnd, UINT msg,
-													WPARAM wp, LPARAM lp) {
-	TCHAR	work[32];
-	UINT16	ret;
-	UINT8	b;
-	int		renewal;
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void OnOK();
+	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
+	virtual LRESULT WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam);
 
-	switch(msg) {
-		case WM_INITDIALOG:
-			SetDlgItemCheck(hWnd, IDC_LCD, np2cfg.LCD_MODE & 1);
-			EnableWindow(GetDlgItem(hWnd, IDC_LCDX), np2cfg.LCD_MODE & 1);
-			SetDlgItemCheck(hWnd, IDC_LCDX, np2cfg.LCD_MODE & 2);
+private:
+	CSliderValue m_skiplight;		//!< スキップライン
+};
 
-			SetDlgItemCheck(hWnd, IDC_SKIPLINE, np2cfg.skipline);
-			SendDlgItemMessage(hWnd, IDC_SKIPLIGHT, TBM_SETRANGE, TRUE,
-											MAKELONG(0, 255));
-			SendDlgItemMessage(hWnd, IDC_SKIPLIGHT, TBM_SETPOS, TRUE,
-											np2cfg.skiplight);
-			wsprintf(work, tchar_u, np2cfg.skiplight);
-			SetDlgItemText(hWnd, IDC_LIGHTSTR, work);
-			return(TRUE);
-
-		case WM_COMMAND:
-			switch(LOWORD(wp)) {
-				case IDC_LCD:
-					EnableWindow(GetDlgItem(hWnd, IDC_LCDX),
-											GetDlgItemCheck(hWnd, IDC_LCD));
-					break;
-			}
-			break;
-
-		case WM_HSCROLL:
-			switch(GetDlgCtrlID((HWND)lp)) {
-				case IDC_SKIPLIGHT:
-					ret = (UINT16)SendDlgItemMessage(hWnd, IDC_SKIPLIGHT,
-													TBM_GETPOS, 0, 0);
-					wsprintf(work, tchar_u, ret);
-					SetDlgItemText(hWnd, IDC_LIGHTSTR, work);
-					break;
-			}
-			break;
-
-		case WM_NOTIFY:
-			if ((((NMHDR *)lp)->code) == (UINT)PSN_APPLY) {
-				renewal = 0;
-				b = (UINT8)GetDlgItemCheck(hWnd, IDC_SKIPLINE);
-				if (np2cfg.skipline != b) {
-					np2cfg.skipline = b;
-					renewal = 1;
-				}
-				ret = (UINT16)SendDlgItemMessage(hWnd, IDC_SKIPLIGHT,
-														TBM_GETPOS, 0, 0);
-				if (ret > 255) {
-					ret = 255;
-				}
-				if (np2cfg.skiplight != ret) {
-					np2cfg.skiplight = ret;
-					renewal = 1;
-				}
-				if (renewal) {
-					pal_makeskiptable();
-				}
-				b = (GetDlgItemCheck(hWnd, IDC_LCD)?0x01:0x00) |
-					(GetDlgItemCheck(hWnd, IDC_LCDX)?0x02:0x00);
-				if (np2cfg.LCD_MODE != b) {
-					np2cfg.LCD_MODE = b;
-					pal_makelcdpal();
-					renewal = 1;
-				}
-				if (renewal) {
-					scrndraw_redraw();
-					sysmng_update(SYS_UPDATECFG);
-				}
-				return(TRUE);
-			}
-			break;
-	}
-	return(FALSE);
+/**
+ * コンストラクタ
+ */
+ScrOptVideoPage::ScrOptVideoPage()
+	: CPropPageProc(IDD_SCROPT1)
+{
 }
 
-static const int gdcchip[4] = {IDC_GRCGNON, IDC_GRCG, IDC_GRCG2, IDC_EGC};
+/**
+ * デストラクタ
+ */
+ScrOptVideoPage::~ScrOptVideoPage()
+{
+}
 
-static LRESULT CALLBACK Scropt2DlgProc(HWND hWnd, UINT msg,
-													WPARAM wp, LPARAM lp) {
+/**
+ * このメソッドは WM_INITDIALOG のメッセージに応答して呼び出されます
+ * @retval TRUE 最初のコントロールに入力フォーカスを設定
+ * @retval FALSE 既に設定済
+ */
+BOOL ScrOptVideoPage::OnInitDialog()
+{
+	CheckDlgButton(IDC_LCD, (np2cfg.LCD_MODE & 1) ? BST_CHECKED : BST_UNCHECKED);
+	GetDlgItem(IDC_LCDX).EnableWindow((np2cfg.LCD_MODE & 1) ? TRUE : FALSE);
+	CheckDlgButton(IDC_LCDX, (np2cfg.LCD_MODE & 2) ? BST_CHECKED : BST_UNCHECKED);
 
-	UINT8	b;
-	UINT	update;
+	CheckDlgButton(IDC_SKIPLINE, (np2cfg.skipline) ? BST_CHECKED : BST_UNCHECKED);
 
-	switch(msg) {
-		case WM_INITDIALOG:
-			if (!np2cfg.uPD72020) {
-				SetDlgItemCheck(hWnd, IDC_GDC7220, TRUE);
-			}
-			else {
-				SetDlgItemCheck(hWnd, IDC_GDC72020, TRUE);
-			}
-			SetDlgItemCheck(hWnd, gdcchip[np2cfg.grcg & 3], TRUE);
-			SetDlgItemCheck(hWnd, IDC_PC980124, np2cfg.color16);
+	m_skiplight.SubclassDlgItem(IDC_SKIPLIGHT, this);
+	m_skiplight.SetStaticId(IDC_LIGHTSTR);
+	m_skiplight.SetRange(0, 255);
+	m_skiplight.SetPos(np2cfg.skiplight);
+	return TRUE;
+}
+
+/**
+ * ユーザーが OK のボタン (IDOK ID がのボタン) をクリックすると呼び出されます
+ */
+void ScrOptVideoPage::OnOK()
+{
+	bool bUpdated = false;
+
+	const UINT8 cSkipLine = (IsDlgButtonChecked(IDC_SKIPLINE) != BST_UNCHECKED) ? 1 : 0;
+	if (np2cfg.skipline != cSkipLine)
+	{
+		np2cfg.skipline = cSkipLine;
+		bUpdated = true;
+	}
+	const UINT8 cSkipLight = static_cast<UINT8>(m_skiplight.GetPos());
+	if (np2cfg.skiplight != cSkipLight)
+	{
+		np2cfg.skiplight = cSkipLight;
+		bUpdated = true;
+	}
+	if (bUpdated)
+	{
+		::pal_makeskiptable();
+	}
+
+	UINT8 cMode = 0;
+	if (IsDlgButtonChecked(IDC_LCD) != BST_UNCHECKED)
+	{
+		cMode |= 1;
+	}
+	if (IsDlgButtonChecked(IDC_LCDX) != BST_UNCHECKED)
+	{
+		cMode |= 2;
+	}
+	if (np2cfg.LCD_MODE != cMode)
+	{
+		np2cfg.LCD_MODE = cMode;
+		pal_makelcdpal();
+		bUpdated = true;
+	}
+	if (bUpdated)
+	{
+		::scrndraw_redraw();
+		::sysmng_update(SYS_UPDATECFG);
+	}
+}
+
+/**
+ * ユーザーがメニューの項目を選択したときに、フレームワークによって呼び出されます
+ * @param[in] wParam パラメタ
+ * @param[in] lParam パラメタ
+ * @retval TRUE アプリケーションがこのメッセージを処理した
+ */
+BOOL ScrOptVideoPage::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+	if (LOWORD(wParam) == IDC_LCD)
+	{
+		const BOOL bEnable = (IsDlgButtonChecked(IDC_LCD) != BST_UNCHECKED) ? TRUE : FALSE;
+		GetDlgItem(IDC_LCDX).EnableWindow(bEnable);
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * CWndProc オブジェクトの Windows プロシージャ (WindowProc) が用意されています
+ * @param[in] nMsg 処理される Windows メッセージを指定します
+ * @param[in] wParam メッセージの処理で使う付加情報を提供します。このパラメータの値はメッセージに依存します
+ * @param[in] lParam メッセージの処理で使う付加情報を提供します。このパラメータの値はメッセージに依存します
+ * @return メッセージに依存する値を返します
+ */
+LRESULT ScrOptVideoPage::WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (nMsg == WM_HSCROLL)
+	{
+		switch (::GetDlgCtrlID(reinterpret_cast<HWND>(lParam)))
+		{
+			case IDC_SKIPLIGHT:
+				m_skiplight.UpdateValue();
+				break;
+
+			default:
+				break;
+		}
+	}
+	return CDlgProc::WindowProc(nMsg, wParam, lParam);
+}
+
+
+
+// ----
+/**
+ * @brief Chip ページ
+ */
+class ScrOptChipPage : public CPropPageProc
+{
+public:
+	ScrOptChipPage();
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void OnOK();
+};
+
+/**
+ * コンストラクタ
+ */
+ScrOptChipPage::ScrOptChipPage()
+	: CPropPageProc(IDD_SCROPT2)
+{
+}
+
+//! GDC チップ
+static const UINT s_gdcchip[4] = {IDC_GRCGNON, IDC_GRCG, IDC_GRCG2, IDC_EGC};
+
+/**
+ * このメソッドは WM_INITDIALOG のメッセージに応答して呼び出されます
+ * @retval TRUE 最初のコントロールに入力フォーカスを設定
+ * @retval FALSE 既に設定済
+ */
+BOOL ScrOptChipPage::OnInitDialog()
+{
+	CheckDlgButton((np2cfg.uPD72020) ? IDC_GDC72020 : IDC_GDC7220, BST_CHECKED);
+	CheckDlgButton(s_gdcchip[np2cfg.grcg & 3], BST_CHECKED);
+	CheckDlgButton(IDC_PC980124, (np2cfg.color16) ? BST_CHECKED : BST_UNCHECKED);
+
 #if defined(SUPPORT_PC9821)
-			EnableWindow(GetDlgItem(hWnd, IDC_GCBOX), FALSE);
-			EnableWindow(GetDlgItem(hWnd, IDC_GRCGNON), FALSE);
-			EnableWindow(GetDlgItem(hWnd, IDC_GRCG), FALSE);
-			EnableWindow(GetDlgItem(hWnd, IDC_GRCG2), FALSE);
-			EnableWindow(GetDlgItem(hWnd, IDC_EGC), FALSE);
-			EnableWindow(GetDlgItem(hWnd, IDC_PC980124), FALSE);
-#endif
-			return(TRUE);
-
-		case WM_NOTIFY:
-			if ((((NMHDR *)lp)->code) == (UINT)PSN_APPLY) {
-				update = 0;
-				b = (UINT8)GetDlgItemCheck(hWnd, IDC_GDC72020);
-				if (np2cfg.uPD72020 != b) {
-					np2cfg.uPD72020 = b;
-					update |= SYS_UPDATECFG;
-					gdc_restorekacmode();
-					gdcs.grphdisp |= GDCSCRN_ALLDRAW2;
-				}
-				for (b=0; (b<3) && (!GetDlgItemCheck(hWnd, gdcchip[b])); b++);
-				if (np2cfg.grcg != b) {
-					np2cfg.grcg = b;
-					update |= SYS_UPDATECFG;
-					gdcs.grphdisp |= GDCSCRN_ALLDRAW2;
-				}
-				b = (UINT8)GetDlgItemCheck(hWnd, IDC_PC980124);
-				if (np2cfg.color16 != b) {
-					np2cfg.color16 = b;
-					update |= SYS_UPDATECFG;
-				}
-				sysmng_update(update);
-				return(TRUE);
-			}
-			break;
+	static const UINT s_disabled[] =
+	{
+		IDC_GCBOX,
+			IDC_GRCGNON, IDC_GRCG, IDC_GRCG2, IDC_EGC,
+		IDC_PC980124
+	};
+	for (UINT i = 0; i < _countof(s_disabled); i++)
+	{
+		GetDlgItem(s_disabled[i]).EnableWindow(FALSE);
 	}
-	return(FALSE);
+#endif	// defined(SUPPORT_PC9821)
+
+	return TRUE;
 }
 
-static LRESULT CALLBACK Scropt3DlgProc(HWND hWnd, UINT msg,
-													WPARAM wp, LPARAM lp) {
+/**
+ * ユーザーが OK のボタン (IDOK ID がのボタン) をクリックすると呼び出されます
+ */
+void ScrOptChipPage::OnOK()
+{
+	bool bUpdated = false;
 
-	TCHAR	work[32];
-	UINT8	value[6];
-	UINT8	b;
-	UINT	update;
-
-	switch(msg) {
-		case WM_INITDIALOG:
-			SendDlgItemMessage(hWnd, IDC_TRAMWAIT, TBM_SETRANGE, TRUE,
-											MAKELONG(0, 32));
-			SendDlgItemMessage(hWnd, IDC_TRAMWAIT, TBM_SETPOS, TRUE,
-											np2cfg.wait[0]);
-			wsprintf(work, tchar_u, np2cfg.wait[0]);
-			SetDlgItemText(hWnd, IDC_TRAMSTR, work);
-			SendDlgItemMessage(hWnd, IDC_VRAMWAIT, TBM_SETRANGE, TRUE,
-											MAKELONG(0, 32));
-			SendDlgItemMessage(hWnd, IDC_VRAMWAIT, TBM_SETPOS, TRUE,
-											np2cfg.wait[2]);
-			wsprintf(work, tchar_u, np2cfg.wait[2]);
-			SetDlgItemText(hWnd, IDC_VRAMSTR, work);
-			SendDlgItemMessage(hWnd, IDC_GRCGWAIT, TBM_SETRANGE, TRUE,
-											MAKELONG(0, 32));
-			SendDlgItemMessage(hWnd, IDC_GRCGWAIT, TBM_SETPOS, TRUE,
-											np2cfg.wait[4]);
-			wsprintf(work, tchar_u, np2cfg.wait[4]);
-			SetDlgItemText(hWnd, IDC_GRCGSTR, work);
-
-			SendDlgItemMessage(hWnd, IDC_REALPAL, TBM_SETRANGE, TRUE,
-											MAKELONG(0, 64));
-			SendDlgItemMessage(hWnd, IDC_REALPAL, TBM_SETPOS, TRUE,
-											np2cfg.realpal);
-			wsprintf(work, tchar_d, (int)np2cfg.realpal - 32);
-			SetDlgItemText(hWnd, IDC_REALPALSTR, work);
-
-			return(TRUE);
-
-		case WM_HSCROLL:
-			switch(GetDlgCtrlID((HWND)lp)) {
-				case IDC_TRAMWAIT:
-					b = (UINT8)SendDlgItemMessage(hWnd, IDC_TRAMWAIT,
-													TBM_GETPOS, 0, 0);
-					wsprintf(work, tchar_u, b);
-					SetDlgItemText(hWnd, IDC_TRAMSTR, work);
-					break;
-
-				case IDC_VRAMWAIT:
-					b = (UINT8)SendDlgItemMessage(hWnd, IDC_VRAMWAIT,
-													TBM_GETPOS, 0, 0);
-					wsprintf(work, tchar_u, b);
-					SetDlgItemText(hWnd, IDC_VRAMSTR, work);
-					break;
-
-				case IDC_GRCGWAIT:
-					b = (UINT8)SendDlgItemMessage(hWnd, IDC_GRCGWAIT,
-													TBM_GETPOS, 0, 0);
-					wsprintf(work, tchar_u, b);
-					SetDlgItemText(hWnd, IDC_GRCGSTR, work);
-					break;
-
-				case IDC_REALPAL:
-					b = (UINT8)SendDlgItemMessage(hWnd, IDC_REALPAL,
-													TBM_GETPOS, 0, 0);
-					wsprintf(work, tchar_d, (int)b - 32);
-					SetDlgItemText(hWnd, IDC_REALPALSTR, work);
-			}
-			break;
-
-		case WM_NOTIFY:
-			if ((((NMHDR *)lp)->code) == (UINT)PSN_APPLY) {
-				update = 0;
-				ZeroMemory(value, sizeof(value));
-				value[0] = (UINT8)SendDlgItemMessage(hWnd, IDC_TRAMWAIT,
-													TBM_GETPOS, 0, 0);
-				if (value[0]) {
-					value[1] = 1;
-				}
-				value[2] = (UINT8)SendDlgItemMessage(hWnd, IDC_VRAMWAIT,
-													TBM_GETPOS, 0, 0);
-				if (value[2]) {
-					value[3] = 1;
-				}
-				value[4] = (UINT8)SendDlgItemMessage(hWnd, IDC_GRCGWAIT,
-													TBM_GETPOS, 0, 0);
-				if (value[4]) {
-					value[5] = 1;
-				}
-				for (b=0; b<6; b++) {
-					if (np2cfg.wait[b] != value[b]) {
-						np2cfg.wait[b] = value[b];
-						update |= SYS_UPDATECFG;
-					}
-				}
-				b = (UINT8)SendDlgItemMessage(hWnd, IDC_REALPAL,
-														TBM_GETPOS, 0, 0);
-				if (np2cfg.realpal != b) {
-					np2cfg.realpal = b;
-					update |= SYS_UPDATECFG;
-				}
-				sysmng_update(update);
-				return(TRUE);
-			}
-			break;
+	const UINT8 cMode = (IsDlgButtonChecked(IDC_GDC72020) != BST_UNCHECKED) ? 1 : 0;
+	if (np2cfg.uPD72020 != cMode)
+	{
+		np2cfg.uPD72020 = cMode;
+		bUpdated = true;
+		gdc_restorekacmode();
+		gdcs.grphdisp |= GDCSCRN_ALLDRAW2;
 	}
-	return(FALSE);
+
+	for (UINT i = 0; i < _countof(s_gdcchip); i++)
+	{
+		if (IsDlgButtonChecked(s_gdcchip[i]) != BST_UNCHECKED)
+		{
+			const UINT8 cType = static_cast<UINT8>(i);
+			if (np2cfg.grcg != cType)
+			{
+				np2cfg.grcg = cType;
+				bUpdated = true;
+				gdcs.grphdisp |= GDCSCRN_ALLDRAW2;
+			}
+			break;
+		}
+	}
+
+	const UINT8 cColor16 = (IsDlgButtonChecked(IDC_PC980124) != BST_UNCHECKED) ? 1 : 0;
+	if (np2cfg.color16 != cColor16)
+	{
+		np2cfg.color16 = cColor16;
+		bUpdated = true;
+	}
+
+	if (bUpdated)
+	{
+		::sysmng_update(SYS_UPDATECFG);
+	}
 }
 
-static const CBPARAM cpZoom[] =
+
+
+// ----
+
+/**
+ * @brief Timing ページ
+ */
+class ScrOptTimingPage : public CPropPageProc
+{
+public:
+	ScrOptTimingPage();
+	virtual ~ScrOptTimingPage();
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void OnOK();
+	virtual LRESULT WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam);
+
+private:
+	CSliderValue m_tram;	//!< TRAM
+	CSliderValue m_vram;	//!< VRAM
+	CSliderValue m_grcg;	//!< GRCG
+	CSliderValue m_raster;	//!< ラスタ
+};
+
+/**
+ * コンストラクタ
+ */
+ScrOptTimingPage::ScrOptTimingPage()
+	: CPropPageProc(IDD_SCROPT3)
+{
+}
+
+/**
+ * デストラクタ
+ */
+ScrOptTimingPage::~ScrOptTimingPage()
+{
+}
+
+/**
+ * このメソッドは WM_INITDIALOG のメッセージに応答して呼び出されます
+ * @retval TRUE 最初のコントロールに入力フォーカスを設定
+ * @retval FALSE 既に設定済
+ */
+BOOL ScrOptTimingPage::OnInitDialog()
+{
+	m_tram.SubclassDlgItem(IDC_TRAMWAIT, this);
+	m_tram.SetStaticId(IDC_TRAMSTR);
+	m_tram.SetRange(0, 32);
+	m_tram.SetPos(np2cfg.wait[0]);
+
+	m_vram.SubclassDlgItem(IDC_VRAMWAIT, this);
+	m_vram.SetStaticId(IDC_VRAMSTR);
+	m_vram.SetRange(0, 32);
+	m_vram.SetPos(np2cfg.wait[2]);
+
+	m_grcg.SubclassDlgItem(IDC_GRCGWAIT, this);
+	m_grcg.SetStaticId(IDC_GRCGSTR);
+	m_grcg.SetRange(0, 32);
+	m_grcg.SetPos(np2cfg.wait[4]);
+
+	m_raster.SubclassDlgItem(IDC_REALPAL, this);
+	m_raster.SetStaticId(IDC_REALPALSTR);
+	m_raster.SetRange(-32, 32);
+	m_raster.SetPos(np2cfg.realpal - 32);
+
+	return TRUE;
+}
+
+/**
+ * ユーザーが OK のボタン (IDOK ID がのボタン) をクリックすると呼び出されます
+ */
+void ScrOptTimingPage::OnOK()
+{
+	bool bUpdated = false;
+
+	UINT8 sWait[6];
+	ZeroMemory(sWait, sizeof(sWait));
+	sWait[0] = static_cast<UINT8>(m_tram.GetPos());
+	sWait[2] = static_cast<UINT8>(m_vram.GetPos());
+	sWait[4] = static_cast<UINT8>(m_grcg.GetPos());
+
+	sWait[1] = (sWait[0]) ? 1 : 0;
+	sWait[3] = (sWait[2]) ? 1 : 0;
+	sWait[5] = (sWait[4]) ? 1 : 0;
+
+	for (UINT i = 0; i < 6; i++)
+	{
+		if (np2cfg.wait[i] != sWait[i])
+		{
+			np2cfg.wait[i] = sWait[i];
+			bUpdated = true;
+		}
+	}
+
+	const UINT8 cRealPal = static_cast<UINT8>(m_raster.GetPos() + 32);
+	if (np2cfg.realpal != cRealPal)
+	{
+		np2cfg.realpal = cRealPal;
+		bUpdated = true;
+	}
+
+	if (bUpdated)
+	{
+		::sysmng_update(SYS_UPDATECFG);
+	}
+}
+
+/**
+ * CWndProc オブジェクトの Windows プロシージャ (WindowProc) が用意されています
+ * @param[in] nMsg 処理される Windows メッセージを指定します
+ * @param[in] wParam メッセージの処理で使う付加情報を提供します。このパラメータの値はメッセージに依存します
+ * @param[in] lParam メッセージの処理で使う付加情報を提供します。このパラメータの値はメッセージに依存します
+ * @return メッセージに依存する値を返します
+ */
+LRESULT ScrOptTimingPage::WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (nMsg == WM_HSCROLL)
+	{
+		switch (::GetDlgCtrlID(reinterpret_cast<HWND>(lParam)))
+		{
+			case IDC_TRAMWAIT:
+				m_tram.UpdateValue();
+				break;
+
+			case IDC_VRAMWAIT:
+				m_vram.UpdateValue();
+				break;
+
+			case IDC_GRCGWAIT:
+				m_grcg.UpdateValue();
+				break;
+
+			case IDC_REALPAL:
+				m_raster.UpdateValue();
+				break;
+
+			default:
+				break;
+		}
+	}
+	return CDlgProc::WindowProc(nMsg, wParam, lParam);
+}
+
+
+
+// ----
+
+/**
+ * @brief Fullscreen ページ
+ */
+class ScrOptFullscreenPage : public CPropPageProc
+{
+public:
+	ScrOptFullscreenPage();
+	virtual ~ScrOptFullscreenPage();
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void OnOK();
+	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
+
+private:
+	CComboData m_zoom;				//!< ズーム
+};
+
+//! ズーム リスト
+static const CComboData::Entry s_zoom[] =
 {
 	{MAKEINTRESOURCE(IDS_ZOOM_NONE),			0},
 	{MAKEINTRESOURCE(IDS_ZOOM_FIXEDASPECT),		1},
@@ -280,105 +434,106 @@ static const CBPARAM cpZoom[] =
 	{MAKEINTRESOURCE(IDS_ZOOM_FULL),			3},
 };
 
-static LRESULT CALLBACK ScroptFullScreenDlgProc(HWND hWnd, UINT uMsg,
-												WPARAM wParam, LPARAM lParam)
+/**
+ * コンストラクタ
+ */
+ScrOptFullscreenPage::ScrOptFullscreenPage()
+	: CPropPageProc(IDD_SCROPT_FULLSCREEN)
 {
-	UINT8	c;
+}
 
-	switch(uMsg)
+/**
+ * デストラクタ
+ */
+ScrOptFullscreenPage::~ScrOptFullscreenPage()
+{
+}
+
+/**
+ * このメソッドは WM_INITDIALOG のメッセージに応答して呼び出されます
+ * @retval TRUE 最初のコントロールに入力フォーカスを設定
+ * @retval FALSE 既に設定済
+ */
+BOOL ScrOptFullscreenPage::OnInitDialog()
+{
+	const UINT8 c = np2oscfg.fscrnmod;
+	CheckDlgButton(IDC_FULLSCREEN_SAMEBPP, (c & FSCRNMOD_SAMEBPP) ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(IDC_FULLSCREEN_SAMERES, (c & FSCRNMOD_SAMERES) ? BST_CHECKED : BST_UNCHECKED);
+
+	m_zoom.SubclassDlgItem(IDC_FULLSCREEN_ZOOM, this);
+	m_zoom.Add(s_zoom, _countof(s_zoom));
+	m_zoom.SetCurItemData(c & 3);
+	m_zoom.EnableWindow((c & FSCRNMOD_SAMERES) ? TRUE : FALSE);
+
+	return TRUE;
+}
+
+/**
+ * ユーザーが OK のボタン (IDOK ID がのボタン) をクリックすると呼び出されます
+ */
+void ScrOptFullscreenPage::OnOK()
+{
+	UINT8 c = 0;
+	if (IsDlgButtonChecked(IDC_FULLSCREEN_SAMEBPP) != BST_UNCHECKED)
 	{
-		case WM_INITDIALOG:
-			c = np2oscfg.fscrnmod;
-			SetDlgItemCheck(hWnd, IDC_FULLSCREEN_SAMEBPP,
-													(c & FSCRNMOD_SAMEBPP));
-			SetDlgItemCheck(hWnd, IDC_FULLSCREEN_SAMERES,
-													(c & FSCRNMOD_SAMERES));
-			dlgs_setcbitem(hWnd, IDC_FULLSCREEN_ZOOM,
-												cpZoom, NELEMENTS(cpZoom));
-			dlgs_setcbcur(hWnd, IDC_FULLSCREEN_ZOOM, (c & 3));
-			EnableWindow(GetDlgItem(hWnd, IDC_FULLSCREEN_ZOOM),
-												(c & FSCRNMOD_SAMERES) != 0);
-			return(TRUE);
-
-		case WM_COMMAND:
-			switch(LOWORD(wParam))
-			{
-				case IDC_FULLSCREEN_SAMERES:
-					dlgs_enablebyautocheck(hWnd, IDC_FULLSCREEN_ZOOM,
-													IDC_FULLSCREEN_SAMERES);
-					break;
-			}
-			break;
-
-		case WM_NOTIFY:
-			if ((((NMHDR *)lParam)->code) == (UINT)PSN_APPLY)
-			{
-				c = 0;
-				if (GetDlgItemCheck(hWnd, IDC_FULLSCREEN_SAMEBPP))
-				{
-					c |= FSCRNMOD_SAMEBPP;
-				}
-				if (GetDlgItemCheck(hWnd, IDC_FULLSCREEN_SAMERES))
-				{
-					c |= FSCRNMOD_SAMERES;
-				}
-				c |= dlgs_getcbcur(hWnd, IDC_FULLSCREEN_ZOOM, 0);
-				if (np2oscfg.fscrnmod != c)
-				{
-					np2oscfg.fscrnmod = c;
-					sysmng_update(SYS_UPDATEOSCFG);
-				}
-				return(TRUE);
-			}
-			break;
+		c |= FSCRNMOD_SAMEBPP;
 	}
-	return(FALSE);
+	if (IsDlgButtonChecked(IDC_FULLSCREEN_SAMERES) != BST_UNCHECKED)
+	{
+		c |= FSCRNMOD_SAMERES;
+	}
+	c |= m_zoom.GetCurItemData(np2oscfg.fscrnmod & 3);
+	if (np2oscfg.fscrnmod != c)
+	{
+		np2oscfg.fscrnmod = c;
+		::sysmng_update(SYS_UPDATEOSCFG);
+	}
 }
 
-void dialog_scropt(HWND hWnd)
+/**
+ * ユーザーがメニューの項目を選択したときに、フレームワークによって呼び出されます
+ * @param[in] wParam パラメタ
+ * @param[in] lParam パラメタ
+ * @retval TRUE アプリケーションがこのメッセージを処理した
+ */
+BOOL ScrOptFullscreenPage::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-	HINSTANCE		hInstance;
-	PROPSHEETPAGE	psp;
-	PROPSHEETHEADER	psh;
-	HPROPSHEETPAGE	hpsp[4];
-	TCHAR			szTitle[128];
-
-	hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
-
-	ZeroMemory(&psp, sizeof(psp));
-	psp.dwSize = sizeof(PROPSHEETPAGE);
-	psp.dwFlags = PSP_DEFAULT;
-	psp.hInstance = hInstance;
-
-	psp.pszTemplate = MAKEINTRESOURCE(IDD_SCROPT1);
-	psp.pfnDlgProc = (DLGPROC)Scropt1DlgProc;
-	hpsp[0] = CreatePropertySheetPage(&psp);
-
-	psp.pszTemplate = MAKEINTRESOURCE(IDD_SCROPT2);
-	psp.pfnDlgProc = (DLGPROC)Scropt2DlgProc;
-	hpsp[1] = CreatePropertySheetPage(&psp);
-
-	psp.pszTemplate = MAKEINTRESOURCE(IDD_SCROPT3);
-	psp.pfnDlgProc = (DLGPROC)Scropt3DlgProc;
-	hpsp[2] = CreatePropertySheetPage(&psp);
-
-	psp.pszTemplate = MAKEINTRESOURCE(IDD_SCROPT_FULLSCREEN);
-	psp.pfnDlgProc = (DLGPROC)ScroptFullScreenDlgProc;
-	hpsp[3] = CreatePropertySheetPage(&psp);
-
-	loadstringresource(IDS_SCREENOPTION, szTitle, NELEMENTS(szTitle));
-
-	ZeroMemory(&psh, sizeof(psh));
-	psh.dwSize = sizeof(PROPSHEETHEADER);
-	psh.dwFlags = PSH_NOAPPLYNOW | PSH_USEHICON | PSH_USECALLBACK;
-	psh.hwndParent = hWnd;
-	psh.hInstance = hInstance;
-	psh.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON2));
-	psh.nPages = 4;
-	psh.phpage = hpsp;
-	psh.pszCaption = szTitle;
-	psh.pfnCallback = np2class_propetysheet;
-	PropertySheet(&psh);
-	InvalidateRect(hWnd, NULL, TRUE);
+	if (LOWORD(wParam) == IDC_FULLSCREEN_SAMERES)
+	{
+		m_zoom.EnableWindow((IsDlgButtonChecked(IDC_FULLSCREEN_SAMERES) != BST_UNCHECKED) ? TRUE : FALSE);
+		return TRUE;
+	}
+	return FALSE;
 }
 
+
+
+// ----
+
+/**
+ * スクリーン設定
+ * @param[in] hwndParent 親ウィンドウ
+ */
+void dialog_scropt(HWND hwndParent)
+{
+	CPropSheetProc prop(IDS_SCREENOPTION, hwndParent);
+
+	ScrOptVideoPage video;
+	prop.AddPage(&video);
+
+	ScrOptChipPage chip;
+	prop.AddPage(&chip);
+
+	ScrOptTimingPage timing;
+	prop.AddPage(&timing);
+
+	ScrOptFullscreenPage fullscreen;
+	prop.AddPage(&fullscreen);
+
+	prop.m_psh.dwFlags |= PSH_NOAPPLYNOW | PSH_USEHICON | PSH_USECALLBACK;
+	prop.m_psh.hIcon = LoadIcon(CWndProc::GetResourceHandle(), MAKEINTRESOURCE(IDI_ICON2));
+	prop.m_psh.pfnCallback = np2class_propetysheet;
+	prop.DoModal();
+
+	::InvalidateRect(hwndParent, NULL, TRUE);
+}

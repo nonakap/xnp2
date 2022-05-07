@@ -5,10 +5,10 @@
 #include	"np2.h"
 #include	"viewer.h"
 #include	"viewmem.h"
-#include	"memory.h"
+#include	"cpumem.h"
 
 
-void viewmem_read(VIEWMEM_T *cfg, UINT32 adrs, BYTE *buf, UINT32 size) {
+void viewmem_read(VIEWMEM_T *cfg, UINT32 adrs, UINT8 *buf, UINT32 size) {
 
 	if (!size) {
 		return;

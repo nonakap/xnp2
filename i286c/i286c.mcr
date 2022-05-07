@@ -130,30 +130,30 @@ extern UINT calc_a(UINT op, UINT32 *seg);
 
 
 #define	REMOVE_PREFIX												\
-		SS_FIX = SS_BASE;											\
-		DS_FIX = DS_BASE;
+		I286_SS_FIX = I286_SS_BASE;									\
+		I286_DS_FIX = I286_DS_BASE;
 
 
 #define	I286_WORKCLOCK(c)	I286_REMCLOCK -= (c)
 
 
 #define	GET_PCBYTE(b)												\
-		(b) = i286_memoryread(CS_BASE + I286_IP);					\
+		(b) = i286_memoryread(I286_CS_BASE + I286_IP);				\
 		I286_IP++;
 
 
 #define	GET_PCBYTES(b)												\
-		(b) = __CBW(i286_memoryread(CS_BASE + I286_IP));			\
+		(b) = __CBW(i286_memoryread(I286_CS_BASE + I286_IP));		\
 		I286_IP++;
 
 
 #define	GET_PCBYTESD(b)												\
-		(b) = __CBD(i286_memoryread(CS_BASE + I286_IP));			\
+		(b) = __CBD(i286_memoryread(I286_CS_BASE + I286_IP));		\
 		I286_IP++;
 
 
 #define	GET_PCWORD(b)												\
-		(b) = i286_memoryread_w(CS_BASE + I286_IP);					\
+		(b) = i286_memoryread_w(I286_CS_BASE + I286_IP);			\
 		I286_IP += 2;
 
 
@@ -412,10 +412,10 @@ extern UINT calc_a(UINT op, UINT32 *seg);
 
 #define	REGPUSH0(reg)												\
 		I286_SP -= 2;												\
-		i286_memorywrite_w(I286_SP + SS_BASE, reg);
+		i286_memorywrite_w(I286_SP + I286_SS_BASE, reg);
 
 #define	REGPOP0(reg) 												\
-		reg = i286_memoryread_w(I286_SP + SS_BASE);					\
+		reg = i286_memoryread_w(I286_SP + I286_SS_BASE);			\
 		I286_SP += 2;
 
 #if (defined(ARM) || defined(X11)) && defined(BYTESEX_LITTLE)
@@ -424,7 +424,7 @@ extern UINT calc_a(UINT op, UINT32 *seg);
 		UINT32 addr;												\
 		I286_WORKCLOCK(clock);										\
 		I286_SP -= 2;												\
-		addr = I286_SP + SS_BASE;									\
+		addr = I286_SP + I286_SS_BASE;								\
 		if (INHIBIT_WORDP(addr)) {									\
 			i286_memorywrite_w(addr, reg);							\
 		}															\
@@ -436,7 +436,7 @@ extern UINT calc_a(UINT op, UINT32 *seg);
 #define	REGPOP(reg, clock) {										\
 		UINT32 addr;												\
 		I286_WORKCLOCK(clock);										\
-		addr = I286_SP + SS_BASE;									\
+		addr = I286_SP + I286_SS_BASE;								\
 		if (INHIBIT_WORDP(addr)) {									\
 			(reg) = i286_memoryread_w(addr);						\
 		}															\
@@ -451,12 +451,12 @@ extern UINT calc_a(UINT op, UINT32 *seg);
 #define	REGPUSH(reg, clock)	{										\
 		I286_WORKCLOCK(clock);										\
 		I286_SP -= 2;												\
-		i286_memorywrite_w(I286_SP + SS_BASE, reg);					\
+		i286_memorywrite_w(I286_SP + I286_SS_BASE, reg);			\
 	}
 
 #define	REGPOP(reg, clock) {										\
 		I286_WORKCLOCK(clock);										\
-		reg = i286_memoryread_w(I286_SP + SS_BASE);					\
+		reg = i286_memoryread_w(I286_SP + I286_SS_BASE);			\
 		I286_SP += 2;												\
 	}
 
@@ -465,19 +465,19 @@ extern UINT calc_a(UINT op, UINT32 *seg);
 #define	SP_PUSH(reg, clock)	{										\
 		REG16 sp = (reg);											\
 		I286_SP -= 2;												\
-		i286_memorywrite_w(I286_SP + SS_BASE, sp);					\
+		i286_memorywrite_w(I286_SP + I286_SS_BASE, sp);				\
 		I286_WORKCLOCK(clock);										\
 	}
 
 #define	SP_POP(reg, clock) {										\
 		I286_WORKCLOCK(clock);										\
-		reg = i286_memoryread_w(I286_SP + SS_BASE);					\
+		reg = i286_memoryread_w(I286_SP + I286_SS_BASE);			\
 	}
 
 
 #define	JMPSHORT(clock) {											\
 		I286_WORKCLOCK(clock);										\
-		I286_IP += __CBW(i286_memoryread(CS_BASE + I286_IP));		\
+		I286_IP += __CBW(i286_memoryread(I286_CS_BASE + I286_IP));	\
 		I286_IP++;													\
 	}
 

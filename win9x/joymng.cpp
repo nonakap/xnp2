@@ -1,96 +1,107 @@
 /**
- * @file	joymng.cpp
- * @brief	Joystick manager
- *
- * @author	$Author: yui $
- * @date	$Date: 2011/03/07 09:54:11 $
+ *	@file	joymng.cpp
+ *	@brief	ジョイパッド入力の動作の定義を行います
  */
 
 #include "compiler.h"
-#include "np2.h"
 #include "joymng.h"
-#include "menu.h"
+#include "np2.h"
 
-#if !defined(__GNUC__)
 #pragma comment(lib, "winmm.lib")
-#endif	// !defined(__GNUC__)
 
-enum {
-	JOY_LEFT_BIT	= 0x04,
-	JOY_RIGHT_BIT	= 0x08,
-	JOY_UP_BIT		= 0x01,
-	JOY_DOWN_BIT	= 0x02,
-	JOY_BTN1_BIT	= 0x10,
-	JOY_BTN2_BIT	= 0x20
+/**
+ * ビット定義
+ */
+enum
+{
+	JOY_LEFT_BIT	= 0x04,		//!< 左
+	JOY_RIGHT_BIT	= 0x08,		//!< 右
+	JOY_UP_BIT		= 0x01,		//!< 上
+	JOY_DOWN_BIT	= 0x02,		//!< 下
+	JOY_BTN1_BIT	= 0x10,		//!< ボタン1
+	JOY_BTN2_BIT	= 0x20		//!< ボタン2
 };
 
-static	REG8	joyflag = 0xff;
-static	UINT8	joypad1btn[4];
+static bool s_bEnabled = false;				//!< 有効フラグ
+static UINT8 s_cJoyFlag = 0;				//!< ステータス
+static UINT8 s_sJoyPad1ButtonBit[4];		//!< パッドに割り当てたボタン ビット
 
-
-void joymng_initialize(void) {
-
-	JOYINFO		ji;
-	int			i;
-
-	if ((!joyGetNumDevs()) ||
-		(joyGetPos(JOYSTICKID1, &ji) == JOYERR_UNPLUGGED)) {
-		np2oscfg.JOYPAD1 |= 2;
-	}
-	for (i=0; i<4; i++) {
-		joypad1btn[i] = 0xff ^
-			((np2oscfg.JOY1BTN[i] & 3) << ((np2oscfg.JOY1BTN[i] & 4)?4:6));
+/**
+ * 初期化
+ */
+void joymng_initialize()
+{
+	JOYINFO ji;
+	s_bEnabled = ((joyGetNumDevs() != 0) && (joyGetPos(JOYSTICKID1, &ji) == JOYERR_NOERROR));
+	for (int i = 0; i < 4; i++)
+	{
+		s_sJoyPad1ButtonBit[i] = 0xff ^ ((np2oscfg.JOY1BTN[i] & 3) << ((np2oscfg.JOY1BTN[i] & 4) ? 4 : 6));
 	}
 }
 
-void joymng_sync(void) {
-
-	np2oscfg.JOYPAD1 &= 0x7f;
-	joyflag = 0xff;
+/**
+ * 有効?
+ * @return 有効フラグ
+ */
+bool joymng_isEnabled()
+{
+	return s_bEnabled;
 }
 
-REG8 joymng_getstat(void) {
+/**
+ * 同期
+ */
+void joymng_sync()
+{
+	s_cJoyFlag = 0;
+}
 
-	JOYINFO		ji;
-
-	if ((np2oscfg.JOYPAD1 == 1) &&
-		(joyGetPos(JOYSTICKID1, &ji) == JOYERR_NOERROR)) {
-		np2oscfg.JOYPAD1 |= 0x80;
-		joyflag = 0xff;
-		if (ji.wXpos < 0x4000U) {
-			joyflag &= ~JOY_LEFT_BIT;
+/**
+ * ステータスを得る
+ * @return ステータス
+ */
+REG8 joymng_getstat(void)
+{
+	if (s_cJoyFlag == 0)
+	{
+		UINT8 cJoyFlag = 0xff;
+		JOYINFO ji;
+		if ((np2oscfg.JOYPAD1) && (::joyGetPos(JOYSTICKID1, &ji) == JOYERR_NOERROR))
+		{
+			if (ji.wXpos < 0x4000U)
+			{
+				cJoyFlag &= ~JOY_LEFT_BIT;
+			}
+			else if (ji.wXpos > 0xc000U)
+			{
+				cJoyFlag &= ~JOY_RIGHT_BIT;
+			}
+			if (ji.wYpos < 0x4000U)
+			{
+				cJoyFlag &= ~JOY_UP_BIT;
+			}
+			else if (ji.wYpos > 0xc000U)
+			{
+				cJoyFlag &= ~JOY_DOWN_BIT;
+			}
+			if (ji.wButtons & JOY_BUTTON1)
+			{
+				cJoyFlag &= s_sJoyPad1ButtonBit[0];
+			}
+			if (ji.wButtons & JOY_BUTTON2)
+			{
+				cJoyFlag &= s_sJoyPad1ButtonBit[1];
+			}
+			if (ji.wButtons & JOY_BUTTON3)
+			{
+				cJoyFlag &= s_sJoyPad1ButtonBit[2];
+			}
+			if (ji.wButtons & JOY_BUTTON4)
+			{
+				cJoyFlag &= s_sJoyPad1ButtonBit[3];
+			}
 		}
-		else if (ji.wXpos > 0xc000U) {
-			joyflag &= ~JOY_RIGHT_BIT;
-		}
-		if (ji.wYpos < 0x4000U) {
-			joyflag &= ~JOY_UP_BIT;
-		}
-		else if (ji.wYpos > 0xc000U) {
-			joyflag &= ~JOY_DOWN_BIT;
-		}
-		if (ji.wButtons & JOY_BUTTON1) {
-			joyflag &= joypad1btn[0];							// ver0.28
-		}
-		if (ji.wButtons & JOY_BUTTON2) {
-			joyflag &= joypad1btn[1];							// ver0.28
-		}
-		if (ji.wButtons & JOY_BUTTON3) {
-			joyflag &= joypad1btn[2];							// ver0.28
-		}
-		if (ji.wButtons & JOY_BUTTON4) {
-			joyflag &= joypad1btn[3];							// ver0.28
-		}
+		s_cJoyFlag = cJoyFlag;
 	}
-	return(joyflag);
+	return s_cJoyFlag;
 }
-
-// joyflag	bit:0		up
-// 			bit:1		down
-// 			bit:2		left
-// 			bit:3		right
-// 			bit:4		trigger1 (rapid)
-// 			bit:5		trigger2 (rapid)
-// 			bit:6		trigger1
-// 			bit:7		trigger2
-

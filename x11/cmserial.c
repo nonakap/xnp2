@@ -49,7 +49,7 @@ const UINT32 cmserial_speed[10] = {
 
 
 static UINT
-serialread(COMMNG self, BYTE *data)
+serialread(COMMNG self, UINT8 *data)
 {
 	CMSER serial = (CMSER)(self + 1);
 	size_t size;
@@ -70,7 +70,7 @@ serialread(COMMNG self, BYTE *data)
 }
 
 static UINT
-serialwrite(COMMNG self, BYTE data)
+serialwrite(COMMNG self, UINT8 data)
 {
 	CMSER serial = (CMSER)(self + 1);
 	size_t size;
@@ -84,7 +84,7 @@ serialwrite(COMMNG self, BYTE data)
 	return 0;
 }
 
-static BYTE
+static UINT8
 serialgetstat(COMMNG self)
 {
 	CMSER serial = (CMSER)(self + 1);
@@ -104,8 +104,8 @@ serialgetstat(COMMNG self)
 	return 0x00;
 }
 
-static long
-serialmsg(COMMNG self, UINT msg, long param)
+static INTPTR
+serialmsg(COMMNG self, UINT msg, INTPTR param)
 {
 
 	(void)self;
@@ -233,7 +233,7 @@ print_status(const struct termios *tio)
 #endif
 
 COMMNG
-cmserial_create(UINT port, BYTE param, UINT32 speed)
+cmserial_create(UINT port, UINT8 param, UINT32 speed)
 {
 	static const int cmserial_cflag[10] = {
 		B110, B300, B1200, B2400, B4800,

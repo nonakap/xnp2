@@ -96,7 +96,7 @@ skbdwin_key_press(GtkWidget *w, GdkEventKey *ev, gpointer p)
 {
 
 	if (ev->type == GDK_KEY_PRESS) {
-		if ((ev->keyval != GDK_F12) || (np2oscfg.F12KEY != 0))
+		if ((ev->keyval != GDK_KEY_F12) || (np2oscfg.F12KEY != 0))
 			gtkkbd_keydown(ev->keyval);
 		return TRUE;
 	}
@@ -107,7 +107,7 @@ skbdwin_key_release(GtkWidget *w, GdkEventKey *ev, gpointer p)
 {
 
 	if (ev->type == GDK_KEY_RELEASE) {
-		if ((ev->keyval != GDK_F12) || (np2oscfg.F12KEY != 0))
+		if ((ev->keyval != GDK_KEY_F12) || (np2oscfg.F12KEY != 0))
 			gtkkbd_keyup(ev->keyval);
 		return TRUE;
 	}
@@ -171,7 +171,7 @@ skbdwin_create(void)
 	gtk_window_set_title(GTK_WINDOW(skwin.window), "Software Keyboard");
 	gtk_window_set_resizable(GTK_WINDOW(skwin.window), FALSE);
 	gtk_widget_add_events(skwin.window, EVENT_MASK);
-	g_signal_connect(GTK_OBJECT(skwin.window), "destroy",
+	g_signal_connect(G_OBJECT(skwin.window), "destroy",
 	    G_CALLBACK(skbdwin_window_destroy), NULL);
 	gtk_widget_realize(skwin.window);
 
@@ -188,16 +188,16 @@ skbdwin_create(void)
 	gtk_box_pack_start(GTK_BOX(main_widget), da, FALSE, TRUE, 0);
 	gtk_widget_show(da);
 
-	g_signal_connect(GTK_OBJECT(skwin.window), "key_press_event",
+	g_signal_connect(G_OBJECT(skwin.window), "key_press_event",
 	    G_CALLBACK(skbdwin_key_press), NULL);
-	g_signal_connect(GTK_OBJECT(skwin.window), "key_release_event",
+	g_signal_connect(G_OBJECT(skwin.window), "key_release_event",
 	    G_CALLBACK(skbdwin_key_release), NULL);
-	g_signal_connect(GTK_OBJECT(skwin.window), "button_press_event",
+	g_signal_connect(G_OBJECT(skwin.window), "button_press_event",
 	    G_CALLBACK(skbdwin_button_press), NULL);
-	g_signal_connect(GTK_OBJECT(skwin.window), "button_release_event",
+	g_signal_connect(G_OBJECT(skwin.window), "button_release_event",
 	    G_CALLBACK(skbdwin_button_release), NULL);
 
-	g_signal_connect(GTK_OBJECT(da), "expose_event",
+	g_signal_connect(G_OBJECT(da), "expose_event",
 	    G_CALLBACK(skbdwin_expose), NULL);
 
 	gtk_widget_show_all(skwin.window);

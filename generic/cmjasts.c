@@ -61,7 +61,7 @@ static UINT8 jsgetstat(COMMNG self) {
 	return(0);
 }
 
-static long jsmsg(COMMNG self, UINT msg, long param) {
+static INTPTR jsmsg(COMMNG self, UINT msg, INTPTR param) {
 
 	(void)self;
 	(void)msg;

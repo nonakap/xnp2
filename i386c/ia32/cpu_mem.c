@@ -25,7 +25,7 @@
 
 #include "compiler.h"
 #include "cpu.h"
-#include "memory.h"
+#include "cpumem.h"
 
 
 /*

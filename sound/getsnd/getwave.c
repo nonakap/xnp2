@@ -80,7 +80,7 @@ static UINT pcm_dec(GETSND snd, void *dst) {
 		CopyMemory(dst, snd->datptr, size);
 		snd->datptr += size;
 		snd->datsize -= size;
-		size >>= (int)(long)snd->snd;
+		size >>= (int)(INTPTR)snd->snd;
 	}
 	return(size);
 }
@@ -117,7 +117,7 @@ static UINT pcm_dec(GETSND snd, UINT8 *dst) {
 
 static const UINT8 abits[4] = {0, 1, 0, 2};
 
-static BOOL pcm_open(GETSND snd) {
+static BRESULT pcm_open(GETSND snd) {
 
 	UINT	align;
 
@@ -130,7 +130,7 @@ static BOOL pcm_open(GETSND snd) {
 	}
 	snd->blocksamples = 0x800;					// “K“–‚ÉB
 	snd->blocksize *= snd->blocksamples;
-	snd->snd = (void *)(long)abits[align - 1];
+	snd->snd = (void *)(INTPTR)abits[align - 1];
 	snd->dec = (GSDEC)pcm_dec;
 	return(SUCCESS);
 
@@ -234,7 +234,7 @@ static void msa_decend(GETSND snd) {
 	_MFREE(snd->snd);
 }
 
-static BOOL msa_open(GETSND snd, WAVE_INFOS *wavehead, UINT headsize) {
+static BRESULT msa_open(GETSND snd, WAVE_INFOS *wavehead, UINT headsize) {
 
 	WAVE_MSA_INFO	*info;
 	UINT			exsize;
@@ -408,7 +408,7 @@ imadec_err:
 	return(0);
 }
 
-static BOOL ima_open(GETSND snd) {
+static BRESULT ima_open(GETSND snd) {
 
 	int		blk;
 
@@ -446,14 +446,14 @@ extern BOOL __mp3_open(GETSND snd, UINT8 *ptr, UINT size);
 
 // ----
 
-BOOL getwave_open(GETSND snd, UINT8 *ptr, UINT size) {
+BRESULT getwave_open(GETSND snd, UINT8 *ptr, UINT size) {
 
 	RIFF_HEADER		*riff;
 	WAVE_HEADER		*head;
 	WAVE_INFOS		*info;
 	UINT			pos;
 	UINT			format;
-	BOOL			r;
+	BRESULT			r;
 	UINT			headsize = 0;
 	UINT			datasize;
 

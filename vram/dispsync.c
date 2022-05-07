@@ -1,6 +1,5 @@
 #include	"compiler.h"
 #include	"scrnmng.h"
-#include	"memory.h"
 #include	"pccore.h"
 #include	"iocore.h"
 #include	"scrndraw.h"

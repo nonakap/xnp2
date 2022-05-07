@@ -4,7 +4,7 @@ typedef struct {
 	OEMCHAR	str[7];
 } KEYNAME;
 
-static const KEYNAME keyname[] = {
+static const KEYNAME s_keyname[] = {
 		{0x00, OEMTEXT("ESC")},
 		{0x01, OEMTEXT("1")},
 		{0x02, OEMTEXT("2")},

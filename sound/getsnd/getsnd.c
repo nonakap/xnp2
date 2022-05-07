@@ -5,7 +5,7 @@
 GETSND getsnd_create(void *datptr, UINT datsize) {
 
 	_GETSND		snd;
-	BOOL		r;
+	BRESULT		r;
 	UINT		size;
 	UINT		blkwork;
 	GETSND		ret;

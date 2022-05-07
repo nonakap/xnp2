@@ -2,7 +2,7 @@
 #include	"cpucore.h"
 #include	"pccore.h"
 #include	"iocore.h"
-#include	"bios.h"
+#include	"bios/bios.h"
 #include	"lio.h"
 #include	"vram.h"
 

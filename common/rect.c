@@ -1,7 +1,7 @@
 #include	"compiler.h"
 
 
-BRESULT rect_in(const RECT_T *rect, int x, int y) {
+BOOL rect_in(const RECT_T *rect, int x, int y) {
 
 	if ((rect) &&
 		(rect->left <= x) && (rect->right > x) &&
@@ -26,7 +26,7 @@ int rect_num(const RECT_T *rect, int cnt, int x, int y) {
 	return(-1);
 }
 
-BRESULT rect_isoverlap(const RECT_T *r1, const RECT_T *r2) {
+BOOL rect_isoverlap(const RECT_T *r1, const RECT_T *r2) {
 
 	if ((r1->left >= r2->right) ||
 		(r1->right <= r2->left) ||

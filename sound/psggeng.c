@@ -1,21 +1,22 @@
-#include	"compiler.h"
-#include	"parts.h"
-#include	"sound.h"
-#include	"psggen.h"
+/**
+ * @file	psggeng.c
+ * @brief	Implementation of the PSG
+ */
 
+#include "compiler.h"
+#include "psggen.h"
+#include "parts.h"
 
 extern	PSGGENCFG	psggencfg;
 
 
 void SOUNDCALL psggen_getpcm(PSGGEN psg, SINT32 *pcm, UINT count) {
 
-	SINT32	noisevol;
 	UINT8	mixer;
-	UINT	noisetbl = 0;
+	UINT	noisetbl;
 	PSGTONE	*tone;
 	PSGTONE	*toneterm;
 	SINT32	samp;
-//	UINT	psgvol;
 	SINT32	vol;
 	UINT	i;
 	UINT	noise;
@@ -28,7 +29,6 @@ void SOUNDCALL psggen_getpcm(PSGGEN psg, SINT32 *pcm, UINT count) {
 		return;
 	}
 	do {
-		noisevol = 0;
 		if (psg->envcnt) {
 			psg->envcnt--;
 			if (psg->envcnt == 0) {
@@ -54,17 +54,14 @@ void SOUNDCALL psggen_getpcm(PSGGEN psg, SINT32 *pcm, UINT count) {
 			}
 		}
 		mixer = psg->mixer;
+		noisetbl = 0;
 		if (mixer & 0x38) {
 			for (i=0; i<(1 << PSGADDEDBIT); i++) {
-				SINT32 countbak;
-				countbak = psg->noise.count;
-				psg->noise.count -= psg->noise.freq;
-				if (psg->noise.count > countbak) {
-//					psg->noise.base = GETRAND() & (1 << (1 << PSGADDEDBIT));
-					psg->noise.base = rand_get() & (1 << (1 << PSGADDEDBIT));
+				if (psg->noise.count > psg->noise.freq) {
+					psg->noise.lfsr = (psg->noise.lfsr >> 1) ^ ((psg->noise.lfsr & 1) * 0x12000);
 				}
-				noisetbl += psg->noise.base;
-				noisetbl >>= 1;
+				psg->noise.count -= psg->noise.freq;
+				noisetbl |= (psg->noise.lfsr & 1) << i;
 			}
 		}
 		tone = psg->tone;

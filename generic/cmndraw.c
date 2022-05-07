@@ -2,7 +2,6 @@
 #include	"bmpdata.h"
 #include	"scrnmng.h"
 #include	"cpucore.h"
-#include	"font.h"
 #include	"cmndraw.h"
 #include	"minifont.res"
 
@@ -320,7 +319,7 @@ const UINT8	*ptr;
 
 // ---- bmp
 
-BOOL cmndraw_bmp4inf(CMNBMP *bmp, const void *ptr) {
+BRESULT cmndraw_bmp4inf(CMNBMP *bmp, const void *ptr) {
 
 const BMPFILE	*bf;
 const BMPINFO	*bi;

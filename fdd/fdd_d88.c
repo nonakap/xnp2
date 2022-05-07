@@ -10,10 +10,10 @@
 #define		D88TRACKMAX		10600
 
 
-static UINT32 nexttrackptr(FDDFILE fdd, UINT32 fptr, UINT32 last) {
+static UINT nexttrackptr(FDDFILE fdd, UINT fptr, UINT last) {
 
 	int		t;
-	UINT32	cur;
+	UINT	cur;
 
 	for (t=0; t<164; t++) {
 		cur = fdd->inf.d88.ptr[t];
@@ -75,8 +75,8 @@ static BRESULT d88trk_read(D88TRK trk, FDDFILE fdd, UINT track, UINT type) {
 
 	UINT8	rpm;
 	FILEH	fh;
-	UINT32	fptr;
-	UINT32	size;
+	UINT	fptr;
+	UINT	size;
 
 	d88trk_flushdata(trk);
 	if (track >= 164) {
@@ -196,7 +196,7 @@ static void drvflush(FDDFILE fdd) {
 static BRESULT trkseek(FDDFILE fdd, UINT track) {
 
 	D88TRK	trk;
-	BOOL	r;
+	BRESULT	r;
 
 	trk = &d88trk;
 	if ((trk->fdd == fdd) && (trk->track == track) &&
@@ -487,21 +487,20 @@ static UINT8 formatsec = 0;
 static UINT8 formatwrt = 0;
 static UINT formatpos = 0;
 
-static int fileappend(FILEH hdl, FDDFILE fdd,
-									UINT32 ptr, long last, long apsize) {
+static int fileappend(FILEH hdl, FDDFILE fdd, UINT ptr, UINT last, int apsize) {
 
-	long	length;
+	int		length;
 	UINT	size;
 	UINT	rsize;
 	int		t;
 	UINT8	tmp[0x400];							// Stack 0x1000->0x400
-	UINT32	cur;
+	UINT	cur;
 
 	if ((length = last - ptr) <= 0) {			// 書き換える必要なし
 		return(0);
 	}
 	while(length) {
-		if (length >= (long)(sizeof(tmp))) {
+		if (length >= sizeof(tmp)) {
 			size = sizeof(tmp);
 		}
 		else {
@@ -534,12 +533,12 @@ static void endoftrack(UINT fmtsize, UINT8 sectors) {
 	FILEH	hdl;
 	int		i;
 	UINT	trk;
-	long	fpointer;
-	long	endpointer;
-	long	lastpointer;
-	long	trksize;
+	UINT	fpointer;
+	UINT	endpointer;
+	UINT	lastpointer;
+	UINT	trksize;
 	int		ptr;
-	long	apsize;
+	int		apsize;
 
 	trk = (fdc.treg[fdc.us] << 1) + fdc.hd;
 
@@ -555,7 +554,7 @@ static void endoftrack(UINT fmtsize, UINT8 sectors) {
 	if (hdl == FILEH_INVALID) {
 		return;
 	}
-	lastpointer = file_seek(hdl, 0, FSEEK_END);
+	lastpointer = file_getsize(hdl);
 	fpointer = fdd->inf.d88.ptr[trk];
 	if (fpointer == 0) {
 		for (i=trk; i>=0; i--) {					// 新規トラック
@@ -576,7 +575,7 @@ static void endoftrack(UINT fmtsize, UINT8 sectors) {
 		endpointer = nexttrackptr(fdd, fpointer, lastpointer);
 	}
 	trksize = endpointer - fpointer;
-	if ((apsize = (long)fmtsize - trksize) > 0) {
+	if ((apsize = fmtsize - trksize) > 0) {
 								// 書き込むデータのほーが大きい
 		fileappend(hdl, fdd, endpointer, lastpointer, apsize);
 		fdd->inf.d88.fd_size += apsize;
@@ -584,7 +583,7 @@ static void endoftrack(UINT fmtsize, UINT8 sectors) {
 	}
 	fdd->inf.d88.ptr[trk] = fpointer;
 	STOREINTELDWORD(fdd->inf.d88.head.trackp[trk], fpointer);
-	file_seek(hdl, fpointer, 0);
+	file_seek(hdl, (long)fpointer, 0);
 	file_write(hdl, d88trk.buf, fmtsize);
 	file_seek(hdl, 0, FSEEK_SET);
 	file_write(hdl, &fdd->inf.d88.head, sizeof(fdd->inf.d88.head));

@@ -1,5 +1,5 @@
 
-#define		NP2STATUS_VERSION		810
+#define		NP2STATUS_VERSION		850
 
 static const NP2FHDR np2flagdef = {
 						"Neko Project II",
@@ -48,6 +48,8 @@ static const ENUMTBL evtnum[] = {
 			{PROCID('m','g','e','n'), NEVENT_MUSICGEN},
 			{PROCID('f','m','-','a'), NEVENT_FMTIMERA},
 			{PROCID('f','m','-','b'), NEVENT_FMTIMERB},
+			{PROCID('f','m','2','a'), NEVENT_FMTIMER2A},
+			{PROCID('f','m','2','b'), NEVENT_FMTIMER2B},
 			{PROCID('m','o','u','s'), NEVENT_MOUSE},
 			{PROCID('m','o','u','s'), NEVENT_KEYBOARD},
 			{PROCID('m','i','d','w'), NEVENT_MIDIWAIT},
@@ -93,11 +95,7 @@ static const SFENTRY np2tbl[] = {
 
 	{"ARTIC",		0,	STATFLAG_BIN,	&artic,			sizeof(artic)},
 	{"CGROM",		0,	STATFLAG_BIN,	&cgrom,			sizeof(cgrom)},
-#if !defined(CGWND_FONTPTR)
 	{"CGWINDOW",	0,	STATFLAG_BIN,	&cgwindow,		sizeof(cgwindow)},
-#else
-	{"CGWINDOW",	0,	STATFLAG_CGW,	&cgwindow,		sizeof(cgwindow)},
-#endif
 	{"CRTC",		0,	STATFLAG_BIN,	&grcg,			sizeof(grcg)},
 	{"CRTC2",		0,	STATFLAG_BIN,	&crtc,			sizeof(crtc)},
 	{"DMAC",		0,	STATFLAG_DMA,	&dmac,			sizeof(dmac)},
@@ -119,9 +117,10 @@ static const SFENTRY np2tbl[] = {
 	{"VRAMCTRL",	0,	STATFLAG_BIN,	&vramop,		sizeof(vramop)},
 	{"TEXTRAM",		0,	STATFLAG_BIN,	&tramflag,		sizeof(tramflag)},
 	{"GAIJI",		0,	STATFLAG_GIJ,	NULL,			0},
-	{"EVENT",		0,	STATFLAG_EVT,	&nevent,		sizeof(nevent)},
+	{"EVENT",		0,	STATFLAG_EVT,	&g_nevent,		sizeof(g_nevent)},
 	{"CALENDAR",	0,	STATFLAG_BIN,	&cal,			sizeof(cal)},
-	{"KEYSTAT",		0,	STATFLAG_BIN,	&keyctrl,		sizeof(keyctrl)},
+	{"KEYCTRL",		0,	STATFLAG_BIN,	&keyctrl,		sizeof(keyctrl)},
+/*	{"KEYSTAT",		0,	STATFLAG_BIN,	&keystat,		sizeof(keystat)}, */
 	{"PALEVENT",	0,	STATFLAG_BIN,	&palevent,		sizeof(palevent)},
 	{"MPU98II",		0,	STATFLAG_BIN,	&mpu98,			sizeof(mpu98)},
 	{"CMMPU98",		0,	STATFLAG_COM,	(void *)0,		0},
@@ -130,9 +129,7 @@ static const SFENTRY np2tbl[] = {
 	{"SXSI",		0,	STATFLAG_SXSI,	NULL,			0},
 #if !defined(DISABLE_SOUND)
 	{"FMBOARD",		0,	STATFLAG_FM,	NULL,			0},
-	{"BEEP",		0,	STATFLAG_BIN,	&beep,			sizeof(beep)},
-	{"MUSICGEN",	0,	STATFLAG_BIN,	&musicgen,		sizeof(musicgen)},
-	{"AMD98",		0,	STATFLAG_BIN,	&amd98,			sizeof(amd98)},
+	{"BEEP",		0,	STATFLAG_BIN,	&g_beep,		sizeof(g_beep)},
 #endif
 #if defined(SUPPORT_IDEIO)
 	{"IDE",			0,	STATFLAG_BIN,	&ideio,			sizeof(ideio)},

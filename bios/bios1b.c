@@ -6,9 +6,9 @@
 #include	"bios.h"
 #include	"biosmem.h"
 #include	"sxsibios.h"
-#include	"fddfile.h"
-#include	"fdd_mtr.h"
-#include	"sxsi.h"
+#include	"fdd/fddfile.h"
+#include	"fdd/fdd_mtr.h"
+#include	"fdd/sxsi.h"
 
 
 enum {
@@ -19,7 +19,7 @@ enum {
 
 // ---- FDD
 
-static BOOL setfdcmode(REG8 drv, REG8 type, REG8 rpm) {
+static BRESULT setfdcmode(REG8 drv, REG8 type, REG8 rpm) {
 
 	if (drv >= 4) {
 		return(FAILURE);
@@ -85,7 +85,7 @@ static void biosfd_resultout(UINT32 result) {
 }
 #endif
 
-static BOOL biosfd_seek(REG8 track, BOOL ndensity) {
+static BRESULT biosfd_seek(REG8 track, BOOL ndensity) {
 
 	if (ndensity) {
 		if (track < 42) {
@@ -279,7 +279,7 @@ static void b0patch(void) {
 }
 
 static void b0clr(void) {
-	b0p.flg = 0;
+	b0p.flg = FALSE;
 }
 #endif
 
@@ -359,7 +359,7 @@ static REG8 fdd_operate(REG8 type, REG8 rpm, BOOL ndensity) {
 	switch(CPU_AH & 0x0f) {
 		case 0x00:								// シーク
 			if (CPU_AH & 0x10) {
-				if (!biosfd_seek(CPU_CL, ndensity)) {
+				if (biosfd_seek(CPU_CL, ndensity) == SUCCESS) {
 					result = FDCBIOS_SEEKSUCCESS;
 				}
 				else {
@@ -371,7 +371,7 @@ static REG8 fdd_operate(REG8 type, REG8 rpm, BOOL ndensity) {
 
 		case 0x01:								// ベリファイ
 			if (CPU_AH & 0x10) {
-				if (!biosfd_seek(CPU_CL, ndensity)) {
+				if (biosfd_seek(CPU_CL, ndensity) == SUCCESS) {
 					result = FDCBIOS_SEEKSUCCESS;
 				}
 				else {
@@ -410,7 +410,7 @@ static REG8 fdd_operate(REG8 type, REG8 rpm, BOOL ndensity) {
 					fdc.hd = 1;
 					fdc.H = 1;
 					fdc.R = 1;
-					if (biosfd_seek(fdc.treg[fdc.us], 0)) {
+					if (biosfd_seek(fdc.treg[fdc.us], 0) != SUCCESS) {
 						break;
 					}
 				}
@@ -432,10 +432,8 @@ static REG8 fdd_operate(REG8 type, REG8 rpm, BOOL ndensity) {
 
 		case 0x04:								// センス
 			ret_ah = 0x00;
-			if (fdd_diskaccess()) {
-				ret_ah = 0xc0;
-			}
-			else if (fdd_diskprotect(fdc.us)) {
+			if (fdd_diskprotect(fdc.us))
+			{
 				ret_ah = 0x10;
 			}
 			if (CPU_AL & 0x80) {				// 2HD
@@ -459,7 +457,7 @@ static REG8 fdd_operate(REG8 type, REG8 rpm, BOOL ndensity) {
 
 		case 0x05:								// データの書き込み
 			if (CPU_AH & 0x10) {
-				if (!biosfd_seek(CPU_CL, ndensity)) {
+				if (biosfd_seek(CPU_CL, ndensity) == SUCCESS) {
 					result = FDCBIOS_SEEKSUCCESS;
 				}
 				else {
@@ -506,7 +504,7 @@ static REG8 fdd_operate(REG8 type, REG8 rpm, BOOL ndensity) {
 					fdc.hd = 1;
 					fdc.H = 1;
 					fdc.R = 1;
-					if (biosfd_seek(fdc.treg[fdc.us], 0)) {
+					if (biosfd_seek(fdc.treg[fdc.us], 0) != SUCCESS) {
 						break;
 					}
 				}
@@ -524,7 +522,7 @@ static REG8 fdd_operate(REG8 type, REG8 rpm, BOOL ndensity) {
 		case 0x02:								// 診断の為の読み込み
 		case 0x06:								// データの読み込み
 			if (CPU_AH & 0x10) {
-				if (!biosfd_seek(CPU_CL, ndensity)) {
+				if (biosfd_seek(CPU_CL, ndensity) == SUCCESS) {
 					result = FDCBIOS_SEEKSUCCESS;
 				}
 				else {
@@ -572,7 +570,7 @@ static REG8 fdd_operate(REG8 type, REG8 rpm, BOOL ndensity) {
 						fdc.hd = 1;
 						fdc.H = 1;
 						fdc.R = 1;
-						if (biosfd_seek(fdc.treg[fdc.us], 0)) {
+						if (biosfd_seek(fdc.treg[fdc.us], 0) != SUCCESS) {
 							break;
 						}
 					}
@@ -618,7 +616,7 @@ static REG8 fdd_operate(REG8 type, REG8 rpm, BOOL ndensity) {
 		case 0x0a:						// READ ID
 			fdc.mf = CPU_AH & 0x40;
 			if (CPU_AH & 0x10) {
-				if (!biosfd_seek(CPU_CL, ndensity)) {
+				if (biosfd_seek(CPU_CL, ndensity) == SUCCESS) {
 					result = FDCBIOS_SEEKSUCCESS;
 				}
 				else {
@@ -709,7 +707,7 @@ static UINT16 boot_fd1(REG8 type, REG8 rpm) {
 	if (setfdcmode(fdc.us, type, rpm) != SUCCESS) {
 		return(0);
 	}
-	if (biosfd_seek(0, 0)) {
+	if (biosfd_seek(0, 0) != SUCCESS) {
 		return(0);
 	}
 	fdc.hd = 0;

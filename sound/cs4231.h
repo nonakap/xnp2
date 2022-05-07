@@ -1,3 +1,12 @@
+/**
+ * @file	cs4231.h
+ * @brief	Interface of the CS4231
+ */
+
+#pragma once
+
+#include "sound.h"
+#include "io/dmac.h"
 
 enum {
 	CS4231_BUFFERS	= (1 << 9),
@@ -65,7 +74,8 @@ typedef struct {
 
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 void cs4231_dma(NEVENTITEM item);
@@ -84,4 +94,3 @@ void SOUNDCALL cs4231_getpcm(CS4231 cs, SINT32 *pcm, UINT count);
 #ifdef __cplusplus
 }
 #endif
-

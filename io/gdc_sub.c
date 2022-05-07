@@ -104,9 +104,7 @@ void gdcsub_initialize(void) {
 
 void gdcslavewait(NEVENTITEM item) {
 
-	if (item->flag & NEVENT_SETEVENT) {
-		gdc.s_drawing = 0;							// clear DRAWING
-	}
+	gdc.s_drawing = 0;							// clear DRAWING
 }
 
 void gdcsub_setslavewait(UINT32 wait) {

@@ -6,7 +6,7 @@
 //
 //----------------------------------------------------------------------------
 
-#include "memory.h"
+#include "cpumem.h"
 
 #if defined(CPUCORE_IA32)
 #error : not support CPUCORE_IA32

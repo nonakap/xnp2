@@ -7,7 +7,7 @@
 #include	"cpucore.h"
 #include	"pccore.h"
 #include	"iocore.h"
-#include	"fddfile.h"
+#include	"fdd/fddfile.h"
 
 enum {
 	FDC_DMACH2HD	= 2,
@@ -25,14 +25,12 @@ static const UINT8 FDCCMD_TABLE[32] = {
 
 void fdc_intwait(NEVENTITEM item) {
 
-	if (item->flag & NEVENT_SETEVENT) {
-		fdc.intreq = TRUE;
-		if (fdc.chgreg & 1) {
-			pic_setirq(0x0b);
-		}
-		else {
-			pic_setirq(0x0a);
-		}
+	fdc.intreq = TRUE;
+	if (fdc.chgreg & 1) {
+		pic_setirq(0x0b);
+	}
+	else {
+		pic_setirq(0x0a);
 	}
 }
 
@@ -122,10 +120,8 @@ void fdcsend_success7(void) {
 // FDCのタイムアウト			まぁ本当はこんなんじゃダメだけど…	ver0.29
 void fdctimeoutproc(NEVENTITEM item) {
 
-	if (item->flag & NEVENT_SETEVENT) {
-		fdc.stat[fdc.us] = FDCRLT_IC0 | FDCRLT_EN | (fdc.hd << 2) | fdc.us;
-		fdcsend_error7();
-	}
+	fdc.stat[fdc.us] = FDCRLT_IC0 | FDCRLT_EN | (fdc.hd << 2) | fdc.us;
+	fdcsend_error7();
 }
 
 static void fdc_timeoutset(void) {
@@ -768,15 +764,29 @@ static REG8 IOINPCALL fdc_i92(UINT port) {
 
 static REG8 IOINPCALL fdc_i94(UINT port) {
 
+	REG8 ret;
+
 	if (((port >> 4) ^ fdc.chgreg) & 1) {
 		return(0xff);
 	}
-	if (port & 0x10) {		// 94
-		return(0x40);
+
+	ret = 0x40;
+	if (!(port & 0x10))		/* CC */
+	{
+		ret |= 0x20;		/* DMA */
+		ret |= 0x10;		/* readyを立てるるる */
 	}
-	else {					// CC
-		return(0x70);		// readyを立てるるる
+
+	if (pccore.dipsw[0] & 8)
+	{
+		ret |= 0x04;		/* 内蔵優先 */
 	}
+	else
+	{
+		ret |= 0x08;		/* 外付け優先 */
+	}
+
+	return ret;
 }
 
 

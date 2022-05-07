@@ -1,9 +1,14 @@
+/**
+ * @file	soundrom.h
+ * @brief	Interface of the sound rom
+ */
+
+#pragma once
 
 typedef struct {
 	OEMCHAR	name[24];
 	UINT32	address;
 } SOUNDROM;
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,4 +23,3 @@ void soundrom_loadex(UINT sw, const OEMCHAR *primary);
 #ifdef __cplusplus
 }
 #endif
-

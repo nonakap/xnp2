@@ -1,83 +1,91 @@
-#include	"compiler.h"
-#include	"strres.h"
-#include	"resource.h"
-#include	"np2.h"
-#include	"oemtext.h"
-#include	"dosio.h"
-#include	"sysmng.h"
-#include	"dialog.h"
-#include	"dialogs.h"
-#include	"pccore.h"
-#include	"iocore.h"
-#include	"scrnsave.h"
-#include	"font.h"
+/**
+ * @file	d_bmp.cpp
+ * @brief	bmp dialog
+ */
 
+#include "compiler.h"
+#include "resource.h"
+#include "dialog.h"
+#include "dosio.h"
+#include "np2.h"
+#include "sysmng.h"
+#include "misc/DlgProc.h"
+#include "pccore.h"
+#include "iocore.h"
+#include "common/strres.h"
+#include "vram/scrnsave.h"
 
-static const FSPARAM fpFont =
+/** フィルター */
+static const UINT s_nFilter[4] =
 {
-	MAKEINTRESOURCE(IDS_FONTTITLE),
-	MAKEINTRESOURCE(IDS_FONTEXT),
-	MAKEINTRESOURCE(IDS_FONTFILTER),
-	3
+	IDS_BMPFILTER1,
+	IDS_BMPFILTER4,
+	IDS_BMPFILTER8,
+	IDS_BMPFILTER24
 };
 
-static const LPTSTR lpszBmpFilter[] =
+/**
+ * デフォルト ファイルを得る
+ * @param[in] lpExt 拡張子
+ * @param[out] lpFilename ファイル名
+ * @param[in] cchFilename ファイル名長
+ */
+static void GetDefaultFilename(LPCTSTR lpExt, LPTSTR lpFilename, UINT cchFilename)
 {
-	MAKEINTRESOURCE(IDS_BMPFILTER1),
-	MAKEINTRESOURCE(IDS_BMPFILTER4),
-	MAKEINTRESOURCE(IDS_BMPFILTER8),
-	MAKEINTRESOURCE(IDS_BMPFILTER24)
-};
-static const OEMCHAR szBmpFile[] = OEMTEXT("NP2_####.BMP");
-
-void dialog_font(HWND hWnd)
-{
-	OEMCHAR	szPath[MAX_PATH];
-
-	file_cpyname(szPath, np2cfg.fontfile, NELEMENTS(szPath));
-	if ((dlgs_openfile(hWnd, &fpFont, szPath, NELEMENTS(szPath), NULL)) &&
-		(font_load(szPath, FALSE)))
+	for (UINT i = 0; i < 10000; i++)
 	{
-		gdcs.textdisp |= GDCSCRN_ALLDRAW2;
-		milstr_ncpy(np2cfg.fontfile, szPath, NELEMENTS(np2cfg.fontfile));
-		sysmng_update(SYS_UPDATECFG);
+		TCHAR szFilename[MAX_PATH];
+		wsprintf(szFilename, TEXT("NP2_%04d.%s"), i, lpExt);
+
+		file_cpyname(lpFilename, bmpfilefolder, cchFilename);
+		file_cutname(lpFilename);
+		file_catname(lpFilename, szFilename, cchFilename);
+
+		if (file_attr(lpFilename) == -1)
+		{
+			break;
+		}
 	}
 }
 
-void dialog_writebmp(HWND hWnd) {
-
-	SCRNSAVE	ss;
-	FSPARAM		fp;
-	OEMCHAR		szPath[MAX_PATH];
-const OEMCHAR	*pszExt;
-
-	ss = scrnsave_get();
+/**
+ * BMP 出力
+ * @param[in] hWnd 親ウィンドウ
+ */
+void dialog_writebmp(HWND hWnd)
+{
+	SCRNSAVE ss = scrnsave_create();
 	if (ss == NULL)
 	{
 		return;
 	}
-	fp.lpszTitle = MAKEINTRESOURCE(IDS_BMPTITLE);
-	fp.lpszDefExt = MAKEINTRESOURCE(IDS_BMPEXT);
-	fp.lpszFilter = lpszBmpFilter[ss->type];
-	fp.nFilterIndex = 1;
-	file_cpyname(szPath, bmpfilefolder, NELEMENTS(szPath));
-	file_cutname(szPath);
-	file_catname(szPath, szBmpFile, NELEMENTS(szPath));
-	if (dlgs_createfilenum(hWnd, &fp, szPath, NELEMENTS(szPath)))
+	const int nType = scrnsave_gettype(ss);
+
+	std::tstring rExt(LoadTString(IDS_BMPEXT));
+	std::tstring rFilter(LoadTString(s_nFilter[nType]));
+	std::tstring rTitle(LoadTString(IDS_BMPTITLE));
+
+	TCHAR szPath[MAX_PATH];
+	GetDefaultFilename(rExt.c_str(), szPath, _countof(szPath));
+
+	CFileDlg dlg(FALSE, rExt.c_str(), szPath, OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY, rFilter.c_str(), hWnd);
+	dlg.m_ofn.lpstrTitle = rTitle.c_str();
+	dlg.m_ofn.nFilterIndex = 1;
+	if (dlg.DoModal())
 	{
-		file_cpyname(bmpfilefolder, szPath, NELEMENTS(bmpfilefolder));
+		LPCTSTR lpFilename = dlg.GetPathName();
+		file_cpyname(bmpfilefolder, lpFilename, _countof(bmpfilefolder));
 		sysmng_update(SYS_UPDATEOSCFG);
-		pszExt = file_getext(szPath);
-		if ((ss->type <= SCRNSAVE_8BIT) &&
-			(!file_cmpname(pszExt, OEMTEXT("gif"))))
+
+		LPCTSTR lpExt = file_getext(szPath);
+		if ((nType <= SCRNSAVE_8BIT) && (!file_cmpname(lpExt, TEXT("gif"))))
 		{
-			scrnsave_writegif(ss, szPath, SCRNSAVE_AUTO);
+			scrnsave_writegif(ss, lpFilename, SCRNSAVE_AUTO);
 		}
-		else if (!file_cmpname(pszExt, str_bmp))
+		else if (!file_cmpname(lpExt, str_bmp))
 		{
-			scrnsave_writebmp(ss, szPath, SCRNSAVE_AUTO);
+			scrnsave_writebmp(ss, lpFilename, SCRNSAVE_AUTO);
 		}
 	}
-	scrnsave_trash(ss);
+	scrnsave_destroy(ss);
 }
-

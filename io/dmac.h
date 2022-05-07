@@ -1,6 +1,14 @@
+/**
+ * @file	dmac.h
+ * @brief	Interface of the DMA controller
+ */
+
+#pragma once
+
+#include "pccore.h"
 
 #ifndef DMACCALL
-#define	DMACCALL
+#define DMACCALL
 #endif
 
 

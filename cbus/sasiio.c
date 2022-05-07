@@ -7,7 +7,7 @@
 #include	"pccore.h"
 #include	"iocore.h"
 #include	"sasiio.h"
-#include	"sxsi.h"
+#include	"fdd/sxsi.h"
 #include	"sasibios.res"
 
 

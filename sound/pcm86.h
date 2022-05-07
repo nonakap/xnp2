@@ -1,3 +1,12 @@
+/**
+ * @file	pcm86.h
+ * @brief	Interface of the 86-PCM
+ */
+
+#pragma once
+
+#include "sound.h"
+#include "nevent.h"
 
 enum {
 	PCM86_LOGICALBUF	= 0x8000,
@@ -10,17 +19,21 @@ enum {
 	PCM86_RESCUE		= 20
 };
 
-#define	PCM86_EXTBUF		pcm86.rescue					// 救済延滞…
-#define	PCM86_REALBUFSIZE	(PCM86_LOGICALBUF + PCM86_EXTBUF)
-
-#define RECALC_NOWCLKWAIT(cnt) {										\
-		pcm86.virbuf -= (cnt << pcm86.stepbit);							\
-		if (pcm86.virbuf < 0) {											\
-			pcm86.virbuf &= pcm86.stepmask;								\
+#define RECALC_NOWCLKWAIT(p, cnt)										\
+	do																	\
+	{																	\
+		(p)->nFifoRemain -= (cnt << (p)->cStepBits);					\
+		if ((p)->nFifoRemain < 0)										\
+		{																\
+			(p)->nFifoRemain &= (p)->nStepMask;							\
 		}																\
-	}
+	} while (0 /*CONSTCOND*/)
 
-typedef struct {
+/**
+ * @brief PCM86
+ */
+struct tagPcm86
+{
 	SINT32	divremain;
 	SINT32	div;
 	SINT32	div2;
@@ -31,31 +44,33 @@ typedef struct {
 	SINT32	smp_r;
 	SINT32	lastsmp_r;
 
-	UINT32	readpos;			// DSOUND再生位置
-	UINT32	wrtpos;				// 書込み位置
-	SINT32	realbuf;			// DSOUND用のデータ数
-	SINT32	virbuf;				// 86PCM(bufsize:0x8000)のデータ数
-	SINT32	rescue;
+	UINT nReadPos;				/*!< DSOUND再生位置 */
+	UINT nWritePos;				/*!< 書込み位置 */
+	SINT nBufferCount;			/*!< DSOUND用のデータ数 */
+	SINT nFifoRemain;			/*!< 86PCM(bufsize:0x8000)のデータ数 */
+	SINT nExtendBufferSize;		/*!< バッファの追加サイズ */
 
-	SINT32	fifosize;
+	SINT nFifoIntrSize;			/*!< 割り込み要求サイズ */
 	SINT32	volume;
 	SINT32	vol5;
 
-	UINT32	lastclock;
-	UINT32	stepclock;
-	UINT	stepmask;
+	UINT32 nLastClock;			/*!< 最後に処理したクロック */
+	UINT32 nStepClock;			/*!< サンプル1つのクロック */
+	UINT nStepMask;				/*!< ステップ マスク */
 
-	UINT8	fifo;
-	UINT8	extfunc;
-	UINT8	dactrl;
-	UINT8	_write;
-	UINT8	stepbit;
-	UINT8	reqirq;
-	UINT8	irqflag;
-	UINT8	padding[1];
+	UINT8 cFifoCtrl;			/*!< FIFO コントロール */
+	UINT8 cSoundFlags;			/*!< サウンド フラグ (A460) */
+	UINT8 cDacCtrl;				/*!< DAC 設定 */
+	UINT8 __write;
+	UINT8 cStepBits;			/*!< PCM アライメント */
+	UINT8 cIrqLevel;			/*!< 割り込みレベル */
+	UINT8 __cReqIrq;
+	UINT8 cIrqFlag;				/*!< 割り込みフラグ */
 
 	UINT8	buffer[PCM86_BUFSIZE];
-} _PCM86, *PCM86;
+};
+typedef struct tagPcm86	_PCM86;		/*!< define */
+typedef struct tagPcm86	*PCM86;		/*!< define */
 
 typedef struct {
 	UINT	rate;
@@ -64,7 +79,8 @@ typedef struct {
 
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 extern const UINT pcm86rate8[];
@@ -79,12 +95,11 @@ void pcm86gen_update(void);
 void pcm86_setpcmrate(REG8 val);
 void pcm86_setnextintr(void);
 
-void SOUNDCALL pcm86gen_checkbuf(void);
-void SOUNDCALL pcm86gen_getpcm(void *hdl, SINT32 *pcm, UINT count);
+void SOUNDCALL pcm86gen_checkbuf(PCM86 pcm86);
+void SOUNDCALL pcm86gen_getpcm(PCM86 pcm86, SINT32 *lpBuffer, UINT nCount);
 
 BOOL pcm86gen_intrq(void);
 
 #ifdef __cplusplus
 }
 #endif
-

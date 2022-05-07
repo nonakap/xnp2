@@ -8,7 +8,7 @@
 #include	"beep.h"
 
 
-	_BEEP		beep;
+	_BEEP		g_beep;
 	BEEPCFG		beepcfg;
 
 
@@ -70,8 +70,8 @@ void beep_changeclock(void) {
 void beep_reset(void) {
 
 	beep_changeclock();
-	ZeroMemory(&beep, sizeof(beep));
-	beep.mode = 1;
+	ZeroMemory(&g_beep, sizeof(g_beep));
+	g_beep.mode = 1;
 }
 
 void beep_hzset(UINT16 cnt) {
@@ -79,11 +79,11 @@ void beep_hzset(UINT16 cnt) {
 	double	hz;
 
 	sound_sync();
-	beep.hz = 0;
+	g_beep.hz = 0;
 	if ((cnt & 0xff80) && (beepcfg.rate)) {
 		hz = 65536.0 / 4.0 * pccore.baseclock / beepcfg.rate / cnt;
 		if (hz < 0x8000) {
-			beep.hz = (UINT16)hz;
+			g_beep.hz = (UINT16)hz;
 			return;
 		}
 	}
@@ -94,9 +94,9 @@ void beep_modeset(void) {
 	UINT8	newmode;
 
 	newmode = (pit.ch[1].ctrl >> 2) & 3;
-	if (beep.mode != newmode) {
+	if (g_beep.mode != newmode) {
 		sound_sync();
-		beep.mode = newmode;
+		g_beep.mode = newmode;
 		beep_eventinit();
 	}
 }
@@ -107,8 +107,8 @@ static void beep_eventset(void) {
 	int		enable;
 	SINT32	clk;
 
-	enable = beep.low & beep.buz;
-	if (beep.enable != enable) {
+	enable = g_beep.low & g_beep.buz;
+	if (g_beep.enable != enable) {
 #if defined(BEEPLOG)
 		UINT32	tmp;
 		tmp = CPU_CLOCK + CPU_BASECLOCK - CPU_REMCLOCK;
@@ -123,41 +123,41 @@ static void beep_eventset(void) {
 			beeplogflash();
 		}
 #endif
-		if (beep.events >= (BEEPEVENT_MAX / 2)) {
+		if (g_beep.events >= (BEEPEVENT_MAX / 2)) {
 			sound_sync();
 		}
-		beep.enable = enable;
-		if (beep.events < BEEPEVENT_MAX) {
+		g_beep.enable = enable;
+		if (g_beep.events < BEEPEVENT_MAX) {
 			clk = CPU_CLOCK + CPU_BASECLOCK - CPU_REMCLOCK;
-			evt = beep.event + beep.events;
-			beep.events++;
-			evt->clock = (clk - beep.clock) * beepcfg.samplebase;
+			evt = g_beep.event + g_beep.events;
+			g_beep.events++;
+			evt->clock = (clk - g_beep.clock) * beepcfg.samplebase;
 			evt->enable = enable;
-			beep.clock = clk;
+			g_beep.clock = clk;
 		}
 	}
 }
 
 void beep_eventinit(void) {
 
-	beep.low = 0;
-	beep.enable = 0;
-	beep.lastenable = 0;
-	beep.clock = soundcfg.lastclock;
-	beep.events = 0;
+	g_beep.low = 0;
+	g_beep.enable = 0;
+	g_beep.lastenable = 0;
+	g_beep.clock = soundcfg.lastclock;
+	g_beep.events = 0;
 }
 
 void beep_eventreset(void) {
 
-	beep.lastenable = beep.enable;
-	beep.clock = soundcfg.lastclock;
-	beep.events = 0;
+	g_beep.lastenable = g_beep.enable;
+	g_beep.clock = soundcfg.lastclock;
+	g_beep.events = 0;
 }
 
 void beep_lheventset(int low) {
 
-	if (beep.low != low) {
-		beep.low = low;
+	if (g_beep.low != low) {
+		g_beep.low = low;
 		beep_eventset();
 	}
 }
@@ -167,8 +167,8 @@ void beep_oneventset(void) {
 	int		buz;
 
 	buz = (sysport.c & 8)?0:1;
-	if (beep.buz != buz) {
-		beep.buz = buz;
+	if (g_beep.buz != buz) {
+		g_beep.buz = buz;
 		beep_eventset();
 	}
 }

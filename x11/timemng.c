@@ -4,7 +4,7 @@
 
 #include	"timemng.h"
 
-BOOL
+BRESULT
 timemng_gettime(_SYSTIME *systime)
 {
 	struct tm *now_time;

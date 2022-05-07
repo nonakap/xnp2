@@ -24,11 +24,11 @@
  */
 
 #include "compiler.h"
-#include "cpu.h"
-#include "ia32.mcr"
+#include "ia32/cpu.h"
+#include "ia32/ia32.mcr"
 
 #include "misc_inst.h"
-#include "inst_table.h"
+#include "ia32/inst_table.h"
 
 
 void

@@ -1,76 +1,97 @@
-#include	"compiler.h"
-#include	"codecnv.h"
+/**
+ * @file	utf8ucs2.c
+ * @brief	Implementation of converting UTF-8 to UCS2
+ */
 
+#include "compiler.h"
+#include "codecnv.h"
 
-UINT codecnv_utf8toucs2(UINT16 *dst, UINT dcnt, const char *src, UINT scnt) {
+static UINT utf8toucs2(UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
 
-	UINT	orgdcnt;
-	BOOL	stringmode;
-	UINT	c;
+/**
+ * Maps a UTF-8 string to a UTF-16 string
+ * @param[out] lpOutput Pointer to a buffer that receives the converted string
+ * @param[in] cchOutput Size, in characters, of the buffer indicated by lpOutput
+ * @param[in] lpInput Pointer to the character string to convert
+ * @param[in] cchInput Size, in characters, of the buffer indicated by lpInput
+ * @return The number of characters written to the buffer indicated by lpOutput
+ */
+UINT codecnv_utf8toucs2(UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput)
+{
+	UINT nLength;
 
-	if (src == NULL) {
-		return(0);
+	if (lpInput == NULL)
+	{
+		return 0;
 	}
-	if (dcnt == 0) {
-		dst = NULL;
-		dcnt = (UINT)-1;
+
+	if (cchOutput == 0)
+	{
+		lpOutput = NULL;
+		cchOutput = (UINT)-1;
 	}
-	orgdcnt = dcnt;
-	stringmode = (((SINT)scnt) < 0);
-	if (stringmode) {
-		dcnt--;
+
+	if (cchInput != (UINT)-1)
+	{
+		// Binary mode
+		return utf8toucs2(lpOutput, cchOutput, lpInput, cchInput);
 	}
-	while(scnt > 0) {
-		if ((src[0] == '\0') && (stringmode)) {
-			break;
+	else
+	{
+		// String mode
+		nLength = utf8toucs2(lpOutput, cchOutput - 1, lpInput, (UINT)strlen(lpInput));
+		if (lpOutput)
+		{
+			lpOutput[nLength] = '\0';
 		}
-		else if (!(src[0] & 0x80)) {
-			c = src[0];
-			src += 1;
-			scnt -= 1;
-		}
-		else if ((src[0] & 0xe0) == 0xc0) {
-			if ((scnt < 2) ||
-				((src[1] & 0xc0) != 0x80)) {
-				break;
-			}
-			c = ((src[0] & 0x1f) << 6) + (src[1] & 0x3f);
-			src += 2;
-			scnt -= 2;
-		}
-		else if ((src[0] & 0xf0) == 0xe0) {
-			if ((scnt < 3) ||
-				((src[1] & 0xc0) != 0x80) ||
-				((src[2] & 0xc0) != 0x80)) {
-				break;
-			}
-			c = ((src[0] & 0x0f) << 12) +
-								((src[1] & 0x3f) << 6) + (src[2] & 0x3f);
-			src += 3;
-			scnt -= 3;
-		}
-		else {
-			break;
-		}
-		if (dcnt == 0) {
-			break;
-		}
-		dcnt--;
-		if (dst) {
-			dst[0] = (UINT16)c;
-			dst += 1;
-		}
+		return nLength + 1;
 	}
-	if (dst != NULL) {
-		if (stringmode) {
-			*dst = '\0';
-		}
-#if 1	// ˆê‰žŒÝŠ·‚Ìˆ×‚É NULL‚Â‚¯‚é
-		else if (dcnt) {
-			*dst = '\0';
-		}
-#endif
-	}
-	return((UINT)(orgdcnt - dcnt));
 }
 
+/**
+ * Maps a UTF-8 string to a UTF-16 string (inner)
+ * @param[out] lpOutput Pointer to a buffer that receives the converted string
+ * @param[in] cchOutput Size, in characters, of the buffer indicated by lpOutput
+ * @param[in] lpInput Pointer to the character string to convert
+ * @param[in] cchInput Size, in characters, of the buffer indicated by lpInput
+ * @return The number of characters written to the buffer indicated by lpOutput
+ */
+static UINT utf8toucs2(UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput)
+{
+	UINT nRemain;
+	UINT c;
+	int nBits;
+
+	nRemain = cchOutput;
+	while ((cchInput > 0) && (nRemain > 0))
+	{
+		c = *lpInput++;
+		cchInput--;
+
+		if (c & 0x80)
+		{
+			nBits = 0;
+			while ((nBits < 6) && (c & (0x80 >> nBits)))
+			{
+				nBits++;
+			}
+
+			c &= (0x7f >> nBits);
+			nBits--;
+
+			while ((nBits > 0) && (cchInput > 0) && (((*lpInput) & 0xc0) == 0x80))
+			{
+				c = (c << 6) | ((*lpInput++) & 0x3f);
+				cchInput--;
+				nBits--;
+			}
+		}
+
+		nRemain--;
+		if (lpOutput)
+		{
+			*lpOutput++ = (UINT16)c;
+		}
+	}
+	return (UINT)(cchOutput - nRemain);
+}

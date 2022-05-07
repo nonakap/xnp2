@@ -26,7 +26,6 @@
 #include "compiler.h"
 
 #include "cpu.h"
-#include "memory.h"
 #if defined(USE_FPU)
 #include "instructions/fpu/fp.h"
 #endif

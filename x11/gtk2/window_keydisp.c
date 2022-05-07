@@ -228,7 +228,7 @@ kdispwin_create(void)
 	kdwin.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(kdwin.window), "Key Display");
 	gtk_window_set_resizable(GTK_WINDOW(kdwin.window), FALSE);
-	g_signal_connect(GTK_OBJECT(kdwin.window), "destroy",
+	g_signal_connect(G_OBJECT(kdwin.window), "destroy",
 	    G_CALLBACK(kdispwin_window_destroy), NULL);
 	gtk_widget_realize(kdwin.window);
 
@@ -250,7 +250,7 @@ kdispwin_create(void)
 	da = GTK_WIDGET(drawmng_get_widget_handle(kdwin.hdl));
 	gtk_box_pack_start(GTK_BOX(main_widget), da, FALSE, TRUE, 0);
 	gtk_widget_show(da);
-	g_signal_connect(GTK_OBJECT(da), "expose_event",
+	g_signal_connect(G_OBJECT(da), "expose_event",
 	    G_CALLBACK(kdispwin_expose), NULL);
 
 	mode = kdispwin_getmode(kdispcfg.mode);

@@ -39,7 +39,7 @@ typedef struct {
 extern "C" {
 #endif
 
-extern	_BEEP		beep;
+extern	_BEEP		g_beep;
 
 void beep_initialize(UINT rate);
 void beep_deinitialize(void);

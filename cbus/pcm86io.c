@@ -1,14 +1,17 @@
-#include	"compiler.h"
-#include	"cpucore.h"
-#include	"pccore.h"
-#include	"iocore.h"
-#include	"pcm86io.h"
-#include	"sound.h"
-#include	"fmboard.h"
+/**
+ * @file	pcm86io.c
+ * @brief	Implementation of the 86-PCM I/O
+ */
 
+#include "compiler.h"
+#include "cpucore.h"
+#include "pccore.h"
+#include "iocore.h"
+#include "pcm86io.h"
+#include "sound/fmboard.h"
+#include "sound/sound.h"
 
 extern	PCM86CFG	pcm86cfg;
-
 
 static const UINT8 pcm86bits[] = {1, 1, 1, 2, 0, 0, 0, 1};
 static const SINT32 pcm86rescue[] = {PCM86_RESCUE * 32, PCM86_RESCUE * 24,
@@ -16,227 +19,220 @@ static const SINT32 pcm86rescue[] = {PCM86_RESCUE * 32, PCM86_RESCUE * 24,
 									 PCM86_RESCUE *  8, PCM86_RESCUE *  6,
 									 PCM86_RESCUE *  4, PCM86_RESCUE *  3};
 
+static const UINT8 s_irqtable[8] = {0xff, 0xff, 0xff, 0xff, 0x03, 0x0a, 0x0d, 0x0c};
 
-static void IOOUTCALL pcm86_oa460(UINT port, REG8 val) {
-
+static void IOOUTCALL pcm86_oa460(UINT port, REG8 val)
+{
 //	TRACEOUT(("86pcm out %.4x %.2x", port, val));
-	pcm86.extfunc = val;
+	g_pcm86.cSoundFlags = (g_pcm86.cSoundFlags & 0xfe) | (val & 1);
 	fmboard_extenable((REG8)(val & 1));
 	(void)port;
 }
 
-static void IOOUTCALL pcm86_oa466(UINT port, REG8 val) {
-
+static void IOOUTCALL pcm86_oa466(UINT port, REG8 val)
+{
 //	TRACEOUT(("86pcm out %.4x %.2x", port, val));
-	if ((val & 0xe0) == 0xa0) {
+	if ((val & 0xe0) == 0xa0)
+	{
 		sound_sync();
-		pcm86.vol5 = (~val) & 15;
-		pcm86.volume = pcm86cfg.vol * pcm86.vol5;
+		g_pcm86.vol5 = (~val) & 15;
+		g_pcm86.volume = pcm86cfg.vol * g_pcm86.vol5;
 	}
 	(void)port;
 }
 
-static void IOOUTCALL pcm86_oa468(UINT port, REG8 val) {
-
+static void IOOUTCALL pcm86_oa468(UINT port, REG8 val)
+{
 	REG8	xchgbit;
 
 //	TRACEOUT(("86pcm out %.4x %.2x", port, val));
 	sound_sync();
-	xchgbit = pcm86.fifo ^ val;
-	// バッファリセット判定
-	if ((xchgbit & 8) && (val & 8)) {
-		pcm86.readpos = 0;				// バッファリセット
-		pcm86.wrtpos = 0;
-		pcm86.realbuf = 0;
-		pcm86.virbuf = 0;
-		pcm86.lastclock = CPU_CLOCK + CPU_BASECLOCK - CPU_REMCLOCK;
-		pcm86.lastclock <<= 6;
+	xchgbit = g_pcm86.cFifoCtrl ^ val;
+
+	/* バッファリセット */
+	if ((xchgbit & 8) && (val & 8))
+	{
+		g_pcm86.nReadPos = 0;
+		g_pcm86.nWritePos = 0;
+		g_pcm86.nBufferCount = 0;
+		g_pcm86.nFifoRemain = 0;
+		g_pcm86.nLastClock = CPU_CLOCK + CPU_BASECLOCK - CPU_REMCLOCK;
+		g_pcm86.nLastClock <<= 6;
 	}
-	if ((xchgbit & 0x10) && (!(val & 0x10))) {
-		pcm86.irqflag = 0;
-//		pcm86.write = 0;
-//		pcm86.reqirq = 0;
+
+	/* 割り込みクリア */
+	if ((xchgbit & 0x10) && (!(val & 0x10)))
+	{
+		g_pcm86.cIrqFlag = 0;
+//		g_pcm86.cReqIrq = 0;
 	}
-	// サンプリングレート変更
-	if (xchgbit & 7) {
-		pcm86.rescue = pcm86rescue[val & 7] << pcm86.stepbit;
+
+	/* サンプリングレート変更 */
+	if (xchgbit & 7)
+	{
+		g_pcm86.nExtendBufferSize = pcm86rescue[val & 7] << g_pcm86.cStepBits;
 		pcm86_setpcmrate(val);
 	}
-#if 1	// これ重大なバグ....
-	pcm86.fifo = val;
-#else
-	pcm86.fifo = val & (~0x10);
-#endif
-	if ((xchgbit & 0x80) && (val & 0x80)) {
-		pcm86.lastclock = CPU_CLOCK + CPU_BASECLOCK - CPU_REMCLOCK;
-		pcm86.lastclock <<= 6;
+	g_pcm86.cFifoCtrl = val;
+
+	/* 再生フラグ */
+	if ((xchgbit & 0x80) && (val & 0x80))
+	{
+		g_pcm86.nLastClock = CPU_CLOCK + CPU_BASECLOCK - CPU_REMCLOCK;
+		g_pcm86.nLastClock <<= 6;
 	}
 	pcm86_setnextintr();
 	(void)port;
 }
 
-static void IOOUTCALL pcm86_oa46a(UINT port, REG8 val) {
-
+static void IOOUTCALL pcm86_oa46a(UINT port, REG8 val)
+{
 //	TRACEOUT(("86pcm out %.4x %.2x", port, val));
 	sound_sync();
-	if (pcm86.fifo & 0x20) {
-#if 1
-		if (val != 0xff) {
-			pcm86.fifosize = (UINT16)((val + 1) << 7);
+	if (g_pcm86.cFifoCtrl & 0x20)
+	{
+		if (val != 0xff)
+		{
+			g_pcm86.nFifoIntrSize = (UINT16)((val + 1) << 7);
 		}
-		else {
-			pcm86.fifosize = 0x7ffc;
+		else
+		{
+			g_pcm86.nFifoIntrSize = 0x7ffc;
 		}
-#else
-		if (!val) {
-			val++;
-		}
-		pcm86.fifosize = (WORD)(val) << 7;
-#endif
 	}
-	else {
-		pcm86.dactrl = val;
-		pcm86.stepbit = pcm86bits[(val >> 4) & 7];
-		pcm86.stepmask = (1 << pcm86.stepbit) - 1;
-		pcm86.rescue = pcm86rescue[pcm86.fifo & 7] << pcm86.stepbit;
+	else
+	{
+		g_pcm86.cDacCtrl = val;
+		g_pcm86.cStepBits = pcm86bits[(val >> 4) & 7];
+		g_pcm86.nStepMask = (1 << g_pcm86.cStepBits) - 1;
+		g_pcm86.nExtendBufferSize = pcm86rescue[g_pcm86.cFifoCtrl & 7] << g_pcm86.cStepBits;
 	}
 	pcm86_setnextintr();
 	(void)port;
 }
 
-static void IOOUTCALL pcm86_oa46c(UINT port, REG8 val) {
-
+static void IOOUTCALL pcm86_oa46c(UINT port, REG8 val)
+{
 //	TRACEOUT(("86pcm out %.4x %.2x", port, val));
-#if 1
-	if (pcm86.virbuf < PCM86_LOGICALBUF) {
-		pcm86.virbuf++;
+	if (g_pcm86.nFifoRemain < PCM86_LOGICALBUF)
+	{
+		g_pcm86.nFifoRemain++;
 	}
-	pcm86.buffer[pcm86.wrtpos] = val;
-	pcm86.wrtpos = (pcm86.wrtpos + 1) & PCM86_BUFMSK;
-	pcm86.realbuf++;
-	// バッファオーバーフローの監視
-	if (pcm86.realbuf >= PCM86_REALBUFSIZE) {
-#if 1
-		pcm86.realbuf -= 4;
-		pcm86.readpos = (pcm86.readpos + 4) & PCM86_BUFMSK;
-#else
-		pcm86.realbuf &= 3;				// align4決めウチ
-		pcm86.realbuf += PCM86_REALBUFSIZE - 4;
-#endif
+	g_pcm86.buffer[g_pcm86.nWritePos] = val;
+	g_pcm86.nWritePos = (g_pcm86.nWritePos + 1) & PCM86_BUFMSK;
+	g_pcm86.nBufferCount++;
+	/* バッファオーバーフローの監視 */
+	if (g_pcm86.nBufferCount >= (PCM86_LOGICALBUF + g_pcm86.nExtendBufferSize))
+	{
+		g_pcm86.nBufferCount -= 4;
+		g_pcm86.nReadPos = (g_pcm86.nReadPos + 4) & PCM86_BUFMSK;
 	}
-//	pcm86.write = 1;
-	pcm86.reqirq = 1;
-#else
-	if (pcm86.virbuf < PCM86_LOGICALBUF) {
-		pcm86.virbuf++;
-		pcm86.buffer[pcm86.wrtpos] = val;
-		pcm86.wrtpos = (pcm86.wrtpos + 1) & PCM86_BUFMSK;
-		pcm86.realbuf++;
-		// バッファオーバーフローの監視
-		if (pcm86.realbuf >= PCM86_REALBUFSIZE) {
-			pcm86.realbuf &= 3;				// align4決めウチ
-			pcm86.realbuf += PCM86_REALBUFSIZE - 4;
-		}
-//		pcm86.write = 1;
-		pcm86.reqirq = 1;
-	}
-#endif
 	(void)port;
 }
 
-static REG8 IOINPCALL pcm86_ia460(UINT port) {
-
+static REG8 IOINPCALL pcm86_ia460(UINT port)
+{
 	(void)port;
-	return(0x40 | (pcm86.extfunc & 1));
+	return g_pcm86.cSoundFlags;
 }
 
-static REG8 IOINPCALL pcm86_ia466(UINT port) {
-
-	UINT32	past;
+static REG8 IOINPCALL pcm86_ia466(UINT port)
+{
+	UINT32	nPast;
+	UINT32	nStepClock;
 	UINT32	cnt;
-	UINT32	stepclock;
 	REG8	ret;
 
-	past = CPU_CLOCK + CPU_BASECLOCK - CPU_REMCLOCK;
-	past <<= 6;
-	past -= pcm86.lastclock;
-	stepclock = pcm86.stepclock;
-	if (past >= stepclock) {
-		cnt = past / stepclock;
-		pcm86.lastclock += (cnt * stepclock);
-		past -= cnt * stepclock;
-		if (pcm86.fifo & 0x80) {
+	nPast = CPU_CLOCK + CPU_BASECLOCK - CPU_REMCLOCK;
+	nPast <<= 6;
+	nPast -= g_pcm86.nLastClock;
+	nStepClock = g_pcm86.nStepClock;
+	if (nPast >= nStepClock)
+	{
+		cnt = nPast / nStepClock;
+		g_pcm86.nLastClock += (cnt * nStepClock);
+		nPast -= cnt * nStepClock;
+		if (g_pcm86.cFifoCtrl & 0x80)
+		{
 			sound_sync();
-			RECALC_NOWCLKWAIT(cnt);
+			RECALC_NOWCLKWAIT(&g_pcm86, cnt);
 		}
 	}
-	ret = ((past << 1) >= stepclock)?1:0;
-	if (pcm86.virbuf >= PCM86_LOGICALBUF) {			// バッファフル
+	ret = ((nPast << 1) >= nStepClock) ? 1 : 0;
+	if (g_pcm86.nFifoRemain >= PCM86_LOGICALBUF)		/* バッファフル */
+	{
 		ret |= 0x80;
 	}
-	else if (!pcm86.virbuf) {						// バッファ０
-		ret |= 0x40;								// ちと変…
+	else if (!g_pcm86.nFifoRemain)						/* バッファ０ */
+	{
+		ret |= 0x40;
 	}
 	(void)port;
 //	TRACEOUT(("86pcm in %.4x %.2x", port, ret));
-	return(ret);
+	return ret;
 }
 
-static REG8 IOINPCALL pcm86_ia468(UINT port) {
+static REG8 IOINPCALL pcm86_ia468(UINT port)
+{
+	REG8 ret;
 
-	REG8	ret;
-
-	ret = pcm86.fifo & (~0x10);
-#if 1
-	if (pcm86gen_intrq()) {
+	ret = g_pcm86.cFifoCtrl & (~0x10);
+	if (pcm86gen_intrq())
+	{
 		ret |= 0x10;
 	}
-#elif 1		// むしろこう？
-	if (pcm86.fifo & 0x20) {
-		sound_sync();
-		if (pcm86.virbuf <= pcm86.fifosize) {
-			if (pcm86.write) {
-				pcm86.write = 0;
-			}
-			else {
-				ret |= 0x10;
-			}
-		}
-	}
-#else
-	if ((pcm86.write) && (pcm86.fifo & 0x20)) {
-//		pcm86.write = 0;
-		sound_sync();
-		if (pcm86.virbuf <= pcm86.fifosize) {
-			pcm86.write = 0;
-			ret |= 0x10;
-		}
-	}
-#endif
 	(void)port;
 //	TRACEOUT(("86pcm in %.4x %.2x", port, ret));
-	return(ret);
+	return ret;
 }
 
-static REG8 IOINPCALL pcm86_ia46a(UINT port) {
-
+static REG8 IOINPCALL pcm86_ia46a(UINT port)
+{
 	(void)port;
-//	TRACEOUT(("86pcm in %.4x %.2x", port, pcm86.dactrl));
-	return(pcm86.dactrl);
+//	TRACEOUT(("86pcm in %.4x %.2x", port, g_pcm86.cDacCtrl));
+	return g_pcm86.cDacCtrl;
 }
 
-static REG8 IOINPCALL pcm86_inpdummy(UINT port) {
+static REG8 IOINPCALL pcm86_ia46c(UINT port)
+{
+	REG8 ret = 0;
 
+	if (g_pcm86.nFifoRemain)
+	{
+		g_pcm86.nFifoRemain--;
+	}
+
+	if (g_pcm86.nBufferCount > 0)
+	{
+		g_pcm86.nBufferCount--;
+		ret = g_pcm86.buffer[g_pcm86.nReadPos & PCM86_BUFMSK];
+		g_pcm86.nReadPos++;
+	}
+	return ret;
+}
+
+static REG8 IOINPCALL pcm86_inpdummy(UINT port)
+{
 	(void)port;
-	return(0);
+	return 0;
 }
 
 
-// ----
+/* ---- */
 
-void pcm86io_bind(void) {
+/**
+ * Reset
+ * @param[in] cDipSw Dip switch
+ */
+void pcm86io_setopt(REG8 cDipSw)
+{
+	g_pcm86.cSoundFlags = ((~cDipSw) >> 1) & 0x70;
+	g_pcm86.cIrqLevel = s_irqtable[(cDipSw >> 2) & 7];
+}
 
-	sound_streamregist(&pcm86, (SOUNDCB)pcm86gen_getpcm);
+void pcm86io_bind(void)
+{
+	sound_streamregist(&g_pcm86, (SOUNDCB)pcm86gen_getpcm);
 
 	iocore_attachout(0xa460, pcm86_oa460);
 	iocore_attachout(0xa466, pcm86_oa466);
@@ -250,7 +246,6 @@ void pcm86io_bind(void) {
 	iocore_attachinp(0xa466, pcm86_ia466);
 	iocore_attachinp(0xa468, pcm86_ia468);
 	iocore_attachinp(0xa46a, pcm86_ia46a);
-	iocore_attachinp(0xa46c, pcm86_inpdummy);
+	iocore_attachinp(0xa46c, pcm86_ia46c);
 	iocore_attachinp(0xa46e, pcm86_inpdummy);
 }
-

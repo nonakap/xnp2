@@ -136,10 +136,10 @@ enum {
 };
 
 typedef struct {
-	char	reg[RSTR_REGMAX][8][4];
+	char	reg[RSTR_REGMAX][8][5];
 	char	lea[8][8];
 	char	ptr[4][12];
-	char	ope[RSTR_OPMAX][8];
+	char	ope[RSTR_OPMAX][9];
 } REGSTR;
 
 static const REGSTR rstr = {

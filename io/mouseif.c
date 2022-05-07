@@ -25,7 +25,7 @@ void mouseif_sync(void) {
 	mouseif.rx = mouseif.sx;
 	mouseif.ry = mouseif.sy;
 
-	mouseif.lastc = CPU_CLOCK + CPU_BASECLOCK + CPU_REMCLOCK;
+	mouseif.lastc = CPU_CLOCK + CPU_BASECLOCK - CPU_REMCLOCK;
 }
 
 static void calc_mousexy(void) {
@@ -33,7 +33,7 @@ static void calc_mousexy(void) {
 	UINT32	clk;
 	SINT32	diff;
 
-	clk = CPU_CLOCK + CPU_BASECLOCK + CPU_REMCLOCK;
+	clk = CPU_CLOCK + CPU_BASECLOCK - CPU_REMCLOCK;
 	diff = clk - mouseif.lastc;
 	if (diff >= 2000) {
 		SINT32 dx;
@@ -81,12 +81,9 @@ static void calc_mousexy(void) {
 
 void mouseint(NEVENTITEM item) {
 
-	if (item->flag & NEVENT_SETEVENT) {
-		if (!(mouseif.upd8255.portc & 0x10)) {
-			pic_setirq(0x0d);
-			nevent_set(NEVENT_MOUSE, mouseif.intrclock << mouseif.timing,
-												mouseint, NEVENT_RELATIVE);
-		}
+	if (!(mouseif.upd8255.portc & 0x10)) {
+		pic_setirq(0x0d);
+		nevent_set(NEVENT_MOUSE, mouseif.intrclock << mouseif.timing, mouseint, NEVENT_RELATIVE);
 	}
 }
 

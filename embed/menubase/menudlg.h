@@ -1,3 +1,11 @@
+/**
+ * @file	menudlg.h
+ * @brief	Interface of the base of the dialog
+ */
+
+#pragma once
+
+#include "menubase.h"
 
 enum {
 	DLGMSG_CREATE	= 0,
@@ -102,7 +110,7 @@ BRESULT menudlg_append(int type, MENUID id, MENUFLG flg, const void *arg,
 
 void menudlg_moving(int x, int y, int btn);
 
-void *menudlg_msg(int ctrl, MENUID id, void *arg);
+INTPTR menudlg_msg(int ctrl, MENUID id, INTPTR arg);
 void menudlg_setpage(MENUID page);
 void menudlg_disppagehidden(MENUID page, BOOL hidden);
 
@@ -114,32 +122,32 @@ void menudlg_disppagehidden(MENUID page, BOOL hidden);
 // ---- MACRO
 
 #define menudlg_sethide(id, hidden)		\
-					menudlg_msg(DMSG_SETHIDE, (id), (void *)(hidden))
+					menudlg_msg(DMSG_SETHIDE, (id), (hidden))
 #define menudlg_setenable(id, enable)	\
-					menudlg_msg(DMSG_SETENABLE, (id), (void *)(enable))
+					menudlg_msg(DMSG_SETENABLE, (id), (enable))
 #define menudlg_setval(id, val)			\
-					menudlg_msg(DMSG_SETVAL, (id), (void *)(long)(val))
+					menudlg_msg(DMSG_SETVAL, (id), (UINT)(val))
 #define menudlg_getval(id)				\
-					((int)menudlg_msg(DMSG_GETVAL, (id), NULL))
+					((UINT)menudlg_msg(DMSG_GETVAL, (id), 0))
 #define	menudlg_setvram(id, vram)		\
-					((VRAMHDL)menudlg_msg(DMSG_SETVRAM, (id), (void *)(vram)))
+					((VRAMHDL)menudlg_msg(DMSG_SETVRAM, (id), (INTPTR)(vram)))
 #define menudlg_settext(id, arg)		\
-					menudlg_msg(DMSG_SETTEXT, (id), (void *)(arg))
+					menudlg_msg(DMSG_SETTEXT, (id), (INTPTR)(arg))
 #define menudlg_seticon(id, val)		\
-					menudlg_msg(DMSG_SETICON, (id), (void *)(long)(val))
+					menudlg_msg(DMSG_SETICON, (id), (val))
 #define menudlg_itemappend(id, arg)		\
-					menudlg_msg(DMSG_ITEMAPPEND, (id), (void *)(arg))
+					menudlg_msg(DMSG_ITEMAPPEND, (id), (INTPTR)(arg))
 #define menudlg_itemreset(id)			\
-					menudlg_msg(DMSG_ITEMRESET, (id), NULL)
+					menudlg_msg(DMSG_ITEMRESET, (id), 0)
 #define menudlg_itemsetex(id, arg)		\
-					menudlg_msg(DMSG_ITEMSETEX, (id), (void *)(arg))
+					menudlg_msg(DMSG_ITEMSETEX, (id), (INTPTR)(arg))
 #define menudlg_setlistpos(id, num)		\
-					menudlg_msg(DMSG_SETLISTPOS, (id), (void *)(num))
+					menudlg_msg(DMSG_SETLISTPOS, (id), (num))
 #define menudlg_setrect(id, rect)		\
-					menudlg_msg(DMSG_SETRECT, (id), (rect))
+					menudlg_msg(DMSG_SETRECT, (id), (INTPTR)(rect))
 #define menudlg_getrect(id)				\
-					((RECT_T *)menudlg_msg(DMSG_GETRECT, (id), NULL))
+					((RECT_T *)menudlg_msg(DMSG_GETRECT, (id), 0))
 #define menudlg_setfont(id, font)		\
-					menudlg_msg(DMSG_SETFONT, (id), (font))
+					menudlg_msg(DMSG_SETFONT, (id), (INTPTR)(font))
 #define menudlg_getfont(id)				\
-					menudlg_msg(DMSG_GETFONT, (id), NULL)
+					menudlg_msg(DMSG_GETFONT, (id), 0)

@@ -1,6 +1,33 @@
+/**
+ * @file	view1mb.h
+ * @brief	メイン メモリ レジスタ表示クラスの宣言およびインターフェイスの定義をします
+ */
 
-LRESULT CALLBACK view1mb_proc(NP2VIEW_T *view,
-								HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+#pragma once
 
-void view1mb_init(NP2VIEW_T *dst, NP2VIEW_T *src);
+#include <vector>
+#include "viewitem.h"
+#include "viewmem.h"
 
+/**
+ * @brief メモリ レジスタ表示クラス
+ */
+class CDebugUty1MB : public CDebugUtyItem
+{
+public:
+	CDebugUty1MB(CDebugUtyView* lpView);
+	virtual ~CDebugUty1MB();
+
+	virtual void Initialize(const CDebugUtyItem* lpItem = NULL);
+	virtual bool Update();
+	virtual bool Lock();
+	virtual void Unlock();
+	virtual bool IsLocked();
+	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
+	virtual void OnPaint(HDC hDC, const RECT& rect);
+
+private:
+	DebugUtyViewMemory m_mem;					//!< メモリ
+	std::vector<unsigned char> m_buffer;		//!< バッファ
+	void SetSegment(UINT nSegment);
+};

@@ -159,7 +159,7 @@ cpu_lmemory_RMW_b(UINT32 laddr, UINT32 (CPUCALL *func)(UINT32, void *), void *ar
 	if (!CPU_STAT_PAGING) {
 		value = cpu_memoryread_b(laddr);
 		result = (*func)(value, arg);
-		cpu_memorywrite_b(laddr, result);
+		cpu_memorywrite_b(laddr, (UINT8)result);
 		return value;
 	}
 	return cpu_memory_access_la_RMW_b(laddr, func, arg);
@@ -174,7 +174,7 @@ cpu_lmemory_RMW_w(UINT32 laddr, UINT32 (CPUCALL *func)(UINT32, void *), void *ar
 	if (!CPU_STAT_PAGING) {
 		value = cpu_memoryread_w(laddr);
 		result = (*func)(value, arg);
-		cpu_memorywrite_w(laddr, result);
+		cpu_memorywrite_w(laddr, (UINT16)result);
 		return value;
 	}
 	return cpu_memory_access_la_RMW_w(laddr, func, arg);

@@ -1,12 +1,17 @@
-#include	"compiler.h"
-#include	"strres.h"
-#include	"np2ver.h"
-#include	"pccore.h"
-#include	"vramhdl.h"
-#include	"menubase.h"
-#include	"menustr.h"
-#include	"sysmenu.res"
+/**
+ * @file	dlgabout.c
+ * @brief	Implementation of the about dialog
+ */
 
+#include "compiler.h"
+#include "dlgabout.h"
+#include "../menubase/menudlg.h"
+#include "../menubase/menures.h"
+#include "../menubase/menuicon.h"
+#include "strres.h"
+#include "np2ver.h"
+#include "pccore.h"
+#include "sysmenu.res"
 
 enum {
 	DID_ICON	= DID_USER,
@@ -42,11 +47,8 @@ static void dlginit(void) {
 	milstr_ncpy(work, str_np2, NELEMENTS(work));
 	milstr_ncat(work, str_space, NELEMENTS(work));
 	milstr_ncat(work, np2version, NELEMENTS(work));
-#if defined(_WIN32_WCE) && defined(NP2VER_WINCE)
-	milstr_ncat(work, OEMTEXT(NP2VER_WINCE), NELEMENTS(work));
-#endif
-#if defined(NP2VER_SDL)
-	milstr_ncat(work, OEMTEXT(NP2VER_SDL), NELEMENTS(work));
+#if defined(NP2VER_SDL2)
+	milstr_ncat(work, OEMTEXT(NP2VER_SDL2), NELEMENTS(work));
 #endif
 	menudlg_settext(DID_VER, work);
 }

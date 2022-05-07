@@ -1,19 +1,41 @@
+/**
+ * @file	dialog.h
+ * @breif	ダイアログの宣言
+ */
 
-LRESULT CALLBACK CfgDialogProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
-LRESULT CALLBACK AboutDialogProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
-LRESULT CALLBACK MidiDialogProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
-LRESULT CALLBACK ClndDialogProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
+#pragma once
 
-void dialog_scropt(HWND hWnd);
-void dialog_sndopt(HWND hWnd);
-void dialog_s98(HWND hWnd);
-#if defined(SUPPORT_WAVEREC)
-void dialog_waverec(HWND hWnd);
-#endif
-void dialog_serial(HWND hWnd);
-void dialog_newdisk(HWND hWnd);
-void dialog_changefdd(HWND hWnd, REG8 drv);
-void dialog_changehdd(HWND hWnd, REG8 drv);
-void dialog_font(HWND hWnd);
+// d_about.cpp
+void dialog_about(HWND hwndParent);
+
+// d_bmp.cpp
 void dialog_writebmp(HWND hWnd);
 
+// d_clnd.cpp
+void dialog_calendar(HWND hwndParent);
+
+// d_config.cpp
+void dialog_configure(HWND hwndParent);
+
+// d_disk.cpp
+void dialog_changefdd(HWND hWnd, REG8 drv);
+void dialog_changehdd(HWND hWnd, REG8 drv);
+void dialog_newdisk(HWND hWnd);
+
+// d_font.cpp
+void dialog_font(HWND hWnd);
+
+// d_mpu98.cpp
+void dialog_mpu98(HWND hwndParent);
+
+// d_screen.cpp
+void dialog_scropt(HWND hwndParent);
+
+// d_serial.cpp
+void dialog_serial(HWND hWnd);
+
+// d_sound.cpp
+void dialog_sndopt(HWND hwndParent);
+
+// d_soundlog.cpp
+void dialog_soundlog(HWND hWnd);

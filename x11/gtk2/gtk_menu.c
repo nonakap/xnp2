@@ -36,13 +36,12 @@
 #include "debugsub.h"
 
 #include "beep.h"
-#include "diskdrv.h"
-#include "font.h"
+#include "fdd/diskdrv.h"
+#include "font/font.h"
 #include "mpu98ii.h"
 #include "pc9861k.h"
 #include "s98.h"
-#include "scrnbmp.h"
-#include "sxsi.h"
+#include "vram/scrnsave.h"
 
 #include "kdispwin.h"
 #include "toolwin.h"
@@ -576,12 +575,11 @@ cb_bmpsave(GtkAction *action, gpointer user_data)
 	GtkWidget *dialog = NULL;
 	GtkFileFilter *filter;
 	gchar *utf8, *path;
-	SCRNBMP bmp = NULL;
-	FILEH fh;
+	SCRNSAVE bmp = NULL;
 
 	uninstall_idle_process();
 
-	bmp = scrnbmp();
+	bmp = scrnsave_create();
 	if (bmp == NULL)
 		goto end;
 
@@ -637,19 +635,14 @@ cb_bmpsave(GtkAction *action, gpointer user_data)
 			}
 			file_cpyname(bmpfilefolder, path, sizeof(bmpfilefolder));
 			sysmng_update(SYS_UPDATEOSCFG);
-			fh = file_create(path);
-			if (fh != FILEH_INVALID) {
-				file_write(fh, bmp->ptr, bmp->size);
-				file_close(fh);
-			}
+			scrnsave_writebmp(bmp, path, SCRNSAVE_AUTO);
 			g_free(path);
 		}
 		g_free(utf8);
 	}
 
 end:
-	if (bmp)
-		_MFREE(bmp);
+	scrnsave_destroy(bmp);
 	if (dialog)
 		gtk_widget_destroy(dialog);
 	install_idle_process();
@@ -901,7 +894,7 @@ cb_ataopen(GtkAction *action, gpointer user_data)
 		if (path) {
 			if ((stat(path, &sb) == 0) && S_ISREG(sb.st_mode) && (sb.st_mode & S_IRUSR)) {
 				file_cpyname(hddfolder, path, sizeof(hddfolder));
-				diskdrv_sethdd(2 * channel + drive, path);
+				diskdrv_setsxsi(2 * channel + drive, path);
 				sysmng_update(SYS_UPDATEOSCFG);
 			}
 			g_free(path);
@@ -932,7 +925,7 @@ cb_ataremove(GtkAction *action, gpointer user_data)
 	drive = g_ascii_digit_value(name[4]);
 	if (channel == 0 && drive < 2) {
 		if (2 * channel + drive < 4) {
-			diskdrv_sethdd(2 * channel + drive, "");
+			diskdrv_setsxsi(2 * channel + drive, NULL);
 		}
 	}
 }
@@ -991,7 +984,7 @@ cb_atapiopen(GtkAction *action, gpointer user_data)
 		if (path) {
 			if ((stat(path, &sb) == 0) && S_ISREG(sb.st_mode) && (sb.st_mode & S_IRUSR)) {
 				file_cpyname(hddfolder, path, sizeof(hddfolder));
-				sxsi_devopen(0x02, path);
+				diskdrv_setsxsi(0x02, path);
 				sysmng_update(SYS_UPDATEOSCFG);
 			}
 			g_free(path);
@@ -1232,7 +1225,7 @@ cb_sasiopen(GtkAction *action, gpointer user_data)
 		if (path) {
 			if ((stat(path, &sb) == 0) && S_ISREG(sb.st_mode) && (sb.st_mode & S_IRUSR)) {
 				file_cpyname(hddfolder, path, sizeof(hddfolder));
-				diskdrv_sethdd(drive, path);
+				diskdrv_setsxsi(drive, path);
 				sysmng_update(SYS_UPDATEOSCFG);
 			}
 			g_free(path);
@@ -1256,7 +1249,7 @@ cb_sasiremove(GtkAction *action, gpointer user_data)
 	if ((strlen(name) >= 5) && (g_ascii_isdigit(name[4]))) {
 		drive = g_ascii_digit_value(name[4]) - 1;
 		if (drive < 2) {
-			diskdrv_sethdd(drive, "");
+			diskdrv_setsxsi(drive, NULL);
 		}
 	}
 }
@@ -1990,9 +1983,9 @@ create_menu(void)
 	menubar = gtk_ui_manager_get_widget(menu_hdl.ui_manager, "/MainMenu");
 
 	gtk_widget_add_events(menubar, EVENT_MASK);
-	g_signal_connect(GTK_OBJECT(menubar), "enter_notify_event",
+	g_signal_connect(G_OBJECT(menubar), "enter_notify_event",
 	            G_CALLBACK(enter_notify_evhandler), NULL);
-	g_signal_connect(GTK_OBJECT(menubar), "leave_notify_event",
+	g_signal_connect(G_OBJECT(menubar), "leave_notify_event",
 	            G_CALLBACK(leave_notify_evhandler), NULL);
 
 	return menubar;

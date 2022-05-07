@@ -61,7 +61,7 @@ create_about_dialog(void)
 	gtk_window_set_modal(GTK_WINDOW(about_dialog), TRUE);
 	gtk_window_set_resizable(GTK_WINDOW(about_dialog), FALSE);
 	gtk_container_set_border_width(GTK_CONTAINER(about_dialog), 10);
-	g_signal_connect(GTK_OBJECT(about_dialog), "destroy",
+	g_signal_connect(G_OBJECT(about_dialog), "destroy",
 	    G_CALLBACK(about_destroy), NULL);
 
 	main_widget = gtk_hbox_new(FALSE, 3);
@@ -86,8 +86,8 @@ create_about_dialog(void)
 	ok_button = gtk_button_new_from_stock(GTK_STOCK_OK);
 	gtk_widget_show(ok_button);
 	gtk_box_pack_end(GTK_BOX(main_widget), ok_button, FALSE, TRUE, 0);
-	g_signal_connect_swapped(GTK_OBJECT(ok_button), "clicked",
-	    G_CALLBACK(gtk_widget_destroy), GTK_OBJECT(about_dialog));
+	g_signal_connect_swapped(G_OBJECT(ok_button), "clicked",
+	    G_CALLBACK(gtk_widget_destroy), G_OBJECT(about_dialog));
 #if GTK_MAJOR_VERSION > 2 || (GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION >= 18)
 	gtk_widget_set_can_default(ok_button, TRUE);
 	gtk_widget_has_default(ok_button);

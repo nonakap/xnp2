@@ -54,7 +54,7 @@ typedef struct {
 	RGB32	paltbl[16];
 } CMNBMP;
 
-BOOL cmndraw_bmp4inf(CMNBMP *bmp, const void *ptr);
+BRESULT cmndraw_bmp4inf(CMNBMP *bmp, const void *ptr);
 void cmndraw_bmp16(CMNVRAM *vram, const void *ptr, CMNPALCNV cnv, UINT flag);
 
 #ifdef __cplusplus

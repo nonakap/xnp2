@@ -16,7 +16,7 @@ typedef struct {
 	UINT16	milli;
 } _SYSTIME;
 
-BOOL timemng_gettime(_SYSTIME *systime);
+BRESULT timemng_gettime(_SYSTIME *systime);
 
 G_END_DECLS
 

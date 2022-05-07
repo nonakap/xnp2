@@ -15,8 +15,8 @@ enum {
 	SNDDRV_DRVMAX
 };
 
-BYTE snddrv_drv2num(const char *);
-const char *snddrv_num2drv(BYTE);
+UINT8 snddrv_drv2num(const char *);
+const char *snddrv_num2drv(UINT8);
 
 #if !defined(NOSOUND)
 UINT soundmng_create(UINT rate, UINT ms);
@@ -27,15 +27,15 @@ void soundmng_stop(void);
 void soundmng_sync(void);
 void soundmng_setreverse(BOOL reverse);
 
-BOOL soundmng_pcmplay(UINT num, BOOL loop);
+BRESULT soundmng_pcmplay(UINT num, BOOL loop);
 void soundmng_pcmstop(UINT num);
 
 /* ---- for X11 */
 
-BOOL soundmng_initialize(void);
+BRESULT soundmng_initialize(void);
 void soundmng_deinitialize(void);
 
-BOOL soundmng_pcmload(UINT num, const char *filename);
+BRESULT soundmng_pcmload(UINT num, const char *filename);
 void soundmng_pcmvolume(UINT num, int volume);
 
 extern int pcm_volume_default;

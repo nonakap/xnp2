@@ -1,566 +1,416 @@
-#include	"compiler.h"
-#include	"resource.h"
-#include	"np2.h"
-#include	"sysmng.h"
-#include	"menu.h"
-#include	"np2class.h"
-#include	"pccore.h"
+/**
+ * @file	menu.cpp
+ * @brief	メニューの宣言およびインターフェイスの定義をします
+ */
 
+#include "compiler.h"
+#include "resource.h"
+#include "menu.h"
+#include "np2.h"
+#include "scrnmng.h"
+#include "sysmng.h"
+#include "misc\tstring.h"
+#include "misc\WndProc.h"
+#include "pccore.h"
+#if defined(SUPPORT_WAVEREC)
+#include "sound\sound.h"
+#endif
+#if defined(SUPPORT_S98)
+#include "sound\s98.h"
+#endif
 
-BOOL menu_searchmenu(HMENU hMenu, UINT uID, HMENU *phmenuRet, int *pnPos)
+/**
+ * メニュー内の指定された位置に、新しいメニュー項目を挿入します
+ * @param[in] hMenu メニューのハンドル
+ * @param[in] uItem 識別子または位置
+ * @param[in] fByPosition uItem パラメータの意味
+ * @param[in] hPopup 追加するメニュー
+ * @return 追加した項目数
+ */
+UINT InsertMenuPopup(HMENU hMenu, UINT uItem, BOOL fByPosition, HMENU hPopup)
 {
-	int				nCount;
-	int				i;
-	MENUITEMINFO	mii;
-
-	nCount = GetMenuItemCount(hMenu);
-	for (i=0; i<nCount; i++)
+	int nCount = GetMenuItemCount(hPopup);
+	UINT nAdded = 0;
+	for (int i = 0; i < nCount; i++)
 	{
+		TCHAR szString[128];
+
+		MENUITEMINFO mii;
 		ZeroMemory(&mii, sizeof(mii));
 		mii.cbSize = sizeof(mii);
-		mii.fMask = MIIM_ID | MIIM_SUBMENU;
-		if (GetMenuItemInfo(hMenu, i, TRUE, &mii))
-		{
-			if (mii.wID == uID)
-			{
-				if (phmenuRet)
-				{
-					*phmenuRet = hMenu;
-				}
-				if (pnPos)
-				{
-					*pnPos = i;
-				}
-				return TRUE;
-			}
-			else if ((mii.hSubMenu) &&
-					(menu_searchmenu(mii.hSubMenu, uID, phmenuRet, pnPos)))
-			{
-				return TRUE;
-			}
-		}
-	}
-	return FALSE;
-}
-
-#if 0
-static BOOL searchsubmenu(HMENU hMenu, HMENU hmenuTarget,
-												HMENU *phmenuRet, int *pnPos)
-{
-	int				nCount;
-	int				i;
-	MENUITEMINFO	mii;
-
-	nCount = GetMenuItemCount(hMenu);
-	for (i=0; i<nCount; i++)
-	{
-		ZeroMemory(&mii, sizeof(mii));
-		mii.cbSize = sizeof(mii);
-		mii.fMask = MIIM_SUBMENU;
-		if ((GetMenuItemInfo(hMenu, i, TRUE, &mii)) && (mii.hSubMenu))
-		{
-			if (mii.hSubMenu == hmenuTarget)
-			{
-				if (phmenuRet)
-				{
-					*phmenuRet = hMenu;
-				}
-				if (pnPos)
-				{
-					*pnPos = i;
-				}
-				return TRUE;
-			}
-			if (searchsubmenu(mii.hSubMenu, hmenuTarget, phmenuRet, pnPos))
-			{
-				return TRUE;
-			}
-		}
-	}
-	return FALSE;
-}
-#endif	// 0
-
-// これってAPIあるのか？
-int menu_addmenu(HMENU hMenu, int nPos, HMENU hmenuAdd, BOOL bSeparator)
-{
-	int				nCount;
-	int				nAdded;
-	int				i;
-	MENUITEMINFO	mii;
-	TCHAR			szString[128];
-	HMENU			hmenuSub;
-
-	if (nPos < 0)
-	{
-		nPos = GetMenuItemCount(hMenu);
-	}
-	nCount = GetMenuItemCount(hmenuAdd);
-	nAdded = 0;
-	for (i=0; i<nCount; i++)
-	{
-		ZeroMemory(&mii, sizeof(mii));
-		mii.cbSize = sizeof(mii);
-		mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_ID | MIIM_SUBMENU |
-																	MIIM_DATA;
+		mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_DATA;
 		mii.dwTypeData = szString;
-		mii.cch = NELEMENTS(szString);
-		if (GetMenuItemInfo(hmenuAdd, i, TRUE, &mii))
+		mii.cch = _countof(szString);
+		if (!GetMenuItemInfo(hPopup, i, TRUE, &mii))
 		{
-			if (mii.hSubMenu)
-			{
-				hmenuSub = CreatePopupMenu();
-				(void)menu_addmenu(hmenuSub, 0, mii.hSubMenu, FALSE);
-				mii.hSubMenu = hmenuSub;
-			}
-			if (bSeparator)
-			{
-				bSeparator = FALSE;
-				InsertMenu(hMenu, nPos + nAdded, MF_BYPOSITION | MF_SEPARATOR,
-																	0, NULL);
-				nAdded++;
-			}
-			InsertMenuItem(hMenu, nPos + nAdded, TRUE, &mii);
+			continue;
+		}
+		if (mii.hSubMenu)
+		{
+			HMENU hSubMenu = CreatePopupMenu();
+			InsertMenuPopup(hSubMenu, 0, TRUE, mii.hSubMenu);
+			mii.hSubMenu = hSubMenu;
+		}
+		if (InsertMenuItem(hMenu, uItem, fByPosition, &mii))
+		{
 			nAdded++;
+			if (fByPosition)
+			{
+				uItem++;
+			}
 		}
 	}
 	return nAdded;
 }
 
-int menu_addmenures(HMENU hMenu, int nPos, UINT uID, BOOL bSeparator)
+/**
+ * 新しいメニュー項目を追加します
+ * @param[in] hMenu メニューのハンドル
+ * @param[in] nMenuID 追加するメニュー ID
+ * @return 追加した項目数
+ */
+UINT AppendMenuResource(HMENU hMenu, UINT nMenuID)
 {
-	int		nCount;
-	HMENU	hmenuAdd;
+	return InsertMenuResource(hMenu, GetMenuItemCount(hMenu), TRUE, nMenuID);
+}
 
-	nCount = 0;
-	hmenuAdd = LoadMenu(g_hInstance, MAKEINTRESOURCE(uID));
-	if (hmenuAdd)
+/**
+ * メニュー内の指定された位置に、新しいメニュー項目を挿入します
+ * @param[in] hMenu メニューのハンドル
+ * @param[in] uItem 識別子または位置
+ * @param[in] fByPosition uItem パラメータの意味
+ * @param[in] nMenuID 追加するメニュー ID
+ * @return 追加した項目数
+ */
+UINT InsertMenuResource(HMENU hMenu, UINT uItem, BOOL fByPosition, UINT nMenuID)
+{
+	HMENU hSubMenu = LoadMenu(CWndProc::GetResourceHandle(), MAKEINTRESOURCE(nMenuID));
+	const UINT nAdded = InsertMenuPopup(hMenu, uItem, fByPosition, hSubMenu);
+	::DestroyMenu(hSubMenu);
+	return nAdded;
+}
+
+/**
+ * メニューを追加する
+ * @param[in] hMenu メニューのハンドル
+ * @param[in] uFlags オプション
+ * @param[in] uIDNewItem 識別子、メニュー、サブメニューのいずれか
+ * @retval 関数が成功すると、0 以外の値が返ります
+ */
+static BOOL AppendMenuString(HMENU hMenu, UINT uFlags, UINT_PTR uIDNewItem)
+{
+	std::tstring rString(LoadTString(static_cast<UINT>(uIDNewItem)));
+	if (rString.empty())
 	{
-		nCount = menu_addmenu(hMenu, nPos, hmenuAdd, bSeparator);
-		DestroyMenu(hmenuAdd);
+		return FALSE;
 	}
-	return nCount;
-}
 
-int menu_addmenubyid(HMENU hMenu, UINT uByID, UINT uID)
-{
-	int		nCount;
-	HMENU	hmenuSub;
-	int		nSubPos;
-
-	nCount = 0;
-	if (menu_searchmenu(hMenu, uByID, &hmenuSub, &nSubPos))
+	if (uFlags & MF_POPUP)
 	{
-		nCount = menu_addmenures(hmenuSub, nSubPos + 1, uID, FALSE);
+		HMENU hSubMenu = LoadMenu(CWndProc::GetResourceHandle(), MAKEINTRESOURCE(uIDNewItem));
+		if (hSubMenu == NULL)
+		{
+			return FALSE;
+		}
+		uIDNewItem = reinterpret_cast<UINT_PTR>(hSubMenu);
 	}
-	return nCount;
+	return AppendMenu(hMenu, uFlags, uIDNewItem, rString.c_str());
 }
 
-BOOL menu_insertmenures(HMENU hMenu, int nPosition, UINT uFlags,
-											UINT_PTR uIDNewItem, UINT uID)
+/**
+ * メニューを挿入する
+ * @param[in] hMenu メニューのハンドル
+ * @param[in] uItem 挿入するべきメニュー項目の直後に位置するメニュー項目の識別子または位置を指定します
+ * @param[in] uFlags オプション
+ * @param[in] uIDNewItem 識別子、メニュー、サブメニューのいずれか
+ * @retval 関数が成功すると、0 以外の値が返ります
+ */
+static BOOL InsertMenuString(HMENU hMenu, UINT uItem, UINT uFlags, UINT_PTR uIDNewItem)
 {
-	BOOL	bResult;
-	TCHAR	szString[128];
-
-	bResult = FALSE;
-	if (loadstringresource(uID, szString, NELEMENTS(szString)))
+	std::tstring rString(LoadTString(static_cast<UINT>(uIDNewItem)));
+	if (rString.empty())
 	{
-		bResult = InsertMenu(hMenu, nPosition, uFlags, uIDNewItem, szString);
+		return FALSE;
 	}
-	return bResult;
+
+	if (uFlags & MF_POPUP)
+	{
+		HMENU hSubMenu = LoadMenu(CWndProc::GetResourceHandle(), MAKEINTRESOURCE(uIDNewItem));
+		if (hSubMenu == NULL)
+		{
+			return FALSE;
+		}
+		uIDNewItem = reinterpret_cast<UINT_PTR>(hSubMenu);
+	}
+	return InsertMenu(hMenu, uItem, uFlags, uIDNewItem, rString.c_str());
 }
 
-void menu_addmenubar(HMENU popup, HMENU menubar)
+/**
+ * メニュー オーナーを検索
+ * @param[in] hMenu メニュー ハンドル
+ * @param[in] uItem メニュー アイテム
+ * @param[out] pnPos 見つかった位置
+ * @return メニュー ハンドル
+ */
+HMENU GetMenuOwner(HMENU hMenu, UINT uItem, int* pnPos)
 {
-	(void)menu_addmenu(popup, 0, menubar, FALSE);
+	int nCount = GetMenuItemCount(hMenu);
+	for (int i = 0; i < nCount; i++)
+	{
+		MENUITEMINFO mii;
+		ZeroMemory(&mii, sizeof(mii));
+		mii.cbSize = sizeof(mii);
+		mii.fMask = MIIM_ID | MIIM_SUBMENU;
+		if (GetMenuItemInfo(hMenu, i, TRUE, &mii))
+		{
+			if (mii.wID == uItem)
+			{
+				if (pnPos)
+				{
+					*pnPos = i;
+				}
+				return hMenu;
+			}
+			else if (mii.hSubMenu)
+			{
+				HMENU hFoundMenu = GetMenuOwner(mii.hSubMenu, uItem, pnPos);
+				if (hFoundMenu)
+				{
+					return hFoundMenu;
+				}
+			}
+		}
+	}
+	return NULL;
 }
+
 
 
 // ----
 
-void sysmenu_initialize(void)
+/**
+ * システム メニュー初期化
+ * @param[in] hMenu メニュー ハンドル
+ */
+void sysmenu_initialize(HMENU hMenu)
 {
-	HMENU	hMenu;
-	UINT	uPos;
-
-	hMenu = GetSystemMenu(g_hWndMain, FALSE);
-	uPos = 0;
+	UINT nPos = 0;
 
 #if defined(SUPPORT_KEYDISP)
-	uPos += menu_addmenures(hMenu, uPos, IDR_SYSKEYDISP, FALSE);
-#endif
-#if defined(SUPPORT_SOFTKBD)
-	uPos += menu_addmenures(hMenu, uPos, IDR_SYSSOFTKBD, FALSE);
-#endif
+	nPos += InsertMenuResource(hMenu, nPos, TRUE, IDR_SYSKEYDISP);
+#endif	// defined(SUPPORT_KEYDISP)
 
-	uPos += menu_addmenures(hMenu, uPos, IDR_SYS, FALSE);
+#if defined(SUPPORT_SOFTKBD)
+	nPos += InsertMenuResource(hMenu, nPos, TRUE, IDR_SYSSOFTKBD);
+#endif	// defined(SUPPORT_KEYDISP)
+
+	nPos += InsertMenuResource(hMenu, nPos, TRUE, IDR_SYS);
 	if (np2oscfg.I286SAVE)
 	{
 #if defined(CPUCORE_IA32) && defined(SUPPORT_MEMDBG32)
-		uPos += menu_addmenures(hMenu, uPos, IDR_SYSDEBUG32, FALSE);
-#endif
-		uPos += menu_addmenures(hMenu, uPos, IDR_SYSDEBUG, FALSE);
+		nPos += InsertMenuResource(hMenu, nPos, TRUE, IDR_SYSDEBUG32);
+#endif	// defined(CPUCORE_IA32) && defined(SUPPORT_MEMDBG32)
+
+		nPos += InsertMenuResource(hMenu, nPos, TRUE, IDR_SYSDEBUG);
 	}
 }
 
-void sysmenu_settoolwin(UINT8 value) {
+/**
+ * システム メニュー更新
+ * @param[in] hMenu メニュー ハンドル
+ */
+void sysmenu_update(HMENU hMenu)
+{
+	CheckMenuItem(hMenu, IDM_TOOLWIN, MF_BYCOMMAND | MFCHECK(np2oscfg.toolwin));
+	CheckMenuItem(hMenu, IDM_KEYDISP, MF_BYCOMMAND | MFCHECK(np2oscfg.keydisp));
+	CheckMenuItem(hMenu, IDM_SNAPENABLE, MF_BYCOMMAND | MFCHECK(np2oscfg.WINSNAP));
 
-	value &= 1;
-	np2oscfg.toolwin = value;
-	CheckMenuItem(GetSystemMenu(g_hWndMain, FALSE),
-											IDM_TOOLWIN, MFCHECK(value));
+	const UINT8 background = np2oscfg.background ^ 3;
+	EnableMenuItem(hMenu, IDM_BGSOUND, (background & 1) ? MF_ENABLED : MF_GRAYED);
+	CheckMenuItem(hMenu, IDM_BACKGROUND, MF_BYCOMMAND | MFCHECK(background & 1));
+	CheckMenuItem(hMenu, IDM_BGSOUND, MF_BYCOMMAND | MFCHECK(background & 2));
+
+	const int scrnmul = scrnmng_getmultiple();
+	CheckMenuItem(hMenu, IDM_SCRNMUL4, MF_BYCOMMAND | MFCHECK(scrnmul == 4));
+	CheckMenuItem(hMenu, IDM_SCRNMUL6, MF_BYCOMMAND | MFCHECK(scrnmul == 6));
+	CheckMenuItem(hMenu, IDM_SCRNMUL8, MF_BYCOMMAND | MFCHECK(scrnmul == 8));
+	CheckMenuItem(hMenu, IDM_SCRNMUL10, MF_BYCOMMAND | MFCHECK(scrnmul == 10));
+	CheckMenuItem(hMenu, IDM_SCRNMUL12, MF_BYCOMMAND | MFCHECK(scrnmul == 12));
+	CheckMenuItem(hMenu, IDM_SCRNMUL16, MF_BYCOMMAND | MFCHECK(scrnmul == 16));
 }
 
-void sysmenu_setkeydisp(UINT8 value) {
-
-	value &= 1;
-	np2oscfg.keydisp = value;
-	CheckMenuItem(GetSystemMenu(g_hWndMain, FALSE),
-											IDM_KEYDISP, MFCHECK(value));
-}
-
-void sysmenu_setwinsnap(UINT8 value) {
-
-	value &= 1;
-	np2oscfg.WINSNAP = value;
-	CheckMenuItem(GetSystemMenu(g_hWndMain, FALSE),
-											IDM_SNAPENABLE, MFCHECK(value));
-}
-
-void sysmenu_setbackground(UINT8 value) {
-
-	HMENU	hmenu;
-
-	np2oscfg.background &= 2;
-	np2oscfg.background |= (value & 1);
-	hmenu = GetSystemMenu(g_hWndMain, FALSE);
-	if (value & 1) {
-		CheckMenuItem(hmenu, IDM_BACKGROUND, MF_UNCHECKED);
-		EnableMenuItem(hmenu, IDM_BGSOUND, MF_GRAYED);
-	}
-	else {
-		CheckMenuItem(hmenu, IDM_BACKGROUND, MF_CHECKED);
-		EnableMenuItem(hmenu, IDM_BGSOUND, MF_ENABLED);
-	}
-}
-
-void sysmenu_setbgsound(UINT8 value) {
-
-	np2oscfg.background &= 1;
-	np2oscfg.background |= (value & 2);
-	CheckMenuItem(GetSystemMenu(g_hWndMain, FALSE),
-									IDM_BGSOUND, MFCHECK((value & 2) ^ 2));
-}
-
-void sysmenu_setscrnmul(UINT8 value) {
-
-	HMENU	hmenu;
-
-//	np2cfg.scrnmul = value;
-	hmenu = GetSystemMenu(g_hWndMain, FALSE);
-	CheckMenuItem(hmenu, IDM_SCRNMUL4, MFCHECK(value == 4));
-	CheckMenuItem(hmenu, IDM_SCRNMUL6, MFCHECK(value == 6));
-	CheckMenuItem(hmenu, IDM_SCRNMUL8, MFCHECK(value == 8));
-	CheckMenuItem(hmenu, IDM_SCRNMUL10, MFCHECK(value == 10));
-	CheckMenuItem(hmenu, IDM_SCRNMUL12, MFCHECK(value == 12));
-	CheckMenuItem(hmenu, IDM_SCRNMUL16, MFCHECK(value == 16));
-}
 
 
 // ----
 
-void xmenu_initialize(void)
+/**
+ * メニュー初期化
+ * @param[in] メニュー ハンドル
+ */
+void xmenu_initialize(HMENU hMenu)
 {
-	HMENU	hMenu;
-	int		nPos;
-	HMENU	hmenuSub;
-	UINT	i;
-	int		nSubPos;
+	UINT nPos = 1;
 
-	hMenu = np2class_gethmenu(g_hWndMain);
-
-	nPos = 1;
 #if defined(SUPPORT_STATSAVE)
 	if (np2oscfg.statsave)
 	{
-		nPos += menu_addmenures(hMenu, nPos, IDR_STAT, FALSE);
+		nPos += InsertMenuResource(hMenu, nPos, TRUE, IDR_STAT);
 	}
 #endif
 
-	for (i=0; i<4; i++)
+	for (UINT i = 0; i < 4; i++)
 	{
 		if (np2cfg.fddequip & (1 << i))
 		{
-			nPos += menu_addmenures(hMenu, nPos, IDR_FDD1MENU + i, FALSE);
+			nPos += InsertMenuResource(hMenu, nPos, TRUE, IDR_FDD1MENU + i);
 		}
 	}
 
-	hmenuSub = CreatePopupMenu();
-	if (hmenuSub)
+	HMENU hMenuSub = CreatePopupMenu();
+	if (hMenuSub)
 	{
-		nSubPos = 0;
+		UINT nSubPos = 0;
 #if defined(SUPPORT_IDEIO)
-		nSubPos += menu_addmenures(hmenuSub, nSubPos, IDR_IDEMENU, FALSE);
-#else
-		nSubPos += menu_addmenures(hmenuSub, nSubPos, IDR_SASIMENU, FALSE);
-#endif
+		nSubPos += InsertMenuResource(hMenuSub, nSubPos, TRUE, IDR_IDEMENU);
+#else	// defined(SUPPORT_IDEIO)
+		nSubPos += InsertMenuResource(hMenuSub, nSubPos, TRUE, IDR_SASIMENU);
+#endif	// defined(SUPPORT_IDEIO)
+
 #if defined(SUPPORT_SCSI)
-		nSubPos += menu_addmenures(hmenuSub, nSubPos, IDR_SCSIMENU, TRUE);
-#endif
-		menu_insertmenures(hMenu, nPos, MF_BYPOSITION | MF_POPUP,
-												(UINT_PTR)hmenuSub, IDS_HDD);
+		if (nSubPos)
+		{
+			nSubPos += InsertMenu(hMenuSub, nSubPos, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+		}
+		nSubPos += InsertMenuResource(hMenuSub, nSubPos, TRUE, IDR_SCSIMENU);
+#endif	// defined(SUPPORT_SCSI)
+
+		std::tstring rString(LoadTString(IDS_HDD));
+		InsertMenu(hMenu, nPos, MF_BYPOSITION | MF_POPUP, reinterpret_cast<INT_PTR>(hMenuSub), rString.c_str());
 	}
 
 #if defined(SUPPORT_PX)
-	(void)menu_addmenubyid(hMenu, IDM_SPARKBOARD, IDR_PXMENU);
-#endif
-
-#if defined(SUPPORT_WAVEREC)
-	(void)menu_addmenubyid(hMenu, IDM_S98LOGGING, IDR_WAVEREC);
-#endif
+	InsertMenuResource(hMenu, IDM_SOUNDORCHESTRA, FALSE, IDR_PXMENU);
+#endif	// defined(SUPPORT_PX)
 
 	if (np2oscfg.I286SAVE)
 	{
 #if defined(SUPPORT_PC9821)
-		(void)menu_addmenubyid(hMenu, IDM_SSTP, IDR_CPUSAVE32);
+		InsertMenuResource(hMenu, IDM_CALENDAR, FALSE, IDR_CPUSAVE32);
 #else	//	defined(SUPPORT_PC9821)
-		(void)menu_addmenubyid(hMenu, IDM_SSTP, IDR_CPUSAVE16);
+		InsertMenuResource(hMenu, IDM_CALENDAR, FALSE, IDR_CPUSAVE16);
 #endif	//	defined(SUPPORT_PC9821)
 	}
 }
 
-void xmenu_disablewindow(void) {
-
-	HMENU	hmenu;
-
-	hmenu = np2class_gethmenu(g_hWndMain);
-	EnableMenuItem(hmenu, IDM_WINDOW, MF_GRAYED);
-	EnableMenuItem(hmenu, IDM_FULLSCREEN, MF_GRAYED);
-}
-
-void xmenu_setroltate(UINT8 value) {
-
-	HMENU	hmenu;
-
-	hmenu = np2class_gethmenu(g_hWndMain);
-	CheckMenuItem(hmenu, IDM_ROLNORMAL, MFCHECK(value == 0));
-	CheckMenuItem(hmenu, IDM_ROLLEFT, MFCHECK(value == 1));
-	CheckMenuItem(hmenu, IDM_ROLRIGHT, MFCHECK(value == 2));
-}
-
-void xmenu_setdispmode(UINT8 value) {
-
-	value &= 1;
-	np2cfg.DISPSYNC = value;
-	CheckMenuItem(np2class_gethmenu(g_hWndMain), IDM_DISPSYNC, MFCHECK(value));
-}
-
-void xmenu_setraster(UINT8 value) {
-
-	value &= 1;
-	np2cfg.RASTER = value;
-	CheckMenuItem(np2class_gethmenu(g_hWndMain), IDM_RASTER, MFCHECK(value));
-}
-
-void xmenu_setwaitflg(UINT8 value) {
-
-	value &= 1;
-	np2oscfg.NOWAIT = value;
-	CheckMenuItem(np2class_gethmenu(g_hWndMain), IDM_NOWAIT, MFCHECK(value));
-}
-
-void xmenu_setframe(UINT8 value) {
-
-	HMENU	hmenu;
-
-	np2oscfg.DRAW_SKIP = value;
-	hmenu = np2class_gethmenu(g_hWndMain);
-	CheckMenuItem(hmenu, IDM_AUTOFPS, MFCHECK(value == 0));
-	CheckMenuItem(hmenu, IDM_60FPS, MFCHECK(value == 1));
-	CheckMenuItem(hmenu, IDM_30FPS, MFCHECK(value == 2));
-	CheckMenuItem(hmenu, IDM_20FPS, MFCHECK(value == 3));
-	CheckMenuItem(hmenu, IDM_15FPS, MFCHECK(value == 4));
-}
-
-void xmenu_setkey(UINT8 value) {
-
-	HMENU	hmenu;
-
-	if (value >= 4) {
-		value = 0;
+/**
+ * メニュー状態を更新する
+ * @param[in] hMenu メニュー ハンドル
+ */
+void xmenu_update(HMENU hMenu)
+{
+	if (hMenu == NULL)
+	{
+		return;
 	}
-	np2cfg.KEY_MODE = value;
-	hmenu = np2class_gethmenu(g_hWndMain);
-	CheckMenuItem(hmenu, IDM_KEY, MFCHECK(value == 0));
-	CheckMenuItem(hmenu, IDM_JOY1, MFCHECK(value == 1));
-	CheckMenuItem(hmenu, IDM_JOY2, MFCHECK(value == 2));
-}
 
-void xmenu_setxshift(UINT8 value) {
+	// Screen
+	const bool bFullScreen = ((g_scrnmode & SCRNMODE_FULLSCREEN) != 0);
+	CheckMenuItem(hMenu, IDM_WINDOW, MF_BYCOMMAND | MFCHECK(!bFullScreen));
+	CheckMenuItem(hMenu, IDM_FULLSCREEN, MF_BYCOMMAND | MFCHECK(bFullScreen));
+	const UINT8 nRotateMode = g_scrnmode & SCRNMODE_ROTATEMASK;
+	CheckMenuItem(hMenu, IDM_ROLNORMAL, MF_BYCOMMAND | MFCHECK(nRotateMode == 0));
+	CheckMenuItem(hMenu, IDM_ROLLEFT, MF_BYCOMMAND | MFCHECK(nRotateMode == SCRNMODE_ROTATELEFT));
+	CheckMenuItem(hMenu, IDM_ROLRIGHT, MF_BYCOMMAND | MFCHECK(nRotateMode == SCRNMODE_ROTATERIGHT));
+	CheckMenuItem(hMenu, IDM_DISPSYNC, MF_BYCOMMAND | MFCHECK(np2cfg.DISPSYNC));
+	CheckMenuItem(hMenu, IDM_RASTER, MF_BYCOMMAND | MFCHECK(np2cfg.RASTER));
+	CheckMenuItem(hMenu, IDM_NOWAIT, MF_BYCOMMAND | MFCHECK(np2oscfg.NOWAIT));
+	const UINT8 DRAW_SKIP = np2oscfg.DRAW_SKIP;
+	CheckMenuItem(hMenu, IDM_AUTOFPS, MF_BYCOMMAND | MFCHECK(DRAW_SKIP == 0));
+	CheckMenuItem(hMenu, IDM_60FPS, MF_BYCOMMAND | MFCHECK(DRAW_SKIP == 1));
+	CheckMenuItem(hMenu, IDM_30FPS, MF_BYCOMMAND | MFCHECK(DRAW_SKIP == 2));
+	CheckMenuItem(hMenu, IDM_20FPS, MF_BYCOMMAND | MFCHECK(DRAW_SKIP == 3));
+	CheckMenuItem(hMenu, IDM_15FPS, MF_BYCOMMAND | MFCHECK(DRAW_SKIP == 4));
 
-	HMENU	hmenu;
+	// Device-Keyboard
+	const UINT8 KEY_MODE = np2cfg.KEY_MODE;
+	CheckMenuItem(hMenu, IDM_KEY, MF_BYCOMMAND | MFCHECK(KEY_MODE == 0));
+	CheckMenuItem(hMenu, IDM_JOY1, MF_BYCOMMAND | MFCHECK(KEY_MODE == 1));
+	CheckMenuItem(hMenu, IDM_JOY2, MF_BYCOMMAND | MFCHECK(KEY_MODE == 2));
+	const UINT8 XSHIFT = np2cfg.XSHIFT;
+	CheckMenuItem(hMenu, IDM_XSHIFT, MF_BYCOMMAND | MFCHECK(XSHIFT & 1));
+	CheckMenuItem(hMenu, IDM_XCTRL, MF_BYCOMMAND | MFCHECK(XSHIFT & 2));
+	CheckMenuItem(hMenu, IDM_XGRPH, MF_BYCOMMAND | MFCHECK(XSHIFT & 4));
+	const UINT8 F12COPY = np2oscfg.F12COPY;
+	CheckMenuItem(hMenu, IDM_F12MOUSE, MF_BYCOMMAND | MFCHECK(F12COPY == 0));
+	CheckMenuItem(hMenu, IDM_F12COPY, MF_BYCOMMAND | MFCHECK(F12COPY == 1));
+	CheckMenuItem(hMenu, IDM_F12STOP, MF_BYCOMMAND | MFCHECK(F12COPY == 2));
+	CheckMenuItem(hMenu, IDM_F12EQU, MF_BYCOMMAND | MFCHECK(F12COPY == 3));
+	CheckMenuItem(hMenu, IDM_F12COMMA, MF_BYCOMMAND | MFCHECK(F12COPY == 4));
+	CheckMenuItem(hMenu, IDM_USERKEY1, MF_BYCOMMAND | MFCHECK(F12COPY == 5));
+	CheckMenuItem(hMenu, IDM_USERKEY2, MF_BYCOMMAND | MFCHECK(F12COPY == 6));
 
-	np2cfg.XSHIFT = value;
-	hmenu = np2class_gethmenu(g_hWndMain);
-	CheckMenuItem(hmenu, IDM_XSHIFT, MFCHECK(value & 1));
-	CheckMenuItem(hmenu, IDM_XCTRL, MFCHECK(value & 2));
-	CheckMenuItem(hmenu, IDM_XGRPH, MFCHECK(value & 4));
-}
-
-void xmenu_setf12copy(UINT8 value) {
-
-	HMENU	hmenu;
-
-	if (value > 6) {
-		value = 0;
-	}
-	np2oscfg.F12COPY = value;
-	hmenu = np2class_gethmenu(g_hWndMain);
-	CheckMenuItem(hmenu, IDM_F12MOUSE, MFCHECK(value == 0));
-	CheckMenuItem(hmenu, IDM_F12COPY, MFCHECK(value == 1));
-	CheckMenuItem(hmenu, IDM_F12STOP, MFCHECK(value == 2));
-	CheckMenuItem(hmenu, IDM_F12EQU, MFCHECK(value == 3));
-	CheckMenuItem(hmenu, IDM_F12COMMA, MFCHECK(value == 4));
-	CheckMenuItem(hmenu, IDM_USERKEY1, MFCHECK(value == 5));
-	CheckMenuItem(hmenu, IDM_USERKEY2, MFCHECK(value == 6));
-}
-
-void xmenu_setbeepvol(UINT8 value) {
-
-	HMENU	hmenu;
-
-	value &= 3;
-	np2cfg.BEEP_VOL = value;
-	hmenu = np2class_gethmenu(g_hWndMain);
-	CheckMenuItem(hmenu, IDM_BEEPOFF, MFCHECK(value == 0));
-	CheckMenuItem(hmenu, IDM_BEEPLOW, MFCHECK(value == 1));
-	CheckMenuItem(hmenu, IDM_BEEPMID, MFCHECK(value == 2));
-	CheckMenuItem(hmenu, IDM_BEEPHIGH, MFCHECK(value == 3));
-}
-
-void xmenu_setsound(UINT8 value) {
-
-	HMENU	hmenu;
-
-	sysmng_update(SYS_UPDATESBOARD);
-	np2cfg.SOUND_SW = value;
-	hmenu = np2class_gethmenu(g_hWndMain);
-	CheckMenuItem(hmenu, IDM_NOSOUND, MFCHECK(value == 0x00));
-	CheckMenuItem(hmenu, IDM_PC9801_14, MFCHECK(value == 0x01));
-	CheckMenuItem(hmenu, IDM_PC9801_26K, MFCHECK(value == 0x02));
-	CheckMenuItem(hmenu, IDM_PC9801_86, MFCHECK(value == 0x04));
-	CheckMenuItem(hmenu, IDM_PC9801_26_86, MFCHECK(value == 0x06));
-	CheckMenuItem(hmenu, IDM_PC9801_86_CB, MFCHECK(value == 0x14));
-	CheckMenuItem(hmenu, IDM_PC9801_118, MFCHECK(value == 0x08));
-	CheckMenuItem(hmenu, IDM_SPEAKBOARD, MFCHECK(value == 0x20));
-	CheckMenuItem(hmenu, IDM_SPARKBOARD, MFCHECK(value == 0x40));
-	CheckMenuItem(hmenu, IDM_AMD98, MFCHECK(value == 0x80));
+	// Device-Sound
+	const UINT8 BEEP_VOL = np2cfg.BEEP_VOL;
+	CheckMenuItem(hMenu, IDM_BEEPOFF, MF_BYCOMMAND | MFCHECK(BEEP_VOL == 0));
+	CheckMenuItem(hMenu, IDM_BEEPLOW, MF_BYCOMMAND | MFCHECK(BEEP_VOL == 1));
+	CheckMenuItem(hMenu, IDM_BEEPMID, MF_BYCOMMAND | MFCHECK(BEEP_VOL == 2));
+	CheckMenuItem(hMenu, IDM_BEEPHIGH, MF_BYCOMMAND | MFCHECK(BEEP_VOL == 3));
+	const UINT8 SOUND_SW = np2cfg.SOUND_SW;
+	CheckMenuItem(hMenu, IDM_NOSOUND, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x00));
+	CheckMenuItem(hMenu, IDM_PC9801_14, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x01));
+	CheckMenuItem(hMenu, IDM_PC9801_26K, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x02));
+	CheckMenuItem(hMenu, IDM_PC9801_86, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x04));
+	CheckMenuItem(hMenu, IDM_PC9801_26_86, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x06));
+	CheckMenuItem(hMenu, IDM_PC9801_86_CB, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x14));
+	CheckMenuItem(hMenu, IDM_PC9801_118, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x08));
+	CheckMenuItem(hMenu, IDM_SPEAKBOARD, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x20));
+	CheckMenuItem(hMenu, IDM_SPARKBOARD, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x40));
 #if defined(SUPPORT_PX)
-	CheckMenuItem(hmenu, IDM_PX1, MFCHECK(value == 0x30));
-	CheckMenuItem(hmenu, IDM_PX2, MFCHECK(value == 0x50));
+	CheckMenuItem(hMenu, IDM_PX1, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x30));
+	CheckMenuItem(hMenu, IDM_PX2, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x50));
 #endif	// defined(SUPPORT_PX)
-}
+	CheckMenuItem(hMenu, IDM_SOUNDORCHESTRA, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x32));
+	CheckMenuItem(hMenu, IDM_SOUNDORCHESTRAV, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x82));
+	CheckMenuItem(hMenu, IDM_AMD98, MF_BYCOMMAND | MFCHECK(SOUND_SW == 0x80));
+	CheckMenuItem(hMenu, IDM_JASTSOUND, MF_BYCOMMAND | MFCHECK(np2oscfg.jastsnd));
+	CheckMenuItem(hMenu, IDM_SEEKSND, MF_BYCOMMAND | MFCHECK(np2cfg.MOTOR));
 
-void xmenu_setjastsound(UINT8 value) {
+	// Device-Memory
+	const UINT8 EXTMEM = np2cfg.EXTMEM;
+	CheckMenuItem(hMenu, IDM_MEM640, MF_BYCOMMAND | MFCHECK(EXTMEM == 0));
+	CheckMenuItem(hMenu, IDM_MEM16, MF_BYCOMMAND | MFCHECK(EXTMEM == 1));
+	CheckMenuItem(hMenu, IDM_MEM36, MF_BYCOMMAND | MFCHECK(EXTMEM == 3));
+	CheckMenuItem(hMenu, IDM_MEM76, MF_BYCOMMAND | MFCHECK(EXTMEM == 7));
+	CheckMenuItem(hMenu, IDM_MEM116, MF_BYCOMMAND | MFCHECK(EXTMEM == 11));
+	CheckMenuItem(hMenu, IDM_MEM136, MF_BYCOMMAND | MFCHECK(EXTMEM == 13));
 
-	value &= 1;
-	np2oscfg.jastsnd = value;
-	CheckMenuItem(np2class_gethmenu(g_hWndMain), IDM_JASTSOUND, MFCHECK(value));
-}
+	// Device
+	CheckMenuItem(hMenu, IDM_MOUSE, MF_BYCOMMAND | MFCHECK(np2oscfg.MOUSE_SW));
 
-void xmenu_setmotorflg(UINT8 value) {
+	// Other-ShortcutKey
+	const UINT8 shortcut = np2oscfg.shortcut;
+	CheckMenuItem(hMenu, IDM_ALTENTER, MF_BYCOMMAND | MFCHECK(shortcut & 1));
+	CheckMenuItem(hMenu, IDM_ALTF4, MF_BYCOMMAND | MFCHECK(shortcut & 2));
 
-	value &= 1;
-	np2cfg.MOTOR = value;
-	CheckMenuItem(np2class_gethmenu(g_hWndMain), IDM_SEEKSND, MFCHECK(value));
-}
-
-void xmenu_setextmem(UINT8 value) {
-
-	HMENU	hmenu;
-
-	sysmng_update(SYS_UPDATEMEMORY);
-	np2cfg.EXTMEM = value;
-	hmenu = np2class_gethmenu(g_hWndMain);
-	CheckMenuItem(hmenu, IDM_MEM640, MFCHECK(value == 0));
-	CheckMenuItem(hmenu, IDM_MEM16, MFCHECK(value == 1));
-	CheckMenuItem(hmenu, IDM_MEM36, MFCHECK(value == 3));
-	CheckMenuItem(hmenu, IDM_MEM76, MFCHECK(value == 7));
-	CheckMenuItem(hmenu, IDM_MEM116, MFCHECK(value == 11));
-	CheckMenuItem(hmenu, IDM_MEM136, MFCHECK(value == 13));
-}
-
-void xmenu_setmouse(UINT8 value) {
-
-	value &= 1;
-	np2oscfg.MOUSE_SW = value;
-	CheckMenuItem(np2class_gethmenu(g_hWndMain), IDM_MOUSE, MFCHECK(value));
-}
-
+	// Other
+	bool bLogging = false;
 #if defined(SUPPORT_S98)
-void xmenu_sets98logging(UINT8 value) {
-
-	CheckMenuItem(np2class_gethmenu(g_hWndMain),
-											IDM_S98LOGGING, MFCHECK(value));
-}
+	if (S98_isopened())
+	{
+		bLogging = true;
+	}
 #endif
-
 #if defined(SUPPORT_WAVEREC)
-void xmenu_setwaverec(UINT8 value) {
-
-	CheckMenuItem(np2class_gethmenu(g_hWndMain),
-											IDM_WAVEREC, MFCHECK(value));
-}
+	if (sound_isrecording())
+	{
+		bLogging = true;
+	}
 #endif
-
-void xmenu_setshortcut(UINT8 value) {
-
-	HMENU	hmenu;
-
-	np2oscfg.shortcut = value;
-	hmenu = np2class_gethmenu(g_hWndMain);
-	CheckMenuItem(hmenu, IDM_ALTENTER, MFCHECK(value & 1));
-	CheckMenuItem(hmenu, IDM_ALTF4, MFCHECK(value & 2));
+	CheckMenuItem(hMenu, MF_BYCOMMAND | IDM_S98LOGGING, MFCHECK(bLogging));
+	const UINT8 DISPCLK = np2oscfg.DISPCLK;
+	CheckMenuItem(hMenu, IDM_DISPCLOCK, MF_BYCOMMAND | MFCHECK(DISPCLK & 1));
+	CheckMenuItem(hMenu, IDM_DISPFRAME, MF_BYCOMMAND | MFCHECK(DISPCLK & 2));
+	CheckMenuItem(hMenu, IDM_JOYX, MF_BYCOMMAND | MFCHECK(np2cfg.BTN_MODE));
+	CheckMenuItem(hMenu, IDM_RAPID, MF_BYCOMMAND | MFCHECK(np2cfg.BTN_RAPID));
+	CheckMenuItem(hMenu, IDM_MSRAPID, MF_BYCOMMAND | MFCHECK(np2cfg.MOUSERAPID));
 }
-
-void xmenu_setdispclk(UINT8 value) {
-
-	HMENU	hmenu;
-
-	value &= 3;
-	np2oscfg.DISPCLK = value;
-	hmenu = np2class_gethmenu(g_hWndMain);
-	CheckMenuItem(hmenu, IDM_DISPCLOCK, MFCHECK(value & 1));
-	CheckMenuItem(hmenu, IDM_DISPFRAME, MFCHECK(value & 2));
-	sysmng_workclockrenewal();
-	sysmng_updatecaption(3);
-}
-
-void xmenu_setbtnmode(UINT8 value) {
-
-	value &= 1;
-	np2cfg.BTN_MODE = value;
-	CheckMenuItem(np2class_gethmenu(g_hWndMain), IDM_JOYX, MFCHECK(value));
-}
-
-void xmenu_setbtnrapid(UINT8 value) {
-
-	value &= 1;
-	np2cfg.BTN_RAPID = value;
-	CheckMenuItem(np2class_gethmenu(g_hWndMain), IDM_RAPID, MFCHECK(value));
-}
-
-void xmenu_setmsrapid(UINT8 value) {
-
-	value &= 1;
-	np2cfg.MOUSERAPID = value;
-	CheckMenuItem(np2class_gethmenu(g_hWndMain), IDM_MSRAPID, MFCHECK(value));
-}
-
-void xmenu_setsstp(UINT8 value) {
-
-	value &= 1;
-	np2oscfg.sstp = value;
-	CheckMenuItem(np2class_gethmenu(g_hWndMain), IDM_SSTP, MFCHECK(value));
-}
-

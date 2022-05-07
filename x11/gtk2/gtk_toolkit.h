@@ -29,7 +29,7 @@
 G_BEGIN_DECLS
 
 const char *gui_gtk_get_toolkit(void);
-BOOL gui_gtk_arginit(int *argcp, char ***argvp);
+BRESULT gui_gtk_arginit(int *argcp, char ***argvp);
 void gui_gtk_widget_create(void);
 void gui_gtk_widget_show(void);
 void gui_gtk_widget_mainloop(void);

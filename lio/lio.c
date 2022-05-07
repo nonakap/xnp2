@@ -1,14 +1,18 @@
-#include	"compiler.h"
-#include	"cpucore.h"
-#include	"pccore.h"
-#include	"iocore.h"
-#include	"gdc_sub.h"
-#include	"bios.h"
-#include	"biosmem.h"
-#include	"vram.h"
-#include	"lio.h"
-#include	"lio.res"
+/**
+ * @file	lio.c
+ * @brief	Implementation of LIO
+ */
 
+#include "compiler.h"
+#include "lio.h"
+#include "cpucore.h"
+#include "pccore.h"
+#include "iocore.h"
+#include "gdc_sub.h"
+#include "bios/bios.h"
+#include "bios/biosmem.h"
+#include "vram.h"
+#include "lio.res"
 
 void lio_initialize(void) {
 

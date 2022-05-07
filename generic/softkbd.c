@@ -76,7 +76,7 @@ void softkbd_deinitialize(void) {
 	}
 }
 
-BOOL softkbd_getsize(int *width, int *height) {
+BRESULT softkbd_getsize(int *width, int *height) {
 
 	if (softkbd.ptr == NULL) {
 		return(FAILURE);

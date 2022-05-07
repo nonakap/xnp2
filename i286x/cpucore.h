@@ -14,18 +14,16 @@
 #error : not support CPUSTRUC_MEMWAIT
 #endif
 
-#include	"memory.h"
+#include	"cpumem.h"
 
 
 #if !defined(CPUDEBUG)
 enum {
-	I286_MEMREADMAX		= 0xa4000,
 	I286_MEMWRITEMAX	= 0xa0000
 };
 #else									// ダイレクトアクセス範囲を狭める
 enum {
-	I286_MEMREADMAX		= 0x00400,
-	I286_MEMWRITEMAX	= 0x00400
+	I286_MEMWRITEMAX	= 0xa0000
 };
 #endif
 

@@ -43,12 +43,12 @@ extern NP2TOOL np2tool;
 void toolwin_create(void);
 void toolwin_destroy(void);
 
-void toolwin_setfdd(BYTE drv, const char *name);
+void toolwin_setfdd(UINT8 drv, const char *name);
 
-void toolwin_fddaccess(BYTE drv);
-void toolwin_hddaccess(BYTE drv);
+void toolwin_fddaccess(UINT8 drv);
+void toolwin_hddaccess(UINT8 drv);
 
-void toolwin_draw(BYTE frame);
+void toolwin_draw(UINT8 frame);
 
 void toolwin_readini(void);
 void toolwin_writeini(void);

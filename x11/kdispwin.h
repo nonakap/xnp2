@@ -15,16 +15,16 @@ enum {
 typedef struct {
 	int	posx;
 	int	posy;
-	BYTE	mode;
-	BYTE	type;
+	UINT8	mode;
+	UINT8	type;
 } KDISPCFG;
 
 extern KDISPCFG kdispcfg;
 
-BOOL kdispwin_initialize(void);
+BRESULT kdispwin_initialize(void);
 void kdispwin_create(void);
 void kdispwin_destroy(void);
-void kdispwin_draw(BYTE cnt);
+void kdispwin_draw(UINT8 cnt);
 void kdispwin_readini(void);
 void kdispwin_writeini(void);
 

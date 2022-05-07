@@ -10,7 +10,7 @@
 #include	"scsiio.h"
 #include	"scsiio.tbl"
 #include	"scsicmd.h"
-#include	"sxsi.h"
+#include	"fdd/sxsi.h"
 
 #if defined(_WIN32) && defined(TRACE)
 extern void iptrace_out(void);
@@ -110,6 +110,8 @@ REG8 scsicmd_transfer(REG8 id, UINT8 *cdb) {
 			else if (leng < scsiio.transfer) {
 				return(0x20);		// Pause
 			}
+#else
+			(void)leng;
 #endif
 			return(0x16);			// Succeed
 	}

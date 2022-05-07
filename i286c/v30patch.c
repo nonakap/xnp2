@@ -4,11 +4,12 @@
 #include	"v30patch.h"
 #include	"pccore.h"
 #include	"iocore.h"
-#include	"bios.h"
+#include	"bios/bios.h"
 #include	"dmav30.h"
+#include <limits.h>
 #include	"i286c.mcr"
 #if defined(ENABLE_TRAP)
-#include	"steptrap.h"
+#include "trap/steptrap.h"
 #endif
 
 
@@ -99,8 +100,8 @@ I286FN v30_reserved(void) {
 
 I286FN v30segprefix_es(void) {				// 26: es:
 
-	SS_FIX = ES_BASE;
-	DS_FIX = ES_BASE;
+	I286_SS_FIX = I286_ES_BASE;
+	I286_DS_FIX = I286_ES_BASE;
 	I286_PREFIX++;
 	if (I286_PREFIX < MAX_PREFIX) {
 		UINT op;
@@ -116,8 +117,8 @@ I286FN v30segprefix_es(void) {				// 26: es:
 
 I286FN v30segprefix_cs(void) {				// 2e: cs:
 
-	SS_FIX = CS_BASE;
-	DS_FIX = CS_BASE;
+	I286_SS_FIX = I286_CS_BASE;
+	I286_DS_FIX = I286_CS_BASE;
 	I286_PREFIX++;
 	if (I286_PREFIX < MAX_PREFIX) {
 		UINT op;
@@ -133,8 +134,8 @@ I286FN v30segprefix_cs(void) {				// 2e: cs:
 
 I286FN v30segprefix_ss(void) {				// 36: ss:
 
-	SS_FIX = SS_BASE;
-	DS_FIX = SS_BASE;
+	I286_SS_FIX = I286_SS_BASE;
+	I286_DS_FIX = I286_SS_BASE;
 	I286_PREFIX++;
 	if (I286_PREFIX < MAX_PREFIX) {
 		UINT op;
@@ -150,8 +151,8 @@ I286FN v30segprefix_ss(void) {				// 36: ss:
 
 I286FN v30segprefix_ds(void) {				// 3e: ds:
 
-	SS_FIX = DS_BASE;
-	DS_FIX = DS_BASE;
+	I286_SS_FIX = I286_DS_BASE;
+	I286_DS_FIX = I286_DS_BASE;
 	I286_PREFIX++;
 	if (I286_PREFIX < MAX_PREFIX) {
 		UINT op;
@@ -172,9 +173,7 @@ I286FN v30mov_seg_ea(void) {				// 8E:	mov		segrem, EA
 
 	UINT	op;
 	UINT	tmp;
-	UINT16	ipbak;
 
-	ipbak = I286_IP;
 	GET_PCBYTE(op);
 	if (op >= 0xc0) {
 		I286_WORKCLOCK(2);
@@ -187,25 +186,25 @@ I286FN v30mov_seg_ea(void) {				// 8E:	mov		segrem, EA
 	switch(op & 0x18) {
 		case 0x00:			// es
 			I286_ES = (UINT16)tmp;
-			ES_BASE = tmp << 4;
+			I286_ES_BASE = tmp << 4;
 			break;
 
 		case 0x08:			// cs
 			I286_CS = (UINT16)tmp;
-			CS_BASE = tmp << 4;
+			I286_CS_BASE = tmp << 4;
 			break;
 
 		case 0x10:			// ss
 			I286_SS = (UINT16)tmp;
-			SS_BASE = tmp << 4;
-			SS_FIX = SS_BASE;
+			I286_SS_BASE = tmp << 4;
+			I286_SS_FIX = I286_SS_BASE;
 			NEXT_OPCODE
 			break;
 
 		case 0x18:			// ds
 			I286_DS = (UINT16)tmp;
-			DS_BASE = tmp << 4;
-			DS_FIX = DS_BASE;
+			I286_DS_BASE = tmp << 4;
+			I286_DS_FIX = I286_DS_BASE;
 			break;
 	}
 }
@@ -452,7 +451,7 @@ I286FN v30_aad(void) {						// D5:	AAD
 I286FN v30_xlat(void) {						// D6:	xlat
 
 	I286_WORKCLOCK(5);
-	I286_AL = i286_memoryread(LOW16(I286_AL + I286_BX) + DS_FIX);
+	I286_AL = i286_memoryread(LOW16(I286_AL + I286_BX) + I286_DS_FIX);
 }
 
 I286FN v30_repne(void) {					// F2:	repne
@@ -578,7 +577,7 @@ I286_F6 v30_idiv_ea16(UINT op) {
 		src = i286_memoryread_w(CALC_EA(op));
 	}
 	tmp = (SINT32)((I286_DX << 16) + I286_AX);
-	if (src) {
+	if ((src) && (tmp != INT_MIN)) {
 		r = tmp / src;
 		if (!((r + 0x8000) & 0xffff0000)) {
 			I286_AX = (SINT16)r;
@@ -629,8 +628,8 @@ static const V30PATCH v30patch_op[] = {
 
 I286FN v30repe_segprefix_es(void) {
 
-	DS_FIX = ES_BASE;
-	SS_FIX = ES_BASE;
+	I286_DS_FIX = I286_ES_BASE;
+	I286_SS_FIX = I286_ES_BASE;
 	I286_PREFIX++;
 	if (I286_PREFIX < MAX_PREFIX) {
 		UINT op;
@@ -646,8 +645,8 @@ I286FN v30repe_segprefix_es(void) {
 
 I286FN v30repe_segprefix_cs(void) {
 
-	DS_FIX = CS_BASE;
-	SS_FIX = CS_BASE;
+	I286_DS_FIX = I286_CS_BASE;
+	I286_SS_FIX = I286_CS_BASE;
 	I286_PREFIX++;
 	if (I286_PREFIX < MAX_PREFIX) {
 		UINT op;
@@ -663,8 +662,8 @@ I286FN v30repe_segprefix_cs(void) {
 
 I286FN v30repe_segprefix_ss(void) {
 
-	DS_FIX = SS_BASE;
-	SS_FIX = SS_BASE;
+	I286_DS_FIX = I286_SS_BASE;
+	I286_SS_FIX = I286_SS_BASE;
 	I286_PREFIX++;
 	if (I286_PREFIX < MAX_PREFIX) {
 		UINT op;
@@ -680,8 +679,8 @@ I286FN v30repe_segprefix_ss(void) {
 
 I286FN v30repe_segprefix_ds(void) {
 
-	DS_FIX = DS_BASE;
-	SS_FIX = DS_BASE;
+	I286_DS_FIX = I286_DS_BASE;
+	I286_SS_FIX = I286_DS_BASE;
 	I286_PREFIX++;
 	if (I286_PREFIX < MAX_PREFIX) {
 		UINT op;
@@ -727,8 +726,8 @@ static const V30PATCH v30patch_repe[] = {
 
 I286FN v30repne_segprefix_es(void) {
 
-	DS_FIX = ES_BASE;
-	SS_FIX = ES_BASE;
+	I286_DS_FIX = I286_ES_BASE;
+	I286_SS_FIX = I286_ES_BASE;
 	I286_PREFIX++;
 	if (I286_PREFIX < MAX_PREFIX) {
 		UINT op;
@@ -744,8 +743,8 @@ I286FN v30repne_segprefix_es(void) {
 
 I286FN v30repne_segprefix_cs(void) {
 
-	DS_FIX = CS_BASE;
-	SS_FIX = CS_BASE;
+	I286_DS_FIX = I286_CS_BASE;
+	I286_SS_FIX = I286_CS_BASE;
 	I286_PREFIX++;
 	if (I286_PREFIX < MAX_PREFIX) {
 		UINT op;
@@ -761,8 +760,8 @@ I286FN v30repne_segprefix_cs(void) {
 
 I286FN v30repne_segprefix_ss(void) {
 
-	DS_FIX = SS_BASE;
-	SS_FIX = SS_BASE;
+	I286_DS_FIX = I286_SS_BASE;
+	I286_SS_FIX = I286_SS_BASE;
 	I286_PREFIX++;
 	if (I286_PREFIX < MAX_PREFIX) {
 		UINT op;
@@ -778,8 +777,8 @@ I286FN v30repne_segprefix_ss(void) {
 
 I286FN v30repne_segprefix_ds(void) {
 
-	DS_FIX = DS_BASE;
-	SS_FIX = DS_BASE;
+	I286_DS_FIX = I286_DS_BASE;
+	I286_SS_FIX = I286_DS_BASE;
 	I286_PREFIX++;
 	if (I286_PREFIX < MAX_PREFIX) {
 		UINT op;
@@ -856,7 +855,7 @@ void v30c(void) {
 	if (I286_TRAP) {
 		do {
 #if defined(ENABLE_TRAP)
-			steptrap(CPU_CS, CPU_IP);
+			steptrap(I286_CS, I286_IP);
 #endif
 			GET_PCBYTE(opcode);
 			v30op[opcode]();
@@ -869,7 +868,7 @@ void v30c(void) {
 	else if (dmac.working) {
 		do {
 #if defined(ENABLE_TRAP)
-			steptrap(CPU_CS, CPU_IP);
+			steptrap(I286_CS, I286_IP);
 #endif
 			GET_PCBYTE(opcode);
 			v30op[opcode]();
@@ -879,7 +878,7 @@ void v30c(void) {
 	else {
 		do {
 #if defined(ENABLE_TRAP)
-			steptrap(CPU_CS, CPU_IP);
+			steptrap(I286_CS, I286_IP);
 #endif
 			GET_PCBYTE(opcode);
 			v30op[opcode]();

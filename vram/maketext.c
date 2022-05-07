@@ -6,7 +6,7 @@
 #include	"scrndraw.h"
 #include	"dispsync.h"
 #include	"maketext.h"
-#include	"font.h"
+#include	"font/font.h"
 
 
 		TRAM_T	tramflag;
@@ -547,7 +547,7 @@ void maketext40(int text_renewal) {
 				UINT32 lastbitp;
 				edi = esi;
 				gaiji1st = 0;
-				kanji2nd = 0;
+				kanji2nd = FALSE;
 				lastbitp = 0;
 				for (x=0; x<(TEXTXMAX/2); x++) {					// width40
 					if (edi == csrw) {

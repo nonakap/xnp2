@@ -1,9 +1,9 @@
 #include	"compiler.h"
 
-#ifdef	TRACEOUT
+#if 0
 #undef	TRACEOUT
-#endif
 #define	TRACEOUT(s)	trace_fmt s
+#endif	/* 0 */
 
 // ‚±‚êAscsicmd‚Æ‚Ç‚¤“‡‚·‚é‚Ì‚æH
 
@@ -15,7 +15,7 @@
 #include	"iocore.h"
 #include	"ideio.h"
 #include	"atapicmd.h"
-#include	"sxsi.h"
+#include	"fdd/sxsi.h"
 
 #define	YUIDEBUG
 
@@ -154,7 +154,7 @@ void atapicmd_a0(IDEDRV drv) {
 		drv->buf[0] = 0x70;
 		drv->buf[2] = drv->sk;
 		drv->buf[7] = 11;	// length
-		drv->buf[12] = (BYTE)(drv->asc & 0xff);
+		drv->buf[12] = (UINT8)(drv->asc & 0xff);
 		senddata(drv, 18, leng);
 		break;
 
@@ -325,35 +325,35 @@ static void atapi_cmd_read(IDEDRV drv, UINT32 lba, UINT32 nsec) {
 #define	PC_2A_SIZE	20
 
 // page code changeable value
-static const BYTE chgval_pagecode_01[PC_01_SIZE] = {
+static const UINT8 chgval_pagecode_01[PC_01_SIZE] = {
 	0x00, 0x00, 0x37, 0xff, 0x00, 0x00, 0x00, 0x00,
 };
-static const BYTE chgval_pagecode_0d[PC_0D_SIZE] = {
+static const UINT8 chgval_pagecode_0d[PC_0D_SIZE] = {
 	0x00, 0x00, 0x00, 0x0f, 0xff, 0xff, 0xff, 0xff,
 };
-static const BYTE chgval_pagecode_0e[PC_0E_SIZE] = {
+static const UINT8 chgval_pagecode_0e[PC_0E_SIZE] = {
 	0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0xff, 0xff,
 	0x0f, 0xff, 0x0f, 0xff, 0x00, 0x00, 0x00, 0x00,
 };
-static const BYTE chgval_pagecode_2a[PC_2A_SIZE] = {
+static const UINT8 chgval_pagecode_2a[PC_2A_SIZE] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x02, 0xc2, 0x00, 0x02, 0x00, 0x00, 0x02, 0xc2,
 	0x00, 0x00, 0x00, 0x00,
 };
 
 // page code default value
-static const BYTE defval_pagecode_01[PC_01_SIZE] = {
+static const UINT8 defval_pagecode_01[PC_01_SIZE] = {
 	0x01, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
-static const BYTE defval_pagecode_0d[PC_0D_SIZE] = {
+static const UINT8 defval_pagecode_0d[PC_0D_SIZE] = {
 	0x0d, 0x06, 0x00, 0x00, 0x00, 0x3c, 0x00, 0x4b,
 };
-static const BYTE defval_pagecode_0e[PC_0E_SIZE] = {
+static const UINT8 defval_pagecode_0e[PC_0E_SIZE] = {
 	0x0e, 0x0e, 0x04, 0x00, 0x00, 0x00, 0x00, 0x4b,
 	0x01, 0xff, 0x02, 0xff, 0x00, 0x00, 0x00, 0x00,
 };
 
-static const BYTE defval_pagecode_2a[PC_2A_SIZE] = {
+static const UINT8 defval_pagecode_2a[PC_2A_SIZE] = {
 #ifdef YUIDEBUG
 	0x2a, 0x12, 0x00, 0x00, 0x71, 0x65, 0x89, 0x07,
 	0x02, 0xc2, 0x00, 0xff, 0x00, 0x80, 0x02, 0xc2,
@@ -382,7 +382,7 @@ static void atapi_cmd_mode_select(IDEDRV drv) {
 // 0x5a: MODE SENSE
 static void atapi_cmd_mode_sense(IDEDRV drv) {
 
-	const BYTE	*ptr;
+	const UINT8	*ptr;
 	UINT		leng;
 	UINT		cnt;
 	UINT8		pctrl, pcode;

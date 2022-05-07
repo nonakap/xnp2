@@ -1,3 +1,11 @@
+/**
+ * @file	bios.h
+ * @brief	Interface of BIOS
+ */
+
+#pragma once
+
+#include "cpumem.h"
 
 enum {
 	BIOS_SEG		= 0xfd80,

@@ -1,65 +1,66 @@
+/**
+ * @file	viewer.h
+ * @brief	DebugUty 用ビューワ クラスの宣言およびインターフェイスの定義をします
+ */
 
-#define	NP2VIEW_MAX	8
+#pragma once
 
-typedef struct {
-	UINT8	vram;
-	UINT8	itf;
-	UINT8	A20;
-} VIEWMEM_T;
+#include "..\misc\WndProc.h"
 
-enum {
-	VIEWMODE_REG = 0,
-	VIEWMODE_SEG,
-	VIEWMODE_1MB,
-	VIEWMODE_ASM,
-	VIEWMODE_SND
+class CDebugUtyItem;
+
+//! ビュー最大数
+#define NP2VIEW_MAX		8
+
+/**
+ * @brief ビュー クラス
+ */
+class CDebugUtyView : public CWndProc
+{
+public:
+	static void Initialize(HINSTANCE hInstance);
+	static void New();
+	static void AllClose();
+	static void AllUpdate(bool bForce);
+
+	CDebugUtyView();
+	virtual ~CDebugUtyView();
+	void UpdateCaption();
+	UINT32 GetVScrollPos() const;
+	void SetVScrollPos(UINT nPos);
+	void SetVScroll(UINT nPos, UINT nLines);
+	void UpdateVScroll();
+
+protected:
+	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
+	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
+	int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	void OnSize(UINT nType, int cx, int cy);
+	void OnPaint();
+	void OnVScroll(UINT nSBCode, UINT nPos, HWND hwndScrollBar);
+	void OnEnterMenuLoop(BOOL bIsTrackPopupMenu);
+	void OnActivate(UINT nState, HWND hwndOther, BOOL bMinimized);
+	virtual void PostNcDestroy();
+
+private:
+	bool m_bActive;				//!< アクティブ フラグ
+	UINT m_nVPos;				//!< 位置
+	UINT m_nVLines;				//!< ライン数
+	UINT m_nVPage;				//!< 1ページの表示数
+	UINT m_nVMultiple;			//!< 倍率
+	CDebugUtyItem* m_lpItem;	//!< 表示アイテム
+	static DWORD sm_dwLastTick;	//!< 最後のTick
+	void SetMode(UINT nID);
+	void SetSegmentItem(HMENU hMenu, int nId, LPCTSTR lpSegment, UINT nSegment);
+	void UpdateView();
+	static void UpdateActive();
 };
 
-enum {
-	ALLOCTYPE_NONE = 0,
-	ALLOCTYPE_REG,
-	ALLOCTYPE_SEG,
-	ALLOCTYPE_1MB,
-	ALLOCTYPE_ASM,
-	ALLOCTYPE_SND,
-
-	ALLOCTYPE_ERROR = 0xffffffff
-};
-
-typedef struct {
-	UINT32	type;
-	UINT32	arg;
-	UINT32	size;
-	void	*ptr;
-} VIEWMEMBUF;
-
-typedef struct {
-	HWND		hwnd;
-	VIEWMEMBUF	buf1;
-	VIEWMEMBUF	buf2;
-	UINT32		pos;
-	UINT32		maxline;
-	UINT16		step;
-	UINT16		mul;
-	UINT8		alive;
-	UINT8		type;
-	UINT8		lock;
-	UINT8		active;
-	UINT16		seg;
-	UINT16		off;
-	VIEWMEM_T	dmem;
-	SCROLLINFO	si;
-} NP2VIEW_T;
-
-extern	const TCHAR		np2viewfont[];
-extern	NP2VIEW_T		np2view[NP2VIEW_MAX];
-
-
-BOOL viewer_init(HINSTANCE hInstance);
-void viewer_term(void);
-
-void viewer_open(HINSTANCE hInstance);
-void viewer_allclose(void);
-
-void viewer_allreload(BOOL force);
-
+/**
+ * 現在の位置を返す
+ * @return 位置
+ */
+inline UINT32 CDebugUtyView::GetVScrollPos() const
+{
+	return m_nVPos;
+}

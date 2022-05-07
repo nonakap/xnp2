@@ -24,7 +24,9 @@ Xnp2 - ねこープロジェクトII for X Window System
     以下は動作には必須ではありませんが、音を鳴らす場合等に必要になります。
 
     ・SDL (サウンド・ジョイスティックを使用する場合に必要です。)
+      バージョンは 1.2.x もしくは 2.0.x に対応しています。
     ・SDL_mixer (フロッピーのシーク音等の PCM を再生する場合に必要です。)
+    ・libusb 1.0 (C86BOX を使って FM 音源を再生する場合に必要です。)
     ・XFree86-VidModeExtension (画面解像度を変更するフルスクリーン機能を使用する場合に必要)
 
   3.2. 実行時に必要なソフトウェア
@@ -213,7 +215,75 @@ Xnp2 - ねこープロジェクトII for X Window System
       使用します。
 
 
-8. 備考
+8. USB 接続 FM 音源
+
+  8.1. サポート機器
+
+    Xnp2 では USB 接続 FM 音源をサポートしています。
+    現在サポートしている機器は以下となります。
+
+    ・SPFM Light (http://www.pyonpyon.jp/~gasshi/fm/spfmlight.html)
+      RE:birth モジュール RE1-YM2608 との組み合わせで動作確認済み
+
+    ・C86BOX (http://c86box.com/)
+      PC-9801-86 との組み合わせで動作確認済み
+
+  8.2. 使用方法
+
+    これらの機器を使用するためには Xnp2 を root ユーザで実行する、もしくは
+    機器にアクセスするためのデバイスファイルをユーザから読み書きできる権限を
+    付与する必要があります。
+    Xnp2 を root ユーザで実行するのはお勧めしておりませんので、以下の方法で
+    通常のユーザからアクセスできるようにしてください。
+
+    8.2.1. Linux
+
+      お使いの OS が Linux で udev を使用している場合、/etc/udev/rurles.d に
+      以下の内容を記載したファイルを作成する事により、機器を接続した際に
+      機器にアクセスするためのデバイスファイルが自動的に一般ユーザから
+      読み書きできる設定が行われるようになります。
+
+      ファイル名: /etc/udev/rules.d/70-external-fm-sound.rules
+      ----- ここから
+      ACTION!="add", GOTO="external_fm_sound_end"
+      SUBSYSTEM=="tty", IMPORT{parent}="ID_VENDOR_ID", IMPORT{parent}="ID_MODEL_ID"
+      # C86BOX
+      SUBSYSTEM=="usb", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="27d8", MODE="0666"
+      # SPFM Light (a.k.a. FTDI FT232RL)
+      SUBSYSTEM=="tty", KERNEL=="ttyUSB*", ENV{ID_VENDOR_ID}=="0403", ENV{ID_MODEL_ID}=="6001", MODE="0666"
+      LABEL="external_fm_sound_end"
+      ----- ここまで
+
+    8.2.2. NetBSD
+
+      8.2.2.1. ログイン時設定
+
+        /etc/ttyaction に以下の内容を追加する事により、ログイン時にデバイス
+        ファイルの権限が自動的にログインユーザ、もしくは一般ユーザから
+        アクセスできるようになります。
+
+        ----- ここから
+        ttyE0   *       chown ${USER}:wheel /dev/ugen[0-9]*.* /dev/usb /dev/usb[0-9]*
+        ttyE0   *       chmod go-rw /dev/ttyU*
+        ttyE0   login   chmod go+rw /dev/ttyU*
+        console *       chown ${USER}:wheel /dev/ugen[0-9]*.* /dev/usb /dev/usb[0-9]*
+        console *       chmod go-rw /dev/ttyU*
+        console login   chmod go+rw /dev/ttyU*
+        ----- ここまで
+
+      8.2.2.2. chmod 実行
+
+        root ユーザで必要なデバイスファイルの権限を設定します。
+        ただし MAKEDEV すると元のアクセス権限に戻ってしまいます。
+
+        # chmod go+rw /dev/ugen* /dev/ttyU*
+
+    8.2.3. その他 OS
+
+      お使いの OS のマニュアルや Web ページを参考にしてください。
+
+
+9. 備考
 
   ・man page がインストールされていれば man xnp2 でマニュアルが表示されます。
 
@@ -223,20 +293,24 @@ Xnp2 - ねこープロジェクトII for X Window System
       Xnp2 help URL: http://www.nonakap.org/np2/html/help/ja/
 
 
-9. 問題点
+10. 問題点
 
   ・解像度変更をするフルスクリーン機能を使用している際に、元の画面解像度が
     640x480以外の場合に仮想画面がスクロールしてしまう。
 
+  ・NetBSD では SPFM Light が使用できない。
+    SPFM Light との通信に使用する uftdi(4) が 1.5Mbps の通信速度に対応して
+    いないため。
 
-10. 免責事項・著作権
 
-  10.1. 免責事項
+11. 免責事項・著作権
+
+  11.1. 免責事項
 
     Xnp2 は無保証です。Xnp2 の使用によって得られたいかなる利益・損害に対しても
     作者は責任を負いません。
 
-  10.2. 著作権
+  11.2. 著作権
 
     本ソフトウェアの著作権、その他の知的財産権は、日本法に準拠する為、
     ねこさん開発ちーむが所有しています。
@@ -246,7 +320,7 @@ Xnp2 - ねこープロジェクトII for X Window System
     ありません。
 
 
-11. 連絡先
+12. 連絡先
 
   本ソフトウェアの配布元は http://www.nonakap.org/np2/ です。
 

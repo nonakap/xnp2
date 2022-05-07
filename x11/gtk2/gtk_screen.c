@@ -62,7 +62,7 @@ typedef struct {
 	double		ratio_w, ratio_h;
 	int		interp;
 
-	GdkColor	pal[NP2PAL_EXTEND];
+	GdkColor	pal[NP2PAL_MAX];
 } DRAWMNG;
 
 typedef struct {
@@ -335,7 +335,7 @@ scrnmng_initialize(void)
 	}
 }
 
-BOOL
+BRESULT
 scrnmng_create(UINT8 mode)
 {
 	GdkScreen *screen;

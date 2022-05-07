@@ -24,10 +24,10 @@
  */
 
 #include "compiler.h"
-#include "cpu.h"
-#include "ia32.mcr"
+#include "ia32/cpu.h"
+#include "ia32/ia32.mcr"
 
-#include "instructions/fpu/fp.h"
+#include "ia32/instructions/fpu/fp.h"
 
 
 void

@@ -1,4 +1,20 @@
+/**
+ * @file	viewmem.h
+ * @brief	DebugUty 用メモリ読み込みクラスの宣言およびインターフェイスの定義をします
+ */
 
-void viewmem_read(VIEWMEM_T *cfg, UINT32 adrs, UINT8 *buf, UINT32 size);
-void viewmem_write(VIEWMEM_T *cfg, UINT32 adrs, UINT8 *buf, UINT32 size);
+#pragma once
 
+/**
+ * @brief メモリ読み込み
+ */
+struct DebugUtyViewMemory
+{
+	UINT8	vram;		//!< VRAM バンク
+	UINT8	itf;		//!< ITF バンク
+	UINT8	A20;		//!< A20 ライン
+
+	DebugUtyViewMemory();
+	void Update();
+	void Read(UINT32 nAddress, LPVOID lpBuffer, UINT32 cbBuffer) const;
+};

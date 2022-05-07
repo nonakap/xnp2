@@ -22,14 +22,14 @@ typedef struct {
 
 
 static BOOL
-inigetbmp(const BYTE *ptr, UINT pos)
+inigetbmp(const UINT8 *ptr, UINT pos)
 {
 
 	return ((ptr[pos >> 3] >> (pos & 7)) & 1);
 }
 
 static void
-inisetbmp(BYTE *ptr, UINT pos, BOOL set)
+inisetbmp(UINT8 *ptr, UINT pos, BOOL set)
 {
 	UINT8 bit;
 
@@ -73,14 +73,14 @@ inirdargs16(const char *src, INITBL *ini)
 static void
 inirdargh8(const char *src, INITBL *ini)
 {
-	BYTE *dst;
+	UINT8 *dst;
 	int dsize;
 	int i;
-	BYTE val;
+	UINT8 val;
 	BOOL set;
 	char c;
 
-	dst = (BYTE *)ini->value;
+	dst = (UINT8 *)ini->value;
 	dsize = ini->arg;
 
 	for (i = 0; i < dsize; i++) {
@@ -120,11 +120,11 @@ static void
 iniwrsetargh8(char *work, int size, INITBL *ini)
 {
 	char tmp[8];
-	const BYTE *ptr;
+	const UINT8 *ptr;
 	UINT arg;
 	UINT i;
 
-	ptr = (BYTE *)(ini->value);
+	ptr = (UINT8 *)(ini->value);
 	arg = ini->arg;
 	if (arg > 0) {
 		g_snprintf(tmp, sizeof(tmp), "%.2x ", ptr[0]);
@@ -149,7 +149,7 @@ inirdbyte3(const char *src, INITBL *ini)
 		}
 		if ((((src[i] - '0') & 0xff) < 9) ||
 		    (((src[i] - 'A') & 0xdf) < 26)) {
-			((BYTE *)ini->value)[i] = src[i];
+			((UINT8 *)ini->value)[i] = src[i];
 		}
 	}
 }
@@ -198,7 +198,7 @@ inirdinterp(const char *src, INITBL *ini)
 
 static void update_iniread_flag(const INITBL *p);
 
-static BOOL
+static BRESULT
 inireadcb(void *arg, const char *para, const char *key, const char *data)
 {
 	char work[512];
@@ -221,11 +221,11 @@ inireadcb(void *arg, const char *para, const char *key, const char *data)
 				break;
 
 			case INITYPE_BOOL:
-				*((BYTE *)p->value) = (!milstr_cmp(data, str_true))?1:0;
+				*((UINT8 *)p->value) = (!milstr_cmp(data, str_true))?1:0;
 				break;
 
 			case INITYPE_BITMAP:
-				inisetbmp((BYTE *)p->value, p->arg, milstr_cmp(data, str_true) == 0);
+				inisetbmp((UINT8 *)p->value, p->arg, milstr_cmp(data, str_true) == 0);
 				break;
 
 			case INITYPE_ARGS16:
@@ -382,7 +382,7 @@ ini_write(const char *path, const char *title, INITBL *tbl, UINT count, BOOL cre
 	INITBL	*p;
 	INITBL	*pterm;
 	FILEH	fh;
-	BOOL	set;
+	BRESULT	set;
 
 	fh = FILEH_INVALID;
 	if (!create) {
@@ -413,11 +413,11 @@ ini_write(const char *path, const char *title, INITBL *tbl, UINT count, BOOL cre
 				break;
 
 			case INITYPE_BOOL:
-				milstr_ncpy(work, (*((BYTE *)p->value)) ? str_true : str_false, sizeof(work));
+				milstr_ncpy(work, (*((UINT8 *)p->value)) ? str_true : str_false, sizeof(work));
 				break;
 
 			case INITYPE_BITMAP:
-				milstr_ncpy(work, inigetbmp((BYTE *)p->value, p->arg) ? str_true : str_false, sizeof(work));
+				milstr_ncpy(work, inigetbmp((UINT8 *)p->value, p->arg) ? str_true : str_false, sizeof(work));
 				break;
 
 			case INITYPE_ARGH8:
@@ -437,7 +437,7 @@ ini_write(const char *path, const char *title, INITBL *tbl, UINT count, BOOL cre
 				break;
 
 			case INITYPE_UINT8:
-				g_snprintf(work, sizeof(work), "%u", *((BYTE *)p->value));
+				g_snprintf(work, sizeof(work), "%u", *((UINT8 *)p->value));
 				break;
 
 			case INITYPE_UINT16:
@@ -449,7 +449,7 @@ ini_write(const char *path, const char *title, INITBL *tbl, UINT count, BOOL cre
 				break;
 
 			case INITYPE_HEX8:
-				g_snprintf(work, sizeof(work), "%x", *((BYTE *)p->value));
+				g_snprintf(work, sizeof(work), "%x", *((UINT8 *)p->value));
 				break;
 
 			case INITYPE_HEX16:
@@ -538,7 +538,7 @@ static INITBL iniitem[] = {
 	{"HDD1FILE", INITYPE_STR,	np2cfg.sasihdd[0],	MAX_PATH},
 	{"HDD2FILE", INITYPE_STR,	np2cfg.sasihdd[1],	MAX_PATH},
 
-	{"SampleHz", INITYPE_UINT16,	&np2cfg.samplingrate,	0},
+	{"SampleHz", INITYPE_UINT32,	&np2cfg.samplingrate,	0},
 	{"Latencys", INITYPE_UINT16,	&np2cfg.delayms,	0},
 	{"SNDboard", INITYPE_HEX8,	&np2cfg.SOUND_SW,	0},
 	{"BEEP_vol", INIAND_UINT8,	&np2cfg.BEEP_VOL,	3},

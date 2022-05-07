@@ -1,6 +1,11 @@
+/**
+ * @file	pccore.h
+ * @brief	Interface of the core
+ */
 
-#include	"nevent.h"
-#include	"statsave.h"
+#pragma once
+
+#include "nevent.h"
 
 enum {
 	PCBASECLOCK25		= 2457600,
@@ -27,14 +32,40 @@ enum {
 	PCROM_SCSI			= 0x08,
 	PCROM_BIOS9821		= 0x10,
 
-	PCSOUND_NONE		= 0x00,
-
 	PCCBUS_PC9861K		= 0x0001,
 	PCCBUS_MPU98		= 0x0002
 };
 
+/**
+ * Sound ID
+ */
+enum tagSoundId
+{
+	SOUNDID_NONE				= 0,		/*!< No boards */
+	SOUNDID_PC_9801_14			= 0x01,		/*!< PC-9801-14 */ 
+	SOUNDID_PC_9801_26K			= 0x02,		/*!< PC-9801-26K */ 
+	SOUNDID_PC_9801_86			= 0x04,		/*!< PC-9801-86 */ 
+	SOUNDID_PC_9801_86_26K		= 0x06,		/*!< PC-9801-86 + 26K */ 
+	SOUNDID_PC_9801_118			= 0x08,		/*!< PC-9801-118 */
+	SOUNDID_PC_9801_86_ADPCM	= 0x14,		/*!< PC-9801-86 with ADPCM */
+	SOUNDID_SPEAKBOARD			= 0x20,		/*!< Speak board */
+	SOUNDID_SPARKBOARD			= 0x40,		/*!< Spark board */
+	SOUNDID_AMD98				= 0x80,		/*!< AMD-98 */
+	SOUNDID_SOUNDORCHESTRA		= 0x32,		/*!< SOUND ORCHESTRA */
+	SOUNDID_SOUNDORCHESTRAV		= 0x82,		/*!< SOUND ORCHESTRA-V */
 
-typedef struct {
+#if defined(SUPPORT_PX)
+	SOUNDID_PX1					= 0x30,
+	SOUNDID_PX2					= 0x50,
+#endif	/* defined(SUPPORT_PX) */
+};
+typedef enum tagSoundId		SOUNDID;
+
+/**
+ * @brief config
+ */
+struct tagNP2Config
+{
 	// エミュレート中によく参照される奴
 	UINT8	uPD72020;
 	UINT8	DISPSYNC;
@@ -70,7 +101,7 @@ typedef struct {
 	UINT32	BG_COLOR;
 	UINT32	FG_COLOR;
 
-	UINT16	samplingrate;
+	UINT32	samplingrate;
 	UINT16	delayms;
 	UINT8	SOUND_SW;
 	UINT8	snd_x;
@@ -111,7 +142,8 @@ typedef struct {
 	OEMCHAR	fontfile[MAX_PATH];
 	OEMCHAR	biospath[MAX_PATH];
 	OEMCHAR	hdrvroot[MAX_PATH];
-} NP2CFG;
+};
+typedef struct tagNP2Config  NP2CFG;		/*!< The define of config */
 
 typedef struct {
 	UINT32	baseclock;
@@ -124,10 +156,11 @@ typedef struct {
 	UINT8	dipsw[3];		// リセット時のDIPSW
 	UINT8	rom;
 
-	UINT32	sound;
+	SOUNDID sound;
 	UINT32	device;
 
 	UINT32	realclock;
+	UINT	frames;
 } PCCORE;
 
 enum {
@@ -157,7 +190,7 @@ extern	PCSTAT	pcstat;
 extern	UINT8	soundrenewal;
 extern	UINT	drawcount;
 
-void getbiospath(OEMCHAR *path, const OEMCHAR *fname, int maxlen);
+void getbiospath(OEMCHAR *path, const OEMCHAR *fname, UINT maxlen);
 void screendisp(NEVENTITEM item);
 void screenvsync(NEVENTITEM item);
 

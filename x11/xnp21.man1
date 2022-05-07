@@ -1,4 +1,4 @@
-.TH XNP21 1 "June 7, 2014"
+.TH XNP21 1 "Jan 13, 2016"
 .SH NAME
 Xnp21 \- PC-9801 series emulator with IA-32 emulation
 .SH SYNOPSIS
@@ -64,11 +64,23 @@ font bitmap file
 .B $(HOME)/.np2/bios.rom
 BIOS ROM file
 .TP
-.B $(HOME)/.np2/font.rom
+.B $(HOME)/.np2/FONT.ROM
 font ROM file
 .TP
-.B $(HOME)/.np2/sound.rom
-sound BIOS ROM file
+.B $(HOME)/.np2/sound26.rom
+PC-9801-26K BIOS ROM file
+.TP
+.B $(HOME)/.np2/sound86.rom
+PC-9801-86 BIOS ROM file
+.TP
+.B $(HOME)/.np2/sound118.rom
+PC-9801-118 BIOS ROM file
+.TP
+.B $(HOME)/.np2/soundSPB.rom
+Speak board BIOS ROM file
+.TP
+.B $(HOME)/.np2/SCCI.ini
+SCCI (Sound Chip Common Interface) configuration file
 .TP
 .B $(HOME)/.np2/timidity.cfg
 included software MIDI configuration file

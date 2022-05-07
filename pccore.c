@@ -20,8 +20,8 @@
 #include	"pc9861k.h"
 #include	"mpu98ii.h"
 #include	"amd98.h"
-#include	"bios.h"
-#include	"biosmem.h"
+#include "bios/bios.h"
+#include "bios/biosmem.h"
 #include	"vram.h"
 #include	"scrndraw.h"
 #include	"dispsync.h"
@@ -30,15 +30,17 @@
 #include	"maketgrp.h"
 #include	"makegrph.h"
 #include	"makegrex.h"
+#include "sound/sndcsec.h"
 #include	"sound.h"
 #include	"fmboard.h"
 #include	"beep.h"
 #include	"s98.h"
-#include	"font.h"
-#include	"diskdrv.h"
-#include	"fddfile.h"
-#include	"fdd_mtr.h"
-#include	"sxsi.h"
+#include	"tms3631.h"
+#include	"fdd/diskdrv.h"
+#include	"fdd/fddfile.h"
+#include	"fdd/fdd_mtr.h"
+#include	"fdd/sxsi.h"
+#include	"font/font.h"
 #if defined(SUPPORT_HOSTDRV)
 #include	"hostdrv.h"
 #endif
@@ -67,7 +69,7 @@ const OEMCHAR np2version[] = OEMTEXT(NP2VER_CORE);
 				OEMTEXT("VX"), PCBASECLOCK25, PCBASEMULTIPLE,
 				{0x48, 0x05, 0x04, 0x00, 0x01, 0x00, 0x00, 0x6e},
 				1, 1, 2, 1, 0x000000, 0xffffff,
-				22050, 500, 4, 0,
+				44100, 250, 4, 0,
 				{0, 0, 0}, 0xd1, 0x7f, 0xd1, 0, 0, 1,
 				3, {0x0c, 0x0c, 0x08, 0x06, 0x03, 0x0c}, 64, 64, 64, 64, 64,
 				1, 0x82,
@@ -81,8 +83,8 @@ const OEMCHAR np2version[] = OEMTEXT(NP2VER_CORE);
 
 	PCCORE	pccore = {	PCBASECLOCK25, PCBASEMULTIPLE,
 						0, PCMODEL_VX, 0, 0, {0x3e, 0x73, 0x7b}, 0,
-						0, 0,
-						PCBASECLOCK25 * PCBASEMULTIPLE};
+						SOUNDID_NONE, 0,
+						PCBASECLOCK25 * PCBASEMULTIPLE, 0};
 	PCSTAT	pcstat = {3, TRUE, FALSE, FALSE};
 
 //	UINT8	screenupdate = 3;
@@ -95,7 +97,7 @@ const OEMCHAR np2version[] = OEMTEXT(NP2VER_CORE);
 
 // ---------------------------------------------------------------------------
 
-void getbiospath(OEMCHAR *path, const OEMCHAR *fname, int maxlen) {
+void getbiospath(OEMCHAR *path, const OEMCHAR *fname, UINT maxlen) {
 
 const OEMCHAR	*p;
 
@@ -179,7 +181,7 @@ static void pccore_set(const NP2CFG *pConfig)
 	CopyMemory(pccore.dipsw, pConfig->dipsw, 3);
 
 	// サウンドボードの接続
-	pccore.sound = pConfig->SOUND_SW;
+	pccore.sound = (SOUNDID)pConfig->SOUND_SW;
 
 	// その他CBUSの接続
 	pccore.device = 0;
@@ -199,14 +201,13 @@ static void pccore_set(const NP2CFG *pConfig)
 #if !defined(DISABLE_SOUND)
 static void sound_init(void)
 {
-	UINT	rate;
+	UINT rate;
 
 	rate = np2cfg.samplingrate;
-	if ((rate != 11025) && (rate != 22050) && (rate != 44100))
+	if (sound_create(rate, np2cfg.delayms) != SUCCESS)
 	{
 		rate = 0;
 	}
-	sound_create(rate, np2cfg.delayms);
 	fddmtrsnd_initialize(rate);
 	beep_initialize(rate);
 	beep_setvol(np2cfg.BEEP_VOL);
@@ -224,6 +225,8 @@ static void sound_init(void)
 	pcm86gen_setvol(np2cfg.vol_pcm);
 	cs4231_initialize(rate);
 	amd98_initialize(rate);
+	oplgen_initialize(rate);
+	oplgen_setvol(np2cfg.vol_fm);
 }
 
 static void sound_term(void) {
@@ -237,9 +240,15 @@ static void sound_term(void) {
 }
 #endif
 
-void pccore_init(void) {
-
+/**
+ * Initialize
+ */
+void pccore_init(void)
+{
 	CPU_INITIALIZE();
+
+	SNDCSEC_INIT;
+	SNDCSEC_ENTER;
 
 	pal_initlcdtable();
 	pal_makelcdpal();
@@ -255,8 +264,9 @@ void pccore_init(void) {
 	fddfile_initialize();
 
 #if !defined(DISABLE_SOUND)
+	fmboard_construct();
 	sound_init();
-#endif
+#endif	/* !defined(DISABLE_SOUND) */
 
 	rs232c_construct();
 	mpu98ii_construct();
@@ -267,9 +277,16 @@ void pccore_init(void) {
 #if defined(SUPPORT_HOSTDRV)
 	hostdrv_initialize();
 #endif
+
+	SNDCSEC_LEAVE;
 }
 
-void pccore_term(void) {
+/**
+ * Terminate
+ */
+void pccore_term(void)
+{
+	SNDCSEC_ENTER;
 
 #if defined(SUPPORT_HOSTDRV)
 	hostdrv_deinitialize();
@@ -277,7 +294,8 @@ void pccore_term(void) {
 
 #if !defined(DISABLE_SOUND)
 	sound_term();
-#endif
+	fmboard_destruct();
+#endif	/* !defined(DISABLE_SOUND) */
 
 	fdd_eject(0);
 	fdd_eject(1);
@@ -293,6 +311,9 @@ void pccore_term(void) {
 	sxsi_alltrash();
 
 	CPU_DEINITIALIZE();
+
+	SNDCSEC_LEAVE;
+	SNDCSEC_TERM;
 }
 
 
@@ -330,6 +351,8 @@ void pccore_reset(void) {
 
 	int		i;
 	BOOL	epson;
+
+	SNDCSEC_ENTER;
 
 	soundmng_stop();
 #if !defined(DISABLE_SOUND)
@@ -425,9 +448,7 @@ void pccore_reset(void) {
 	timing_reset();
 	soundmng_play();
 
-#if 0 && defined(SUPPORT_IDEIO)	// Test!
-	sxsi_devopen(0x02, OEMTEXT("e:\\pn\\pn.iso"));
-#endif
+	SNDCSEC_LEAVE;
 }
 
 static void drawscreen(void) {
@@ -624,6 +645,8 @@ void pccore_exec(BOOL draw) {
 	mouseif_sync();
 	pal_eventclear();
 
+	SNDCSEC_ENTER;
+
 	gdc.vsync = 0;
 	pcstat.screendispflag = 1;
 	MEMWAIT_TRAM = np2cfg.wait[0];
@@ -665,11 +688,15 @@ void pccore_exec(BOOL draw) {
 	S98_sync();
 	sound_sync();
 
+	SNDCSEC_LEAVE;
+
 	if (pcstat.hardwarereset) {
 		pcstat.hardwarereset = FALSE;
 		pccore_cfgupdate();
 		pccore_reset();
 	}
+
+	pccore.frames++;
 
 #if defined(TRACE)
 	execcnt++;

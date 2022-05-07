@@ -1,3 +1,11 @@
+/**
+ * @file	dlgcfg.h
+ * @brief	Interface of the configure dialog
+ */
+
+#pragma once
+
+#include "../menubase/menubase.h"
 
 #if defined(SIZE_QVGA)
 enum {

@@ -58,7 +58,7 @@ static void getmaincenter(GtkWidget *w, int *cx, int *cy);
 static void mouseonoff(int onoff);
 
 
-int
+BRESULT
 mousemng_initialize(void)
 {
 	static gchar hide_cursor[16*16/8] = {

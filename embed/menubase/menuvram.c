@@ -1,9 +1,15 @@
-#include	"compiler.h"
-#include	"vramhdl.h"
-#include	"vrammix.h"
-#include	"menudeco.inc"
-#include	"menubase.h"
+/**
+ * @file	menuvram.c
+ * @brief	Implementation of the vram of the menu
+ */
 
+#include "compiler.h"
+#include "menuvram.h"
+#include "menubase.h"
+#include "menudeco.inc"
+#include "menuicon.h"
+#include "menures.h"
+#include "../vrammix.h"
 
 UINT32	menucolor[] = {
 						0xffffff,			// MVC_BACK

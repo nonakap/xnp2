@@ -5,17 +5,9 @@
 #include	"scrndraw.h"
 #include	"palettes.h"
 
-
-#if defined(SUPPORT_PC9821)
-		RGB32		np2_pal32[NP2PAL_EXTEND];
+		RGB32		np2_pal32[NP2PAL_MAX];
 #if defined(SUPPORT_16BPP)
-		RGB16		np2_pal16[NP2PAL_EXTEND];
-#endif
-#else
-		RGB32		np2_pal32[NP2PAL_NORMAL];
-#if defined(SUPPORT_16BPP)
-		RGB16		np2_pal16[NP2PAL_NORMAL];
-#endif
+		RGB16		np2_pal16[NP2PAL_MAX];
 #endif
 
 		PALEVENT	palevent;

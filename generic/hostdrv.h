@@ -1,5 +1,13 @@
+/**
+ * @file	hostdrv.h
+ * @brief	Interface of host drive
+ */
+
+#pragma once
 
 #if defined(SUPPORT_HOSTDRV)
+
+#include "statsave.h"
 
 #define	DIRMAX_DEPTH		8
 
@@ -9,11 +17,17 @@ enum {
 	HDFMODE_DELETE		= 0x04
 };
 
-typedef struct {
-	long	hdl;
+/**
+ * @brief ファイル ハンドル
+ */
+struct tagHostDrvHandle
+{
+	INTPTR	hdl;
 	UINT	mode;
 	OEMCHAR	path[MAX_PATH];
-} _HDRVFILE, *HDRVFILE;
+};
+typedef struct tagHostDrvHandle _HDRVHANDLE;
+typedef struct tagHostDrvHandle *HDRVHANDLE;
 
 typedef struct {
 	struct {

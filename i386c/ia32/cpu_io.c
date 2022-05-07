@@ -28,7 +28,7 @@
 #include "cpu.h"
 #include "pccore.h"
 #include "iocore.h"
-#include "memory.h"
+#include "cpumem.h"
 
 static void CPUCALL check_io(UINT port, UINT len);
 

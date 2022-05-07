@@ -44,7 +44,7 @@ static void secinc(_SYSTIME *dt) {
 	}
 	dt->week = (UINT16)((dt->week + 1) % 7);
 	dt->day++;
-	if (dt->day < daylimit) {
+	if (dt->day <= daylimit) {
 		goto secinc_exit;
 	}
 	dt->day = 1;
@@ -86,6 +86,23 @@ static void date2bcd(UINT8 *bcd, const _SYSTIME *t) {
 	bcd[5] = AdjustAfterMultiply((UINT8)t->second);
 }
 
+/**
+ * Updates week
+ * @param[in,out] t The date-time
+ */
+static void updateweek(_SYSTIME *t)
+{
+	UINT y = t->year;
+	UINT m = t->month;
+
+	if (m < 3)
+	{
+		y--;
+		m += 12;
+	}
+	t->week = (UINT16)((y + (y / 4) - (y / 100) + (y / 400) + (((13 * m) + 8) / 5) + t->day) % 7);
+}
+
 
 // -----
 
@@ -109,9 +126,14 @@ void calendar_inc(void) {
 	secinc(&cal.dt);
 }
 
-void calendar_set(const UINT8 *bcd) {
-
+/**
+ * Set
+ * @param[in] bcd The date-time
+ */
+void calendar_set(const UINT8 *bcd)
+{
 	date2deg(&cal.dt, bcd);
+	updateweek(&cal.dt);
 }
 
 void calendar_getvir(UINT8 *bcd) {

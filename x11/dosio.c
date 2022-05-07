@@ -3,7 +3,7 @@
 #include <sys/stat.h>
 #include <time.h>
 
-#include "codecnv.h"
+#include "codecnv/codecnv.h"
 #include "dosio.h"
 
 
@@ -112,7 +112,7 @@ file_attr(const OEMCHAR *path)
 	return -1;
 }
 
-static BOOL
+static BRESULT
 cnvdatetime(struct stat *sb, DOSDATE *dosdate, DOSTIME *dostime)
 {
 	struct tm *ftime;
@@ -140,7 +140,7 @@ file_getdatetime(FILEH handle, DOSDATE *dosdate, DOSTIME *dostime)
 	struct stat sb;
 
 	if ((fstat(fileno(handle), &sb) == 0)
-	 && (cnvdatetime(&sb, dosdate, dostime)))
+	 && (cnvdatetime(&sb, dosdate, dostime) == SUCCESS))
 		return 0;
 	return -1;
 }
@@ -153,10 +153,24 @@ file_delete(const OEMCHAR *path)
 }
 
 short
+file_rename(const OEMCHAR *existpath, const OEMCHAR *newpath)
+{
+
+	return (short)rename(existpath, newpath);
+}
+
+short
 file_dircreate(const OEMCHAR *path)
 {
 
 	return (short)mkdir(path, 0777);
+}
+
+short
+file_dirdelete(const OEMCHAR *path)
+{
+
+	return (short)rmdir(path);
 }
 
 
@@ -253,7 +267,7 @@ file_list1st(const OEMCHAR *dir, FLINFO *fli)
 	return FLISTH_INVALID;
 }
 
-BOOL
+BRESULT
 file_listnext(FLISTH hdl, FLINFO *fli)
 {
 	OEMCHAR buf[MAX_PATH];

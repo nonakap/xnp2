@@ -31,7 +31,7 @@
 
 #include "kbdmng.h"
 
-static const BYTE kbdmng_f12keys[] = {
+static const UINT8 kbdmng_f12keys[] = {
 	0x61,	/* Copy */
 	0x60,	/* Stop */
 	0x4f,	/* tenkey [,] */
@@ -41,7 +41,7 @@ static const BYTE kbdmng_f12keys[] = {
 	0x3f,	/* Help */
 };
 
-BYTE
+UINT8
 kbdmng_getf12key(void)
 {
 	int key;

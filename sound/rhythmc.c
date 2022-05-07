@@ -1,9 +1,12 @@
-#include	"compiler.h"
-#include	<math.h>
-#include	"pccore.h"
-#include	"sound.h"
-#include	"rhythm.h"
+/**
+ * @file	rhythmc.c
+ * @brief	Implementation of the OPNA rhythm
+ */
 
+#include "compiler.h"
+#include <math.h>
+#include "rhythm.h"
+#include "pccore.h"
 
 static const OEMCHAR file_2608bd[] = OEMTEXT("2608_bd.wav");
 static const OEMCHAR file_2608sd[] = OEMTEXT("2608_sd.wav");
@@ -86,9 +89,9 @@ void rhythm_setvol(UINT vol) {
 	rhythmcfg.vol = vol;
 }
 
-void rhythm_reset(RHYTHM rhy) {
-
-	ZeroMemory(rhy, sizeof(_RHYTHM));
+void rhythm_reset(RHYTHM rhy)
+{
+	memset(rhy, 0, sizeof(*rhy));
 }
 
 void rhythm_bind(RHYTHM rhy) {

@@ -33,7 +33,7 @@
 #include "pccore.h"
 #include "iocore.h"
 #include "dmax86.h"
-#include "bios.h"
+#include "bios/bios.h"
 
 
 void
@@ -170,7 +170,7 @@ ia32_step(void)
 		break;
 	}
 
-	do {
+	{
 		exec_1step();
 		if (CPU_TRAP) {
 			CPU_DR6 |= CPU_DR6_BS;
@@ -179,7 +179,7 @@ ia32_step(void)
 		if (dmac.working) {
 			dmax86();
 		}
-	} while (CPU_REMCLOCK > 0);
+	}
 }
 
 void CPUCALL

@@ -22,9 +22,9 @@ extern "C" {
 #define	_MEM_USED(a)			_memused(a)
 
 void _meminit(void);
-void *_memalloc(int size, const OEMCHAR *name);
+void *_memalloc(int size, const char *name);
 void _memfree(void *hdl);
-void _handle_append(void *hdl, const OEMCHAR *name);
+void _handle_append(void *hdl, const char *name);
 void _handle_remove(void *hdl);
 void _memused(const OEMCHAR *filename);
 

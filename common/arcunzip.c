@@ -194,7 +194,7 @@ static long method0_seek(ARCFH arcfh, long pos, UINT method) {
 	else if (pos > (long)m0->size) {
 		pos = m0->size;
 	}
-	m0->pos = pos;
+	m0->pos = (UINT)pos;
 	return(pos);
 }
 
@@ -242,7 +242,7 @@ typedef struct {
 	UINT		srcpos;
 	UINT		dstsize;
 	UINT		dstpos;
-	long		dstdiff;
+	int			dstdiff;
 
 	z_stream	stream;
 	int			err;
@@ -363,7 +363,7 @@ static long method8_seek(ARCFH arcfh, long pos, UINT method) {
 	else if (pos > (long)m8->dstsize) {
 		pos = m8->dstsize;
 	}
-	m8->dstdiff = pos - m8->dstpos;
+	m8->dstdiff = (int)(pos - m8->dstpos);
 	return(pos);
 }
 
@@ -406,7 +406,6 @@ static ARCFH openzipfile(ARCH arch, const ZIPCAT *cat) {
 	ZIPHDL	*hdl;
 	UINT	method;
 	long	fpos;
-	UINT	size;
 	FILEH	fh;
 	ZIPDAT	zd;
 
@@ -415,7 +414,6 @@ static ARCFH openzipfile(ARCH arch, const ZIPCAT *cat) {
 //	TRACEOUT(("method = %d", method));
 
 	fpos = LOADINTELDWORD(cat->internalfpos);
-	size = LOADINTELDWORD(cat->compresssize);
 
 //	TRACEOUT(("fpos = %d", fpos));
 	fh = hdl->fh;

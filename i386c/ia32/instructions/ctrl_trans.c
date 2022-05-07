@@ -24,14 +24,14 @@
  */
 
 #include "compiler.h"
-#include "cpu.h"
-#include "ia32.mcr"
-#include "ctrlxfer.h"
+#include "ia32/cpu.h"
+#include "ia32/ia32.mcr"
+#include "ia32/ctrlxfer.h"
 
 #include "ctrl_trans.h"
 
 #if defined(ENABLE_TRAP)
-#include "inttrap.h"
+#include "trap/inttrap.h"
 #endif
 
 
@@ -1199,7 +1199,7 @@ RETfar32(void)
 		POP0_32(new_cs);
 
 		/* check new instrunction pointer with new code segment */
-		load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+		load_segreg(CPU_CS_INDEX, (UINT16)new_cs, &sreg, &sd, GP_EXCEPTION);
 		if (new_ip > sd.u.seg.limit) {
 			EXCEPTION(GP_EXCEPTION, 0);
 		}
@@ -1268,7 +1268,7 @@ RETfar32_Iw(void)
 		POP0_32(new_cs);
 
 		/* check new instrunction pointer with new code segment */
-		load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+		load_segreg(CPU_CS_INDEX, (UINT16)new_cs, &sreg, &sd, GP_EXCEPTION);
 		if (new_ip > sd.u.seg.limit) {
 			EXCEPTION(GP_EXCEPTION, 0);
 		}
@@ -1314,7 +1314,7 @@ IRET(void)
 		}
 
 		/* check new instrunction pointer with new code segment */
-		load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+		load_segreg(CPU_CS_INDEX, (UINT16)new_cs, &sreg, &sd, GP_EXCEPTION);
 		if (new_ip > sd.u.seg.limit) {
 			EXCEPTION(GP_EXCEPTION, 0);
 		}

@@ -1,3 +1,11 @@
+/**
+ * @file	rhythm.h
+ * @brief	Interface of the OPNA rhythm
+ */
+
+#pragma once
+
+#include "pcmmix.h"
 
 typedef struct {
 	PMIXHDR	hdr;
@@ -24,4 +32,3 @@ void rhythm_setreg(RHYTHM rhy, UINT reg, REG8 val);
 #ifdef __cplusplus
 }
 #endif
-

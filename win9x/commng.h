@@ -1,3 +1,9 @@
+/**
+ * @file	commng.h
+ * @brief	COM マネージャの宣言およびインターフェイスの定義をします
+ */
+
+#pragma once
 
 // ---- com manager interface
 
@@ -24,16 +30,20 @@ enum {
 };
 
 struct _commng;
-typedef struct _commng	_COMMNG;
-typedef struct _commng	*COMMNG;
+typedef struct _commng	_COMMNG;		/*!< defines the instance of COMMNG */
+typedef struct _commng	*COMMNG;		/*!< defines the instance of COMMNG */
 
-struct _commng {
-	UINT	connect;
-	UINT	(*read)(COMMNG self, UINT8 *data);
-	UINT	(*write)(COMMNG self, UINT8 data);
-	UINT8	(*getstat)(COMMNG self);
-	long	(*msg)(COMMNG self, UINT msg, long param);
-	void	(*release)(COMMNG self);
+/**
+ * @brief COMMNG
+ */
+struct _commng
+{
+	UINT	connect;											/*!< flags */
+	UINT	(*read)(COMMNG self, UINT8 *data);					/*!< read */
+	UINT	(*write)(COMMNG self, UINT8 data);					/*!< write */
+	UINT8	(*getstat)(COMMNG self);							/*!< get status */
+	INTPTR	(*msg)(COMMNG self, UINT msg, INTPTR param);		/*!< message */
+	void	(*release)(COMMNG self);							/*!< release */
 };
 
 typedef struct {
@@ -45,7 +55,8 @@ typedef struct {
 
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 COMMNG commng_create(UINT device);
@@ -81,8 +92,3 @@ enum {
 };
 
 void commng_initialize(void);
-
-#include	"cmserial.h"
-#include	"cmmidi.h"
-#include	"cmpara.h"
-

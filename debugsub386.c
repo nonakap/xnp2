@@ -14,7 +14,7 @@ void debugpageptr(UINT32 addr);
 #if defined(MACOS)
 #define	CRLITERAL	"\r"
 #define	CRCONST		str_cr
-#elif defined(X11) || defined(SLZAURUS)
+#elif defined(X11)
 #define	CRLITERAL	"\n"
 #define	CRCONST		str_lf
 #else

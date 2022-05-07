@@ -1,3 +1,11 @@
+/**
+ * @file	vrammix.h
+ * @brief	Interface of mixing vram
+ */
+
+#pragma once
+
+#include "vramhdl.h"
 
 enum {
 	VRAMALPHA		= 255,

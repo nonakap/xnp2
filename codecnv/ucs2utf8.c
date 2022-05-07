@@ -1,75 +1,123 @@
-#include	"compiler.h"
-#include	"codecnv.h"
+/**
+ * @file	ucs2utf8.c
+ * @brief	Implementation of converting UCS2 to UTF-8
+ */
 
+#include "compiler.h"
+#include "codecnv.h"
 
-UINT codecnv_ucs2toutf8(char *dst, UINT dcnt, const UINT16 *src, UINT scnt) {
+static UINT ucs2len(const UINT16 *lpString);
+static UINT ucs2toutf8(char *lpOutput, UINT cchOutput, const UINT16 *lpInput, UINT cchInput);
 
-	UINT	orgdcnt;
-	BOOL	stringmode;
-	UINT	c;
+/**
+ * Maps a UTF-16 string to a UTF-8 string
+ * @param[out] lpOutput Pointer to a buffer that receives the converted string
+ * @param[in] cchOutput Size, in characters, of the buffer indicated by lpOutput
+ * @param[in] lpInput Pointer to the character string to convert
+ * @param[in] cchInput Size, in characters, of the buffer indicated by lpInput
+ * @return The number of characters written to the buffer indicated by lpOutput
+ */
+UINT codecnv_ucs2toutf8(char *lpOutput, UINT cchOutput, const UINT16 *lpInput, UINT cchInput)
+{
+	UINT nLength;
 
-	if (src == NULL) {
-		return(0);
+	if (lpInput == NULL)
+	{
+		return 0;
 	}
-	if (dcnt == 0) {
-		dst = NULL;
-		dcnt = (UINT)-1;
+
+	if (cchOutput == 0)
+	{
+		lpOutput = NULL;
+		cchOutput = (UINT)-1;
 	}
-	orgdcnt = dcnt;
-	stringmode = (((SINT)scnt) < 0);
-	if (stringmode) {
-		dcnt--;
+
+	if (cchInput != (UINT)-1)
+	{
+		// Binary mode
+		return ucs2toutf8(lpOutput, cchOutput, lpInput, cchInput);
 	}
-	while(scnt > 0) {
-		c = *src++;
-		scnt--;
-		if ((c == '\0') && (stringmode)) {
-			break;
+	else
+	{
+		// String mode
+		nLength = ucs2toutf8(lpOutput, cchOutput - 1, lpInput, ucs2len(lpInput));
+		if (lpOutput)
+		{
+			lpOutput[nLength] = '\0';
 		}
-		else if (c < 0x80) {
-			if (dcnt == 0) {
-				break;
-			}
-			dcnt--;
-			if (dst) {
-				dst[0] = (char)c;
-				dst += 1;
-			}
-		}
-		else if (c < 0x800) {
-			if (dcnt < 2) {
-				break;
-			}
-			dcnt -= 2;
-			if (dst) {
-				dst[0] = (char)(0xc0 + ((c >> 6) & 0x1f));
-				dst[1] = (char)(0x80 + ((c >> 0) & 0x3f));
-				dst += 2;
-			}
-		}
-		else {
-			if (dcnt < 3) {
-				break;
-			}
-			dcnt -= 3;
-			if (dst) {
-				dst[0] = (char)(0xe0 + ((c >> 12) & 0x0f));
-				dst[1] = (char)(0x80 + ((c >> 6) & 0x3f));
-				dst[2] = (char)(0x80 + ((c >> 0) & 0x3f));
-				dst += 3;
-			}
-		}
+		return nLength + 1;
 	}
-	if (dst != NULL) {
-		if (stringmode) {
-			*dst = '\0';
-		}
-#if 1	// ˆê‰žŒÝŠ·‚Ìˆ×‚É NULL‚Â‚¯‚é
-		else if (dcnt) {
-			*dst = '\0';
-		}
-#endif
-	}
-	return((UINT)(orgdcnt - dcnt));
 }
 
+/**
+ * Get the length of a string
+ * @param[in] lpString Null-terminated string
+ * @return the number of characters in lpString
+ */
+static UINT ucs2len(const UINT16 *lpString)
+{
+	const UINT16 *p = lpString;
+	while (*p != 0)
+	{
+		p++;
+	}
+	return (UINT)(p - lpString);
+}
+
+/**
+ * Maps a UTF-16 string to a UTF-8 string (inner)
+ * @param[out] lpOutput Pointer to a buffer that receives the converted string
+ * @param[in] cchOutput Size, in characters, of the buffer indicated by lpOutput
+ * @param[in] lpInput Pointer to the character string to convert
+ * @param[in] cchInput Size, in characters, of the buffer indicated by lpInput
+ * @return The number of characters written to the buffer indicated by lpOutput
+ */
+static UINT ucs2toutf8(char *lpOutput, UINT cchOutput, const UINT16 *lpInput, UINT cchInput)
+{
+	UINT nRemain;
+	UINT c;
+
+	nRemain = cchOutput;
+	while ((cchInput > 0) && (nRemain > 0))
+	{
+		c = *lpInput++;
+		cchInput--;
+
+		if (c < 0x80)
+		{
+			nRemain--;
+			if (lpOutput)
+			{
+				*lpOutput++ = (char)c;
+			}
+		}
+		else if (c < 0x800)
+		{
+			if (nRemain < 2)
+			{
+				break;
+			}
+			nRemain -= 2;
+			if (lpOutput)
+			{
+				*lpOutput++ = (char)(0xc0 + ((c >> 6) & 0x1f));
+				*lpOutput++ = (char)(0x80 + ((c >> 0) & 0x3f));
+			}
+		}
+		else
+		{
+			if (nRemain < 3)
+			{
+				break;
+			}
+			nRemain -= 3;
+			if (lpOutput)
+			{
+				*lpOutput++ = (char)(0xe0 + ((c >> 12) & 0x0f));
+				*lpOutput++ = (char)(0x80 + ((c >> 6) & 0x3f));
+				*lpOutput++ = (char)(0x80 + ((c >> 0) & 0x3f));
+			}
+		}
+	}
+	return (UINT)(cchOutput - nRemain);
+}

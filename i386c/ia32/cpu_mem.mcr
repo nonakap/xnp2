@@ -116,7 +116,7 @@ cpu_vmemory_RMW_##width(int idx, UINT32 offset, UINT32 (CPUCALL *func)(UINT32, v
 	if (!CPU_STAT_PM) { \
 		value = cpu_memoryread_##width(addr); \
 		result = (*func)(value, arg); \
-		cpu_memorywrite_##width(addr, result); \
+		cpu_memorywrite_##width(addr, (valtype)result); \
 		return value; \
 	} \
 \

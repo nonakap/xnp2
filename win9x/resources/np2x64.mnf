@@ -1,9 +1,9 @@
-﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
 <assemblyIdentity
     version="0.8.2.0"
 	processorArchitecture="amd64"
-	name="np2x64"
+	name="np2"
 	type="win32"
 />
 <description>Neko Project II x64</description>

@@ -1,10 +1,17 @@
-#include	"compiler.h"
-#include	"codecnv.h"
+/**
+ * @file	sjisucs2.c
+ * @brief	Implementation of converting S-JIS to UCS2
+ */
 
+#include "compiler.h"
+#include "codecnv.h"
 
+//! undefined code
 #define	UDCODE	0x30fb
 
-static const UINT16 utftblex[] = {
+//! 2nd table
+static const UINT16 s_level2[] =
+{
 	UDCODE,0x3000,0x3001,0x3002,0xff0c,0xff0e,0x30fb,0xff1a,0xff1b,
 	0xff1f,0xff01,0x309b,0x309c,0x00b4,0xff40,0x00a8,0xff3e,0xffe3,
 	0xff3f,0x30fd,0x30fe,0x309d,0x309e,0x3003,0x4edd,0x3005,0x3006,
@@ -1095,9 +1102,12 @@ static const UINT16 utftblex[] = {
 	0xfa29,0x969d,0x96af,0x9733,0x973b,0x9743,0x974d,0x974f,0x9751,
 	0x9755,0x9857,0x9865,0xfa2a,0xfa2b,0x9927,0xfa2c,0x999e,0x9a4e,
 	0x9ad9,0x9adc,0x9b75,0x9b72,0x9b8f,0x9bb1,0x9bbb,0x9c00,0x9d70,
-	0x9d6b,0xfa2d,0x9e19,0x9ed1};
+	0x9d6b,0xfa2d,0x9e19,0x9ed1
+};
 
-static const UINT32 utftbl[] = {
+//! 1st table
+static const UINT32 s_level1[] =
+{
 	0x00000000,0x00000001,0x00000002,0x00000003,0x00000004,0x00000005,
 	0x00000006,0x00000007,0x00000008,0x00000009,0x0000000a,0x0000000b,
 	0x0000000c,0x0000000d,0x0000000e,0x0000000f,0x00000010,0x00000011,
@@ -1140,71 +1150,213 @@ static const UINT32 utftbl[] = {
 	0x1b8f6540,0x1bf40000,0x1bf40000,0x1bf4bd40,0x1cb1bd40,0x1d6e0000,
 	0x1d6ebd40,0x1e2bbd40,0x1ee8bd40,0x1fa5bd40,0x2062bd40,0x211fbd40,
 	0x21dcbd40,0x2299bd40,0x2356bd40,0x2413bd40,0x24d0bd40,0x258dbd40,
-	0x264a0c40,0x0000f8f1,0x0000f8f2,0x0000f8f3};
+	0x264a0c40,0x0000f8f1,0x0000f8f2,0x0000f8f3
+};
 
-UINT codecnv_sjis2utf(UINT16 *dst, UINT dcnt, const char *src, UINT scnt) {
+static UINT sjis2ucs2(UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
+static UINT sjis2utf8(char *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
 
-	UINT	orgdcnt;
-	BOOL	stringmode;
-	UINT	s;
-	UINT	r;
+/**
+ * Maps a S-JIS string to a UTF-16 string
+ * @param[out] lpOutput Pointer to a buffer that receives the converted string
+ * @param[in] cchOutput Size, in characters, of the buffer indicated by lpOutput
+ * @param[in] lpInput Pointer to the character string to convert
+ * @param[in] cchInput Size, in characters, of the buffer indicated by lpInput
+ * @return The number of characters written to the buffer indicated by lpOutput
+ */
+UINT codecnv_sjistoucs2(UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput)
+{
+	UINT nLength;
 
-	if (src == NULL) {
-		return(0);
+	if (lpInput == NULL)
+	{
+		return 0;
 	}
-	if (dcnt == 0) {
-		dst = NULL;
-		dcnt = (UINT)-1;
+
+	if (cchOutput == 0)
+	{
+		lpOutput = NULL;
+		cchOutput = (UINT)-1;
 	}
-	orgdcnt = dcnt;
-	stringmode = (((SINT)scnt) < 0);
-	if (stringmode) {
-		dcnt--;
+
+	if (cchInput != (UINT)-1)
+	{
+		// Binary mode
+		return sjis2ucs2(lpOutput, cchOutput, lpInput, cchInput);
 	}
-	while(scnt > 0) {
-		scnt--;
-		s = (UINT8)*src++;
-		if ((s == 0) && (stringmode)) {
-			break;
+	else
+	{
+		// String mode
+		nLength = sjis2ucs2(lpOutput, cchOutput - 1, lpInput, (UINT)strlen(lpInput));
+		if (lpOutput)
+		{
+			lpOutput[nLength] = '\0';
 		}
-		r = utftbl[s];
-		if (r & 0xffff0000) {
-			if (scnt == 0) {
+		return nLength + 1;
+	}
+}
+
+/**
+ * Maps a S-JIS string to a UTF-16 string (inner)
+ * @param[out] lpOutput Pointer to a buffer that receives the converted string
+ * @param[in] cchOutput Size, in characters, of the buffer indicated by lpOutput
+ * @param[in] lpInput Pointer to the character string to convert
+ * @param[in] cchInput Size, in characters, of the buffer indicated by lpInput
+ * @return The number of characters written to the buffer indicated by lpOutput
+ */
+static UINT sjis2ucs2(UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput)
+{
+	UINT nRemain;
+	UINT c;
+	UINT r;
+
+	nRemain = cchOutput;
+	while ((cchInput > 0) && (nRemain > 0))
+	{
+		c = (*lpInput++) & 0xff;
+		cchInput--;
+
+		r = s_level1[c];
+		if (r & 0xffff0000)
+		{
+			if (cchInput == 0)
+			{
 				break;
 			}
-			scnt--;
-			s = (UINT8)*src++;
-			if (s == 0) {
-				break;
+			cchInput--;
+			c = ((*lpInput++) - r) & 0xff;
+			if (c < ((r >> 8) & 0xff))
+			{
+				r = s_level2[((r >> 16) & 0xffff) + c];
 			}
-			s -= r;
-			s &= 0xff;
-			if (s < ((r >> 8) & 0xff)) {
-				r = utftblex[((r >> 16) & 0xffff) + s];
-			}
-			else {
+			else
+			{
 				r = UDCODE;
 			}
 		}
-		if (dcnt == 0) {
-			break;
-		}
-		dcnt--;
-		if (dst) {
-			dst[0] = (UINT16)r;
-			dst++;
+		nRemain--;
+		if (lpOutput)
+		{
+			*lpOutput++ = (UINT16)r;
 		}
 	}
-	if (dst != NULL) {
-		if (stringmode) {
-			*dst = '\0';
-		}
-#if 1	// ˆê‰žŒÝŠ·‚Ìˆ×‚É NULL‚Â‚¯‚é
-		else if (dcnt) {
-			*dst = '\0';
-		}
-#endif
-	}
-	return((UINT)(orgdcnt - dcnt));
+	return (UINT)(cchOutput - nRemain);
 }
 
+/**
+ * Maps a S-JIS string to a UTF-8 string
+ * @param[out] lpOutput Pointer to a buffer that receives the converted string
+ * @param[in] cchOutput Size, in characters, of the buffer indicated by lpOutput
+ * @param[in] lpInput Pointer to the character string to convert
+ * @param[in] cchInput Size, in characters, of the buffer indicated by lpInput
+ * @return The number of characters written to the buffer indicated by lpOutput
+ */
+UINT codecnv_sjistoutf8(char *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput)
+{
+	UINT nLength;
+
+	if (lpInput == NULL)
+	{
+		return 0;
+	}
+
+	if (cchOutput == 0)
+	{
+		lpOutput = NULL;
+		cchOutput = (UINT)-1;
+	}
+
+	if (cchInput != (UINT)-1)
+	{
+		// Binary mode
+		return sjis2utf8(lpOutput, cchOutput, lpInput, cchInput);
+	}
+	else
+	{
+		// String mode
+		nLength = sjis2utf8(lpOutput, cchOutput - 1, lpInput, (UINT)strlen(lpInput));
+		if (lpOutput)
+		{
+			lpOutput[nLength] = '\0';
+		}
+		return nLength + 1;
+	}
+}
+
+/**
+ * Maps a S-JIS string to a UTF-8 string (inner)
+ * @param[out] lpOutput Pointer to a buffer that receives the converted string
+ * @param[in] cchOutput Size, in characters, of the buffer indicated by lpOutput
+ * @param[in] lpInput Pointer to the character string to convert
+ * @param[in] cchInput Size, in characters, of the buffer indicated by lpInput
+ * @return The number of characters written to the buffer indicated by lpOutput
+ */
+static UINT sjis2utf8(char *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput)
+{
+	UINT nRemain;
+	UINT c;
+	UINT r;
+
+	nRemain = cchOutput;
+	while ((cchInput > 0) && (nRemain > 0))
+	{
+		c = (*lpInput++) & 0xff;
+		cchInput--;
+
+		r = s_level1[c];
+		if (r & 0xffff0000)
+		{
+			if (cchInput == 0)
+			{
+				break;
+			}
+			cchInput--;
+			c = ((*lpInput++) - r) & 0xff;
+			if (c < ((r >> 8) & 0xff))
+			{
+				r = s_level2[((r >> 16) & 0xffff) + c];
+			}
+			else
+			{
+				r = UDCODE;
+			}
+		}
+
+		if (r < 0x80)
+		{
+			nRemain--;
+			if (lpOutput)
+			{
+				*lpOutput++ = (char)r;
+			}
+		}
+		else if (r < 0x800)
+		{
+			if (nRemain < 2)
+			{
+				break;
+			}
+			nRemain -= 2;
+			if (lpOutput)
+			{
+				*lpOutput++ = (char)(0xc0 + ((r >> 6) & 0x1f));
+				*lpOutput++ = (char)(0x80 + ((r >> 0) & 0x3f));
+			}
+		}
+		else
+		{
+			if (nRemain < 3)
+			{
+				break;
+			}
+			nRemain -= 3;
+			if (lpOutput)
+			{
+				*lpOutput++ = (char)(0xe0 + ((r >> 12) & 0x0f));
+				*lpOutput++ = (char)(0x80 + ((r >> 6) & 0x3f));
+				*lpOutput++ = (char)(0x80 + ((r >> 0) & 0x3f));
+			}
+		}
+	}
+	return (UINT)(cchOutput - nRemain);
+}

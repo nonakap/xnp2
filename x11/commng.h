@@ -33,10 +33,10 @@ typedef struct _commng	*COMMNG;
 
 struct _commng {
 	UINT	connect;
-	UINT	(*read)(COMMNG self, BYTE *data);
-	UINT	(*write)(COMMNG self, BYTE data);
-	BYTE	(*getstat)(COMMNG self);
-	long	(*msg)(COMMNG self, UINT msg, long param);
+	UINT	(*read)(COMMNG self, UINT8 *data);
+	UINT	(*write)(COMMNG self, UINT8 data);
+	UINT8	(*getstat)(COMMNG self);
+	INTPTR	(*msg)(COMMNG self, UINT msg, INTPTR param);
 	void	(*release)(COMMNG self);
 };
 

@@ -55,7 +55,7 @@ static const struct {
 	{ "Rhythm", &np2cfg.vol_rhythm, 0.0, 128.0 },
 };
 
-static GtkObject *mixer_adj[NELEMENTS(mixer_vol_tbl)];
+static GObject *mixer_adj[NELEMENTS(mixer_vol_tbl)];
 
 
 /*
@@ -66,7 +66,7 @@ static const char *snd14_vol_str[] = {
 	"left", "right", "f2", "f4", "f8", "f16"
 };
 
-static GtkObject *snd14_adj[NELEMENTS(snd14_vol_str)];
+static GObject *snd14_adj[NELEMENTS(snd14_vol_str)];
 
 
 /*
@@ -223,7 +223,7 @@ static GtkWidget *spb_int_entry;
 static GtkWidget *spb_romaddr_entry;
 static GtkWidget *spb_vr_channel_checkbutton[2];
 static GtkWidget *spb_reverse_channel_checkbutton;
-static GtkObject *spb_vr_level_adj;
+static GObject *spb_vr_level_adj;
 
 
 /*
@@ -333,7 +333,8 @@ ok_button_clicked(GtkButton *b, gpointer d)
 	/* Mixer */
 	renewal = FALSE;
 	for (i = 0; i < NELEMENTS(mixer_vol_tbl); i++) {
-		mixer_vol[i] = (guint)(GTK_ADJUSTMENT(mixer_adj[i])->value);
+		mixer_vol[i] = (guint)gtk_adjustment_get_value(
+		    GTK_ADJUSTMENT(mixer_adj[i]));
 		if (*mixer_vol_tbl[i].valp != mixer_vol[i]) {
 			*mixer_vol_tbl[i].valp = mixer_vol[i];
 			renewal = TRUE;
@@ -347,7 +348,8 @@ ok_button_clicked(GtkButton *b, gpointer d)
 	/* PC-9801-14 */
 	renewal = FALSE;
 	for (i = 0; i < NELEMENTS(snd14_vol_str); i++) {
-		snd14_vol14[i] = (guint)(GTK_ADJUSTMENT(snd14_adj[i])->value);
+		snd14_vol14[i] = (guint)gtk_adjustment_get_value(
+		    GTK_ADJUSTMENT(snd14_adj[i]));
 		if (np2cfg.vol14[i] != snd14_vol14[i]) {
 			np2cfg.vol14[i] = snd14_vol14[i];
 			renewal = TRUE;
@@ -406,8 +408,10 @@ ok_button_clicked(GtkButton *b, gpointer d)
 	snd86_ioport = gtk_entry_get_text(GTK_ENTRY(snd86_ioport_entry));
 	snd86_intr = gtk_entry_get_text(GTK_ENTRY(snd86_int_entry));
 	snd86_soundid = gtk_entry_get_text(GTK_ENTRY(snd86_soundid_entry));
-	snd86_interrupt = GTK_TOGGLE_BUTTON(snd86_int_checkbutton)->active;
-	snd86_biosrom = GTK_TOGGLE_BUTTON(snd86_rom_checkbutton)->active;
+	snd86_interrupt = gtk_toggle_button_get_active(
+	    GTK_TOGGLE_BUTTON(snd86_int_checkbutton));
+	snd86_biosrom = gtk_toggle_button_get_active(
+	    GTK_TOGGLE_BUTTON(snd86_rom_checkbutton));
 
 	renewal = FALSE;
 	snd86opt = snd86opt_mask = 0;
@@ -462,8 +466,10 @@ ok_button_clicked(GtkButton *b, gpointer d)
 	spb_ioport = gtk_entry_get_text(GTK_ENTRY(spb_ioport_entry));
 	spb_intr = gtk_entry_get_text(GTK_ENTRY(spb_int_entry));
 	spb_romaddr = gtk_entry_get_text(GTK_ENTRY(spb_romaddr_entry));
-	spb_vrl = (UINT8)(GTK_ADJUSTMENT(spb_vr_level_adj)->value);
-	spb_x = GTK_TOGGLE_BUTTON(spb_reverse_channel_checkbutton)->active;
+	spb_vrl = (UINT8)gtk_adjustment_get_value(
+	    GTK_ADJUSTMENT(spb_vr_level_adj));
+	spb_x = gtk_toggle_button_get_active(
+	    GTK_TOGGLE_BUTTON(spb_reverse_channel_checkbutton));
 
 	renewal = FALSE;
 	spbopt = spbopt_mask = 0;
@@ -499,7 +505,9 @@ ok_button_clicked(GtkButton *b, gpointer d)
 	}
 	spb_vrc = 0;
 	for (i = 0; i < NELEMENTS(spb_vr_channel_str); i++) {
-		spb_vrc |= GTK_TOGGLE_BUTTON(spb_vr_channel_checkbutton[i])->active ? (1 << i) : 0;
+		spb_vrc |= gtk_toggle_button_get_active(
+		    GTK_TOGGLE_BUTTON(spb_vr_channel_checkbutton[i]))
+		    ? (1 << i) : 0;
 	}
 	if (np2cfg.spb_vrc != spb_vrc) {
 		np2cfg.spb_vrc = spb_vrc;
@@ -523,7 +531,8 @@ ok_button_clicked(GtkButton *b, gpointer d)
 
 	/* JoyPad */
 	if (!(np2oscfg.JOYPAD1 & 2)) {
-		joypad[0] = GTK_TOGGLE_BUTTON(joypad_use_checkbutton[0])->active;
+		joypad[0] = gtk_toggle_button_get_active(
+		    GTK_TOGGLE_BUTTON(joypad_use_checkbutton[0]));
 
 		renewal = FALSE;
 		if ((np2oscfg.JOYPAD1 ^ joypad[0]) & 1) {
@@ -630,10 +639,14 @@ snd86_default_button_clicked(GtkButton *b, gpointer d)
 	gtk_entry_set_text(GTK_ENTRY(snd86_ioport_entry), "0188");
 	gtk_entry_set_text(GTK_ENTRY(snd86_int_entry), "INT5");
 	gtk_entry_set_text(GTK_ENTRY(snd86_soundid_entry), "4x");
-	if (!GTK_TOGGLE_BUTTON(snd86_int_checkbutton)->active)
-		g_signal_emit_by_name(GTK_OBJECT(snd86_int_checkbutton), "clicked");
-	if (!GTK_TOGGLE_BUTTON(snd86_rom_checkbutton)->active)
-		g_signal_emit_by_name(GTK_OBJECT(snd86_rom_checkbutton), "clicked");
+	if (!gtk_toggle_button_get_active(
+	    GTK_TOGGLE_BUTTON(snd86_int_checkbutton)))
+		g_signal_emit_by_name(G_OBJECT(snd86_int_checkbutton),
+		    "clicked");
+	if (!gtk_toggle_button_get_active(
+	    GTK_TOGGLE_BUTTON(snd86_rom_checkbutton)))
+		g_signal_emit_by_name(G_OBJECT(snd86_rom_checkbutton),
+		    "clicked");
 }
 
 static void
@@ -645,8 +658,10 @@ spb_default_button_clicked(GtkButton *b, gpointer d)
 	gtk_entry_set_text(GTK_ENTRY(spb_int_entry), "INT5");
 	gtk_entry_set_text(GTK_ENTRY(spb_romaddr_entry), "CC000");
 	for (i = 0; i < NELEMENTS(spb_vr_channel_str); i++) {
-		if (GTK_TOGGLE_BUTTON(spb_vr_channel_checkbutton[i])->active)
-			g_signal_emit_by_name(GTK_OBJECT(spb_vr_channel_checkbutton[i]), "clicked");
+		if (gtk_toggle_button_get_active(
+		    GTK_TOGGLE_BUTTON(spb_vr_channel_checkbutton[i])))
+			g_signal_emit_by_name(
+			    G_OBJECT(spb_vr_channel_checkbutton[i]), "clicked");
 	}
 }
 
@@ -702,7 +717,7 @@ create_mixer_note(void)
 	mixer_default_button = gtk_button_new_with_label("Default");
 	gtk_widget_show(mixer_default_button);
 	gtk_box_pack_end(GTK_BOX(hbox), mixer_default_button, FALSE, FALSE, 5);
-	g_signal_connect_swapped(GTK_OBJECT(mixer_default_button), "clicked",
+	g_signal_connect_swapped(G_OBJECT(mixer_default_button), "clicked",
 	    G_CALLBACK(mixer_default_button_clicked), NULL);
 
 	return root_widget;
@@ -750,7 +765,7 @@ create_pc9801_14_note(void)
 	snd14_default_button = gtk_button_new_with_label("Default");
 	gtk_widget_show(snd14_default_button);
 	gtk_box_pack_end(GTK_BOX(hbox), snd14_default_button, FALSE, FALSE, 5);
-	g_signal_connect_swapped(GTK_OBJECT(snd14_default_button), "clicked",
+	g_signal_connect_swapped(G_OBJECT(snd14_default_button), "clicked",
 	    G_CALLBACK(snd14_default_button_clicked), NULL);
 
 	return root_widget;
@@ -794,7 +809,7 @@ create_pc9801_26_note(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(ioport_combo), snd26_ioport_str[i]);
 	}
 
-	snd26_ioport_entry = GTK_BIN(ioport_combo)->child;
+	snd26_ioport_entry = gtk_bin_get_child(GTK_BIN(ioport_combo));
 	gtk_widget_show(snd26_ioport_entry);
 	gtk_editable_set_editable(GTK_EDITABLE(snd26_ioport_entry), FALSE);
 	gtk_entry_set_text(GTK_ENTRY(snd26_ioport_entry), snd26_ioport_str[SND26_GET_IOPORT()]);
@@ -812,7 +827,7 @@ create_pc9801_26_note(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(int_combo), snd26_intr_str[i]);
 	}
 
-	snd26_int_entry = GTK_BIN(int_combo)->child;
+	snd26_int_entry = gtk_bin_get_child(GTK_BIN(int_combo));
 	gtk_widget_show(snd26_int_entry);
 	gtk_editable_set_editable(GTK_EDITABLE(snd26_int_entry), FALSE);
 	gtk_entry_set_text(GTK_ENTRY(snd26_int_entry), snd26_intr_str[SND26_GET_INTR()]);
@@ -830,7 +845,7 @@ create_pc9801_26_note(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(romaddr_combo), snd26_romaddr_str[i]);
 	}
 
-	snd26_romaddr_entry = GTK_BIN(romaddr_combo)->child;
+	snd26_romaddr_entry = gtk_bin_get_child(GTK_BIN(romaddr_combo));
 	gtk_widget_show(snd26_romaddr_entry);
 	gtk_editable_set_editable(GTK_EDITABLE(snd26_romaddr_entry), FALSE);
 	gtk_entry_set_text(GTK_ENTRY(snd26_romaddr_entry), snd26_romaddr_str[SND26_GET_ROMADDR()]);
@@ -844,7 +859,7 @@ create_pc9801_26_note(void)
 	snd26_default_button = gtk_button_new_with_label("Default");
 	gtk_widget_show(snd26_default_button);
 	gtk_box_pack_end(GTK_BOX(hbox), snd26_default_button, FALSE, FALSE, 5);
-	g_signal_connect_swapped(GTK_OBJECT(snd26_default_button), "clicked",
+	g_signal_connect_swapped(G_OBJECT(snd26_default_button), "clicked",
 	    G_CALLBACK(snd26_default_button_clicked), NULL);
 
 	return root_widget;
@@ -887,7 +902,7 @@ create_pc9801_86_note(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(ioport_combo), snd86_ioport_str[i]);
 	}
 
-	snd86_ioport_entry = GTK_BIN(ioport_combo)->child;
+	snd86_ioport_entry = gtk_bin_get_child(GTK_BIN(ioport_combo));
 	gtk_widget_show(snd86_ioport_entry);
 	gtk_editable_set_editable(GTK_EDITABLE(snd86_ioport_entry), FALSE);
 	gtk_entry_set_text(GTK_ENTRY(snd86_ioport_entry), snd86_ioport_str[SND86_GET_IOPORT()]);
@@ -897,7 +912,7 @@ create_pc9801_86_note(void)
 	gtk_widget_show(snd86_int_checkbutton);
 	gtk_table_attach_defaults(GTK_TABLE(table), snd86_int_checkbutton, 2, 3, 0, 1);
 	if (SND86_GET_INTERRUPT())
-		g_signal_emit_by_name(GTK_OBJECT(snd86_int_checkbutton), "clicked");
+		g_signal_emit_by_name(G_OBJECT(snd86_int_checkbutton), "clicked");
 
 	int_combo = gtk_combo_box_entry_new_text();
 	gtk_widget_show(int_combo);
@@ -907,7 +922,7 @@ create_pc9801_86_note(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(int_combo), snd86_intr_str[i]);
 	}
 
-	snd86_int_entry = GTK_BIN(int_combo)->child;
+	snd86_int_entry = gtk_bin_get_child(GTK_BIN(int_combo));
 	gtk_widget_show(snd86_int_entry);
 	gtk_editable_set_editable(GTK_EDITABLE(snd86_int_entry), FALSE);
 	gtk_entry_set_text(GTK_ENTRY(snd86_int_entry), snd86_intr_str[SND86_GET_INTR()]);
@@ -925,7 +940,7 @@ create_pc9801_86_note(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(soundid_combo), snd86_soundid_str[i]);
 	}
 
-	snd86_soundid_entry = GTK_BIN(soundid_combo)->child;
+	snd86_soundid_entry = gtk_bin_get_child(GTK_BIN(soundid_combo));
 	gtk_widget_show(snd86_soundid_entry);
 	gtk_editable_set_editable(GTK_EDITABLE(snd86_soundid_entry), FALSE);
 	gtk_entry_set_text(GTK_ENTRY(snd86_soundid_entry), snd86_soundid_str[SND86_GET_SOUNDID()]);
@@ -935,7 +950,7 @@ create_pc9801_86_note(void)
 	gtk_widget_show(snd86_rom_checkbutton);
 	gtk_table_attach_defaults(GTK_TABLE(table), snd86_rom_checkbutton, 2, 3, 1, 2);
 	if (SND86_GET_BIOSROM())
-		g_signal_emit_by_name(GTK_OBJECT(snd86_rom_checkbutton), "clicked");
+		g_signal_emit_by_name(G_OBJECT(snd86_rom_checkbutton), "clicked");
 
 	/* "Default" button */
 	hbox = gtk_hbox_new(FALSE, 0);
@@ -946,7 +961,7 @@ create_pc9801_86_note(void)
 	snd86_default_button = gtk_button_new_with_label("Default");
 	gtk_widget_show(snd86_default_button);
 	gtk_box_pack_end(GTK_BOX(hbox), snd86_default_button, FALSE, FALSE, 5);
-	g_signal_connect_swapped(GTK_OBJECT(snd86_default_button), "clicked",
+	g_signal_connect_swapped(G_OBJECT(snd86_default_button), "clicked",
 	    G_CALLBACK(snd86_default_button_clicked), NULL);
 
 	return root_widget;
@@ -993,7 +1008,7 @@ create_spb_note(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(ioport_combo), spb_ioport_str[i]);
 	}
 
-	spb_ioport_entry = GTK_BIN(ioport_combo)->child;
+	spb_ioport_entry = gtk_bin_get_child(GTK_BIN(ioport_combo));
 	gtk_widget_show(spb_ioport_entry);
 	gtk_editable_set_editable(GTK_EDITABLE(spb_ioport_entry), FALSE);
 	gtk_entry_set_text(GTK_ENTRY(spb_ioport_entry), spb_ioport_str[SPB_GET_IOPORT()]);
@@ -1011,7 +1026,7 @@ create_spb_note(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(int_combo), spb_intr_str[i]);
 	}
 
-	spb_int_entry = GTK_BIN(int_combo)->child;
+	spb_int_entry = gtk_bin_get_child(GTK_BIN(int_combo));
 	gtk_widget_show(spb_int_entry);
 	gtk_editable_set_editable(GTK_EDITABLE(spb_int_entry), FALSE);
 	gtk_entry_set_text(GTK_ENTRY(spb_int_entry), spb_intr_str[SPB_GET_INTR()]);
@@ -1029,7 +1044,7 @@ create_spb_note(void)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(romaddr_combo), spb_romaddr_str[i]);
 	}
 
-	spb_romaddr_entry = GTK_BIN(romaddr_combo)->child;
+	spb_romaddr_entry = gtk_bin_get_child(GTK_BIN(romaddr_combo));
 	gtk_widget_show(spb_romaddr_entry);
 	gtk_editable_set_editable(GTK_EDITABLE(spb_romaddr_entry), FALSE);
 	gtk_entry_set_text(GTK_ENTRY(spb_romaddr_entry), spb_romaddr_str[SPB_GET_ROMADDR()]);
@@ -1044,7 +1059,7 @@ create_spb_note(void)
 		gtk_widget_show(spb_vr_channel_checkbutton[i]);
 		gtk_table_attach_defaults(GTK_TABLE(table), spb_vr_channel_checkbutton[i], i+1, i+2, 2, 3);
 		if (np2cfg.spb_vrc & (1 << i))
-			g_signal_emit_by_name(GTK_OBJECT(spb_vr_channel_checkbutton[i]), "clicked");
+			g_signal_emit_by_name(G_OBJECT(spb_vr_channel_checkbutton[i]), "clicked");
 	}
 
 	vr_level_label = gtk_label_new("level");
@@ -1063,7 +1078,7 @@ create_spb_note(void)
 	gtk_widget_show(spb_reverse_channel_checkbutton);
 	gtk_table_attach_defaults(GTK_TABLE(table), spb_reverse_channel_checkbutton, 0, 6, 3, 4);
 	if (np2cfg.spb_x)
-		g_signal_emit_by_name(GTK_OBJECT(spb_reverse_channel_checkbutton), "clicked");
+		g_signal_emit_by_name(G_OBJECT(spb_reverse_channel_checkbutton), "clicked");
 
 	/* "Default" button */
 	hbox = gtk_hbox_new(FALSE, 0);
@@ -1074,7 +1089,7 @@ create_spb_note(void)
 	spb_default_button = gtk_button_new_with_label("Default");
 	gtk_widget_show(spb_default_button);
 	gtk_box_pack_end(GTK_BOX(hbox), spb_default_button, FALSE, FALSE, 5);
-	g_signal_connect_swapped(GTK_OBJECT(spb_default_button), "clicked",
+	g_signal_connect_swapped(G_OBJECT(spb_default_button), "clicked",
 	    G_CALLBACK(spb_default_button_clicked), NULL);
 
 	return root_widget;
@@ -1118,7 +1133,7 @@ joypad_device_changed(GtkEditable *e, gpointer d)
 			gtk_combo_box_append_text(GTK_COMBO_BOX(joypad_axis_combo[i]), joypad_num_str[j]);
 		}
 
-		axis_entry[i] = GTK_BIN(joypad_axis_combo[i])->child;
+		axis_entry[i] = gtk_bin_get_child(GTK_BIN(joypad_axis_combo[i]));
 		gtk_widget_show(axis_entry[i]);
 		gtk_editable_set_editable(GTK_EDITABLE(axis_entry[i]), FALSE);
 
@@ -1136,7 +1151,7 @@ joypad_device_changed(GtkEditable *e, gpointer d)
 			gtk_combo_box_append_text(GTK_COMBO_BOX(joypad_button_combo[i]), joypad_num_str[j]);
 		}
 
-		button_entry[i] = GTK_BIN(joypad_button_combo[i])->child;
+		button_entry[i] = gtk_bin_get_child(GTK_BIN(joypad_button_combo[i]));
 		gtk_widget_show(button_entry[i]);
 		gtk_editable_set_editable(GTK_EDITABLE(button_entry[i]), FALSE);
 
@@ -1224,10 +1239,10 @@ create_joypad_note(void)
 		ndrv = 0;
 	}
 
-	devlist_entry = GTK_BIN(joypad_devlist_combo)->child;
+	devlist_entry = gtk_bin_get_child(GTK_BIN(joypad_devlist_combo));
 	gtk_widget_show(devlist_entry);
 	gtk_editable_set_editable(GTK_EDITABLE(devlist_entry), FALSE);
-	g_signal_connect(GTK_OBJECT(devlist_entry), "changed",
+	g_signal_connect(G_OBJECT(devlist_entry), "changed",
 	    G_CALLBACK(joypad_device_changed), (gpointer)joypad_devlist_combo);
 
 	/* Axis */
@@ -1244,11 +1259,11 @@ create_joypad_note(void)
 
 		gtk_combo_box_append_text(GTK_COMBO_BOX(joypad_axis_combo[i]), joypad_noconnect_str);
 
-		axis_entry[i] = GTK_BIN(joypad_axis_combo[i])->child;
+		axis_entry[i] = gtk_bin_get_child(GTK_BIN(joypad_axis_combo[i]));
 		gtk_widget_show(axis_entry[i]);
 		gtk_editable_set_editable(GTK_EDITABLE(axis_entry[i]), FALSE);
 		gtk_entry_set_text(GTK_ENTRY(axis_entry[i]), joypad_noconnect_str);
-		g_signal_connect(GTK_OBJECT(axis_entry[i]), "changed",
+		g_signal_connect(G_OBJECT(axis_entry[i]), "changed",
 		    G_CALLBACK(joypad_axis_entry_changed),
 		    (gpointer)(&joypad_axis[i]));
 	}
@@ -1267,11 +1282,11 @@ create_joypad_note(void)
 
 		gtk_combo_box_append_text(GTK_COMBO_BOX(joypad_button_combo[i]), joypad_noconnect_str);
 
-		button_entry[i] = GTK_BIN(joypad_button_combo[i])->child;
+		button_entry[i] = gtk_bin_get_child(GTK_BIN(joypad_button_combo[i]));
 		gtk_widget_show(button_entry[i]);
 		gtk_editable_set_editable(GTK_EDITABLE(button_entry[i]), FALSE);
 		gtk_entry_set_text(GTK_ENTRY(button_entry[i]), joypad_noconnect_str);
-		g_signal_connect(GTK_OBJECT(button_entry[i]), "changed",
+		g_signal_connect(G_OBJECT(button_entry[i]), "changed",
 		    G_CALLBACK(joypad_button_entry_changed),
 		    (gpointer)(&joypad_button[i]));
 	}
@@ -1299,7 +1314,7 @@ create_joypad_note(void)
 		gtk_entry_set_text(GTK_ENTRY(devlist_entry), joypad_nodevice_str);
 	}
 	if (np2oscfg.JOYPAD1 & 1) {
-		g_signal_emit_by_name(GTK_OBJECT(joypad_use_checkbutton[0]), "clicked");
+		g_signal_emit_by_name(G_OBJECT(joypad_use_checkbutton[0]), "clicked");
 	}
 
 	return root_widget;
@@ -1332,7 +1347,7 @@ create_driver_note(void)
 		driver_radiobutton[i] = gtk_radio_button_new_with_label_from_widget(i > 0 ? GTK_RADIO_BUTTON(driver_radiobutton[i-1]) : NULL, driver_name[i]);
 		gtk_widget_show(driver_radiobutton[i]);
 		gtk_box_pack_start(GTK_BOX(driver_vbox), driver_radiobutton[i], TRUE, FALSE, 0);
-		g_signal_connect(GTK_OBJECT(driver_radiobutton[i]), "clicked",
+		g_signal_connect(G_OBJECT(driver_radiobutton[i]), "clicked",
 		    G_CALLBACK(driver_radiobutton_clicked), GINT_TO_POINTER(i));
 	}
 #if !defined(USE_SDLAUDIO) && !defined(USE_SDLMIXER)
@@ -1344,7 +1359,7 @@ create_driver_note(void)
 #if defined(USE_SDLAUDIO) || defined(USE_SDLMIXER)
 	case SNDDRV_SDL:
 #endif
-		g_signal_emit_by_name(GTK_OBJECT(driver_radiobutton[np2oscfg.snddrv]), "clicked");
+		g_signal_emit_by_name(G_OBJECT(driver_radiobutton[np2oscfg.snddrv]), "clicked");
 		break;
 
 #if !defined(USE_SDLAUDIO) && !defined(USE_SDLMIXER)
@@ -1390,7 +1405,7 @@ create_sound_dialog(void)
 	gtk_window_set_modal(GTK_WINDOW(sound_dialog), TRUE);
 	gtk_window_set_resizable(GTK_WINDOW(sound_dialog), FALSE);
 
-	g_signal_connect(GTK_OBJECT(sound_dialog), "destroy",
+	g_signal_connect(G_OBJECT(sound_dialog), "destroy",
 	    G_CALLBACK(dialog_destroy), NULL);
 
 	main_vbox = gtk_vbox_new(FALSE, 0);
@@ -1444,8 +1459,8 @@ create_sound_dialog(void)
 #else
 	GTK_WIDGET_SET_FLAGS(cancel_button, GTK_CAN_DEFAULT);
 #endif
-	g_signal_connect_swapped(GTK_OBJECT(cancel_button), "clicked",
-	    G_CALLBACK(gtk_widget_destroy), GTK_OBJECT(sound_dialog));
+	g_signal_connect_swapped(G_OBJECT(cancel_button), "clicked",
+	    G_CALLBACK(gtk_widget_destroy), G_OBJECT(sound_dialog));
 
 	ok_button = gtk_button_new_from_stock(GTK_STOCK_OK);
 	gtk_widget_show(ok_button);
@@ -1457,7 +1472,7 @@ create_sound_dialog(void)
 	GTK_WIDGET_SET_FLAGS(ok_button, GTK_CAN_DEFAULT);
 	GTK_WIDGET_SET_FLAGS(ok_button, GTK_HAS_DEFAULT);
 #endif
-	g_signal_connect(GTK_OBJECT(ok_button), "clicked",
+	g_signal_connect(G_OBJECT(ok_button), "clicked",
 	    G_CALLBACK(ok_button_clicked), (gpointer)sound_dialog);
 	gtk_widget_grab_default(ok_button);
 

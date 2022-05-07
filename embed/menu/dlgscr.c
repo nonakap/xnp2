@@ -1,16 +1,19 @@
-#include	"compiler.h"
-#include	"strres.h"
-#include	"scrnmng.h"
-#include	"sysmng.h"
-#include	"pccore.h"
-#include	"iocore.h"
-#include	"scrndraw.h"
-#include	"palettes.h"
-#include	"vramhdl.h"
-#include	"menubase.h"
-#include	"menustr.h"
-#include	"sysmenu.res"
+/**
+ * @file	dlgscr.c
+ * @brief	Implementation of the screen dialog
+ */
 
+#include "compiler.h"
+#include "dlgscr.h"
+#include "../menubase/menudlg.h"
+#include "../menubase/menures.h"
+#include "strres.h"
+#include "pccore.h"
+#include "iocore.h"
+#include "scrndraw.h"
+#include "palettes.h"
+#include "scrnmng.h"
+#include "sysmng.h"
 
 enum {
 	DID_TAB		= DID_USER,

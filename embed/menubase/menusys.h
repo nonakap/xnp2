@@ -1,3 +1,11 @@
+/**
+ * @file	menusys.h
+ * @brief	Interface of the menu of the system
+ */
+
+#pragma once
+
+#include "menubase.h"
 
 enum {
 	MENUSYS_MAX			= 8
@@ -47,7 +55,7 @@ void menusys_close(void);
 void menusys_moving(int x, int y, int btn);
 void menusys_key(UINT key);
 
-void *menusys_msg(int ctrl, MENUID id, void *arg);
+INTPTR menusys_msg(int ctrl, MENUID id, INTPTR arg);
 
 void menusys_setstyle(UINT16 style);
 
@@ -59,20 +67,20 @@ void menusys_setstyle(UINT16 style);
 // ---- MACRO
 
 #define menusys_sethide(id, hide)		\
-				menusys_msg(SMSG_SETHIDE, (id), (void *)(long)(hide))
+				menusys_msg(SMSG_SETHIDE, (id), (INTPTR)(hide))
 #define menusys_gethide(id)				\
-				(int)(menusys_msg(SMSG_GETHIDE, (id), NULL))
+				((int)menusys_msg(SMSG_GETHIDE, (id), 0))
 
 #define menusys_setenable(id, enable)	\
-				menusys_msg(SMSG_SETENABLE, (id), (void *)(long)(enable))
+				menusys_msg(SMSG_SETENABLE, (id), (long)(enable))
 #define menusys_getenable(id)			\
-				(int)(menusys_msg(SMSG_GETENABLE, (id), NULL))
+				((int)menusys_msg(SMSG_GETENABLE, (id), 0))
 
 #define menusys_setcheck(id, checked)	\
-				menusys_msg(SMSG_SETCHECK, (id), (void *)(long)(checked))
+				menusys_msg(SMSG_SETCHECK, (id), (long)(checked))
 #define menusys_getcheck(id)			\
-				(int)(menusys_msg(SMSG_GETCHECK, (id), NULL))
+				((int)menusys_msg(SMSG_GETCHECK, (id), 0))
 
 #define menusys_settext(id, str)		\
-				menusys_msg(SMSG_SETTEXT, (id), (str))
+				menusys_msg(SMSG_SETTEXT, (id), (INTPTR)(str))
 

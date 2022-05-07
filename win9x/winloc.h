@@ -1,4 +1,6 @@
 
+#pragma once
+
 void winloc_setclientsize(HWND hwnd, int width, int height);
 
 

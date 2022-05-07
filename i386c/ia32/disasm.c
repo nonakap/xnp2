@@ -313,6 +313,27 @@ static const char *opcode2_g9[8] = {
 static const char *sep[2] = { " ", ", " };
 #endif
 
+/**
+ * string copy
+ */
+static char *
+ncpy(char *dest, const char *src, size_t n)
+{
+	strncpy(dest, src, n);
+	dest[n - 1] = '\0';
+	return dest;
+}
+
+/**
+ * string copy at
+ */
+static char *
+ncat(char *dest, const char *src, size_t n)
+{
+	const size_t offset = strlen(dest);
+	ncpy(dest + offset, src, n - offset);
+	return dest;
+}
 
 /*
  * fetch memory
@@ -544,30 +565,30 @@ ea32(disasm_context_t *ctx, char *buf, size_t size)
 		}
 	}
 
-	milstr_ncpy(buf, "[", size);
+	ncpy(buf, "[", size);
 	for (n = 0, i = 0; i < 8; i++) {
 		if (count[i] != 0) {
 			if (n > 0) {
-				milstr_ncat(buf, " + ", size);
+				ncat(buf, " + ", size);
 			}
 			if (count[i] > 1) {
 				snprintf(tmp, size, "%s * %d",
 				    reg32_str[i], count[i]);
 			} else {
-				milstr_ncpy(tmp, reg32_str[i], sizeof(tmp));
+				ncpy(tmp, reg32_str[i], sizeof(tmp));
 			}
-			milstr_ncat(buf, tmp, size);
+			ncat(buf, tmp, size);
 			n++;
 		}
 	}
 	if (count[8] != 0) {
 		if (n > 0) {
-			milstr_ncat(buf, " + ", size);
+			ncat(buf, " + ", size);
 		}
 		snprintf(tmp, sizeof(tmp), "0x%08x", count[8]);
-		milstr_ncat(buf, tmp, size);
+		ncat(buf, tmp, size);
 	}
-	milstr_ncat(buf, "]", size);
+	ncat(buf, "]", size);
 
 	return 0;
 }
@@ -590,9 +611,9 @@ ea(disasm_context_t *ctx)
 		return rv;
 
 	if (ctx->narg == 0) {
-		milstr_ncat(ctx->next, sep[0], ctx->remain);
+		ncat(ctx->next, sep[0], ctx->remain);
 	} else {
-		milstr_ncat(ctx->next, sep[1], ctx->remain);
+		ncat(ctx->next, sep[1], ctx->remain);
 	}
 	len = strlen(ctx->next);
 	len = (len < ctx->remain) ? len : ctx->remain;
@@ -602,9 +623,9 @@ ea(disasm_context_t *ctx)
 	ctx->arg[ctx->narg++] = ctx->next;
 	if (ctx->useseg) {
 		snprintf(tmp, sizeof(tmp), "%s:", sreg_str[ctx->seg]);
-		milstr_ncat(ctx->next, tmp, ctx->remain);
+		ncat(ctx->next, tmp, ctx->remain);
 	}
-	milstr_ncat(ctx->next, buf, ctx->remain);
+	ncat(ctx->next, buf, ctx->remain);
 	len = strlen(ctx->next);
 	len = (len < ctx->remain) ? len : ctx->remain;
 	ctx->next += len;
@@ -670,8 +691,8 @@ get_opcode(disasm_context_t *ctx)
 		for (i = 0; i < prefix - 1; i++) {
 			opcode = opcode_1byte[ctx->op32][ctx->opbyte[i]];
 			if (opcode) {
-				milstr_ncat(ctx->next, opcode, ctx->remain);
-				milstr_ncat(ctx->next, " ", ctx->remain);
+				ncat(ctx->next, opcode, ctx->remain);
+				ncat(ctx->next, " ", ctx->remain);
 			}
 		}
 		len = strlen(ctx->next);
@@ -750,7 +771,7 @@ get_opcode(disasm_context_t *ctx)
 	if (opcode == NULL)
 		return 1;
 
-	milstr_ncat(ctx->next, opcode, ctx->remain);
+	ncat(ctx->next, opcode, ctx->remain);
 
 	return 0;
 }
@@ -809,10 +830,10 @@ cpu_disasm2str(UINT32 eip)
 		buf[0] = '\0';
 		for (i = 0; i < len; i++) {
 			snprintf(tmp, sizeof(tmp), "%02x ", d.opbyte[i]);
-			milstr_ncat(buf, tmp, sizeof(buf));
+			ncat(buf, tmp, sizeof(buf));
 		}
 		for (; i < 8; i++) {
-			milstr_ncat(buf, "   ", sizeof(buf));
+			ncat(buf, "   ", sizeof(buf));
 		}
 		snprintf(output, sizeof(output), "%04x:%08x: %s%s",
 		    CPU_CS, eip, buf, d.str);
@@ -823,18 +844,18 @@ cpu_disasm2str(UINT32 eip)
 			for (; i < d.nopbytes; i++) {
 				snprintf(tmp, sizeof(tmp), "%02x ",
 				    d.opbyte[i]);
-				milstr_ncat(buf, tmp, sizeof(buf));
+				ncat(buf, tmp, sizeof(buf));
 				if ((i % 8) == 7) {
 					snprintf(t, sizeof(t),
 					    "\n             : %s", buf);
-					milstr_ncat(output, t, sizeof(output));
+					ncat(output, t, sizeof(output));
 					buf[0] = '\0';
 				}
 			}
 			if ((i % 8) != 0) {
 				snprintf(t, sizeof(t),
 				    "\n             : %s", buf);
-				milstr_ncat(output, t, sizeof(output));
+				ncat(output, t, sizeof(output));
 			}
 		}
 	}

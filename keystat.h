@@ -133,27 +133,6 @@ enum {
 	NKEYREF_NC			= 0xff
 };
 
-
-typedef struct {
-	UINT8	keys;
-	UINT8	key[1];
-} NKEYM;
-
-typedef struct {
-	UINT8	keys;
-	UINT8	key[3];
-} NKEYM3;
-
-typedef struct {
-	UINT8	keys;
-	UINT8	key[15];
-} NKEYM15;
-
-typedef struct {
-	NKEYM3	key[NKEY_SYSTEM];
-	NKEYM15	user[NKEY_USERKEYS];
-} NKEYTBL;
-
 typedef struct {
 	UINT8	reqparam;
 	UINT8	mode;
@@ -163,14 +142,23 @@ typedef struct {
 	UINT8	kanaref;
 } KEYCTRL;
 
+typedef struct {
+	UINT8	ref[0x80];
+	UINT8	extkey;
+	UINT8	mouselast;
+	UINT8	padding;
+	UINT8	d_up;
+	UINT8	d_dn;
+	UINT8	d_lt;
+	UINT8	d_rt;
+} KEYSTAT;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern	NKEYTBL		nkeytbl;
 extern	KEYCTRL		keyctrl;
-
+extern	KEYSTAT		keystat;
 
 void keystat_initialize(void);
 

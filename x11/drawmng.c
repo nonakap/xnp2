@@ -6,7 +6,7 @@
 void
 drawmng_make16mask(PAL16MASK *pal16, UINT32 bmask, UINT32 rmask, UINT32 gmask)
 {
-	BYTE sft;
+	UINT8 sft;
 
 	if (pal16 == NULL)
 		return;
@@ -16,7 +16,7 @@ drawmng_make16mask(PAL16MASK *pal16, UINT32 bmask, UINT32 rmask, UINT32 gmask)
 		bmask <<= 1;
 		sft++;
 	}
-	pal16->mask.p.b = (BYTE)bmask;
+	pal16->mask.p.b = (UINT8)bmask;
 	pal16->r16b = sft;
 
 	sft = 0;
@@ -24,7 +24,7 @@ drawmng_make16mask(PAL16MASK *pal16, UINT32 bmask, UINT32 rmask, UINT32 gmask)
 		rmask >>= 1;
 		sft++;
 	}
-	pal16->mask.p.r = (BYTE)rmask;
+	pal16->mask.p.r = (UINT8)rmask;
 	pal16->l16r = sft;
 
 	sft = 0;
@@ -32,7 +32,7 @@ drawmng_make16mask(PAL16MASK *pal16, UINT32 bmask, UINT32 rmask, UINT32 gmask)
 		gmask >>= 1;
 		sft++;
 	}
-	pal16->mask.p.g = (BYTE)gmask;
+	pal16->mask.p.g = (UINT8)gmask;
 	pal16->l16g = sft;
 }
 

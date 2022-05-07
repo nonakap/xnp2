@@ -1,79 +1,93 @@
-#include	"compiler.h"
-#include	<windowsx.h>
-#include	<io.h>
-#include	"strres.h"
-#include	"profile.h"
-#include	"np2.h"
-#include	"np2arg.h"
-#if defined(OSLANG_UCS2)
-#include	"oemtext.h"
-#endif
-#include	"dosio.h"
-#include	"ini.h"
-#include	"winkbd.h"
-#include	"pccore.h"
+/**
+ *	@file	ini.cpp
+ *	@brief	設定ファイル アクセスの動作の定義を行います
+ */
 
+#include "compiler.h"
+#include "strres.h"
+#include "profile.h"
+#include "np2.h"
+#include "np2arg.h"
+#include "dosio.h"
+#include "ini.h"
+#include "winkbd.h"
+#include "pccore.h"
 
+// ---- user type
 
+/**
+ * 16ビット配列を読み込む
+ * @param[in] lpString 文字列
+ * @param[out] ini 設定テーブル
+ */
+static void inirdargs16(LPCTSTR lpString, const PFTBL* ini)
+{
+	SINT16* lpDst = static_cast<SINT16*>(ini->value);
+	const int nCount = ini->arg;
 
-// ---- user
-
-static void inirdargs16(const OEMCHAR *src, const PFTBL *ini) {
-
-	SINT16	*dst;
-	int		dsize;
-	int		i;
-	OEMCHAR	c;
-
-	dst = (SINT16 *)ini->value;
-	dsize = ini->arg;
-
-	for (i=0; i<dsize; i++) {
-		while(*src == ' ') {
-			src++;
+	for (int i = 0; i < nCount; i++)
+	{
+		while (*lpString == ' ')
+		{
+			lpString++;
 		}
-		if (*src == '\0') {
+
+		if (*lpString == '\0')
+		{
 			break;
 		}
-		dst[i] = (SINT16)milstr_solveINT(src);
-		while(*src != '\0') {
-			c = *src++;
-			if (c == ',') {
+
+		lpDst[i] = static_cast<SINT16>(milstr_solveINT(lpString));
+		while (*lpString != '\0')
+		{
+			const TCHAR c = *lpString++;
+			if (c == ',')
+			{
 				break;
 			}
 		}
 	}
 }
 
-static void inirdbyte3(const OEMCHAR *src, const PFTBL *ini) {
-
-	UINT	i;
-
-	for (i=0; i<3; i++) {
-		if (src[i] == '\0') {
+/**
+ * 3バイトを読み込む
+ * @param[in] lpString 文字列
+ * @param[out] ini 設定テーブル
+ */
+static void inirdbyte3(LPCTSTR lpString, const PFTBL* ini)
+{
+	for (int i = 0; i < 3; i++)
+	{
+		const TCHAR c = lpString[i];
+		if (c == '\0')
+		{
 			break;
 		}
-		if ((((src[i] - '0') & 0xff) < 9) ||
-			(((src[i] - 'A') & 0xdf) < 26)) {
-			((UINT8 *)ini->value)[i] = (UINT8)src[i];
+		if ((((c - '0') & 0xff) < 9) || (((c - 'A') & 0xdf) < 26))
+		{
+			(static_cast<UINT8*>(ini->value))[i] = static_cast<UINT8>(c);
 		}
 	}
 }
 
-static void inirdkb(const OEMCHAR *src, const PFTBL *ini) {
-
-	if ((!milstr_extendcmp(src, OEMTEXT("PC98"))) ||
-		(!milstr_cmp(src, OEMTEXT("98")))) {
-		*(UINT8 *)ini->value = KEY_PC98;
+/**
+ * キーボード設定を読み込む
+ * @param[in] lpString 文字列
+ * @param[out] ini 設定テーブル
+ */
+static void inirdkb(LPCTSTR lpString, const PFTBL* ini)
+{
+	if ((!milstr_extendcmp(lpString, TEXT("PC98"))) || (!milstr_cmp(lpString, TEXT("98"))))
+	{
+		*(static_cast<UINT8*>(ini->value)) = KEY_PC98;
 	}
-	else if ((!milstr_extendcmp(src, OEMTEXT("DOS"))) ||
-			(!milstr_cmp(src, OEMTEXT("PCAT"))) ||
-			(!milstr_cmp(src, OEMTEXT("AT")))) {
-		*(UINT8 *)ini->value = KEY_KEY106;
+	else if ((!milstr_extendcmp(lpString, TEXT("DOS"))) || (!milstr_cmp(lpString, TEXT("PCAT"))) || (!milstr_cmp(lpString, TEXT("AT"))))
+	{
+		*(static_cast<UINT8*>(ini->value)) = KEY_KEY106;
 	}
-	else if ((!milstr_extendcmp(src, OEMTEXT("KEY101"))) ||
-			(!milstr_cmp(src, OEMTEXT("101")))) {
-		*(UINT8 *)ini->value = KEY_KEY101;
+	else if ((!milstr_extendcmp(lpString, TEXT("KEY101"))) || (!milstr_cmp(lpString, TEXT("101"))))
+	{
+		*(static_cast<UINT8*>(ini->value)) = KEY_KEY101;
 	}
 }
 
@@ -81,259 +95,264 @@ static void inirdkb(const OEMCHAR *src, const PFTBL *ini) {
 // ---- Use WinAPI
 
 #if !defined(_UNICODE)
-static void bitmapset(UINT8 *ptr, UINT pos, BOOL set) {
-
-	UINT8	bit;
-
-	ptr += (pos >> 3);
-	bit = 1 << (pos & 7);
-	if (set) {
-		*ptr |= bit;
+/**
+ * ビットを設定
+ * @param[in,out] lpBuffer バッファ
+ * @param[in] nPos 位置
+ * @param[in] set セット or クリア
+ */
+static void bitmapset(void* lpBuffer, UINT nPos, BOOL set)
+{
+	const int nIndex = (nPos >> 3);
+	const UINT8 cBit = 1 << (nPos & 7);
+	if (set)
+	{
+		(static_cast<UINT8*>(lpBuffer))[nIndex] |= cBit;
 	}
-	else {
-		*ptr &= ~bit;
+	else
+	{
+		(static_cast<UINT8*>(lpBuffer))[nIndex] &= ~cBit;
 	}
 }
 
-static BOOL bitmapget(const UINT8 *ptr, UINT pos) {
-
-	return((ptr[pos >> 3] >> (pos & 7)) & 1);
+/**
+ * ビットを得る
+ * @param[in] lpBuffer バッファ
+ * @param[in] nPos 位置
+ * @return ビット
+ */
+static BOOL bitmapget(const void* lpBuffer, UINT nPos)
+{
+	const int nIndex = (nPos >> 3);
+	const UINT8 cBit = 1 << (nPos & 7);
+	return (((static_cast<const UINT8*>(lpBuffer))[nIndex]) & cBit) ? TRUE : FALSE;
 }
 
-static void binset(UINT8 *bin, UINT binlen, const OEMCHAR *src) {
-
-	UINT	i;
-	UINT8	val;
-	BOOL	set;
-	OEMCHAR	c;
-
-	for (i=0; i<binlen; i++) {
-		val = 0;
-		set = FALSE;
-		while(*src == ' ') {
-			src++;
+/**
+ * バイナリをアンシリアライズ
+ * @param[out] lpBin バイナリ
+ * @param[in] cbBin バイナリのサイズ
+ * @param[in] lpString 文字列バッファ
+ */
+static void binset(void* lpBin, UINT cbBin, LPCTSTR lpString)
+{
+	for (UINT i = 0; i < cbBin; i++)
+	{
+		while (*lpString == ' ')
+		{
+			lpString++;
 		}
-		while(1) {
-			c = *src;
-			if ((c == '\0') || (c == ' ')) {
-				break;
-			}
-			else if ((c >= '0') && (c <= '9')) {
-				val <<= 4;
-				val += c - '0';
-				set = TRUE;
-			}
-			else {
-				c |= 0x20;
-				if ((c >= 'a') && (c <= 'f')) {
-					val <<= 4;
-					val += c - 'a' + 10;
-					set = TRUE;
-				}
-			}
-			src++;
-		}
-		if (set == FALSE) {
+
+		LPTSTR lpStringEnd;
+		const long lVal = _tcstol(lpString, &lpStringEnd, 16);
+		if (lpString == lpStringEnd)
+		{
 			break;
 		}
-		bin[i] = val;
+
+		(static_cast<UINT8*>(lpBin))[i] = static_cast<UINT8>(lVal);
+		lpString = lpStringEnd;
 	}
 }
 
-static void binget(OEMCHAR *work, int size, const UINT8 *bin, UINT binlen) {
+/**
+ * バイナリをシリアライズ
+ * @param[out] lpString 文字列バッファ
+ * @param[in] cchString 文字列バッファ長
+ * @param[in] lpBin バイナリ
+ * @param[in] cbBin バイナリのサイズ
+ */
+static void binget(LPTSTR lpString, int cchString, const void* lpBin, UINT cbBin)
+{
 
-	UINT	i;
-	OEMCHAR	tmp[8];
-
-	if (binlen) {
-		OEMSPRINTF(tmp, OEMTEXT("%.2x"), bin[0]);
-		milstr_ncpy(work, tmp, size);
+	if (cbBin)
+	{
+		TCHAR tmp[8];
+		wsprintf(tmp, TEXT("%.2x"), (static_cast<const UINT8*>(lpBin))[0]);
+		milstr_ncpy(lpString, tmp, cchString);
 	}
-	for (i=1; i<binlen; i++) {
-		OEMSPRINTF(tmp, OEMTEXT(" %.2x"), bin[i]);
-		milstr_ncat(work, tmp, size);
+	for (UINT i = 1; i < cbBin; i++)
+	{
+		TCHAR tmp[8];
+		wsprintf(tmp, TEXT(" %.2x"), (static_cast<const UINT8*>(lpBin))[i]);
+		milstr_ncat(lpString, tmp, cchString);
 	}
 }
 
-void ini_read(const OEMCHAR *path, const OEMCHAR *title,
-											const PFTBL *tbl, UINT count) {
-
-const PFTBL	*p;
-const PFTBL	*pterm;
-	OEMCHAR	work[512];
-	UINT32	val;
-
-	p = tbl;
-	pterm = tbl + count;
-	while(p < pterm) {
-		switch(p->itemtype & PFTYPE_MASK) {
+/**
+ * 設定読み出し
+ * @param[in] lpPath パス
+ * @param[in] lpTitle タイトル
+ * @param[in] lpTable 設定テーブル
+ * @param[in] nCount 設定テーブル アイテム数
+ */
+void ini_read(LPCTSTR lpPath, LPCTSTR lpTitle, const PFTBL* lpTable, UINT nCount)
+{
+	const PFTBL* p = lpTable;
+	const PFTBL* pTerminate = p + nCount;
+	while (p < pTerminate)
+	{
+		TCHAR szWork[512];
+		UINT32 val;
+		switch (p->itemtype & PFTYPE_MASK)
+		{
 			case PFTYPE_STR:
-				GetPrivateProfileString(title, p->item, (OEMCHAR *)p->value,
-											(OEMCHAR *)p->value, p->arg, path);
+				GetPrivateProfileString(lpTitle, p->item, static_cast<LPCTSTR>(p->value), static_cast<LPTSTR>(p->value), p->arg, lpPath);
 				break;
 
 			case PFTYPE_BOOL:
-				GetPrivateProfileString(title, p->item,
-									(*((UINT8 *)p->value))?str_true:str_false,
-												work, NELEMENTS(work), path);
-				*((UINT8 *)p->value) = (!milstr_cmp(work, str_true))?1:0;
+				GetPrivateProfileString(lpTitle, p->item,
+									(*(static_cast<const UINT8*>(p->value))) ? str_true : str_false,
+									szWork, NELEMENTS(szWork), lpPath);
+				*(static_cast<UINT8*>(p->value)) = (!milstr_cmp(szWork, str_true)) ? 1 : 0;
 				break;
 
 			case PFTYPE_BITMAP:
-				GetPrivateProfileString(title, p->item,
-					(bitmapget((UINT8 *)p->value, p->arg))?str_true:str_false,
-												work, NELEMENTS(work), path);
-				bitmapset((UINT8 *)p->value, p->arg,
-										(milstr_cmp(work, str_true) == 0));
+				GetPrivateProfileString(lpTitle, p->item,
+									(bitmapget(p->value, p->arg)) ? str_true : str_false,
+									szWork, _countof(szWork), lpPath);
+				bitmapset(p->value, p->arg, (milstr_cmp(szWork, str_true) == 0));
 				break;
 
 			case PFTYPE_BIN:
-				GetPrivateProfileString(title, p->item, str_null,
-												work, NELEMENTS(work), path);
-				binset((UINT8 *)p->value, p->arg, work);
+				GetPrivateProfileString(lpTitle, p->item, str_null, szWork, _countof(szWork), lpPath);
+				binset(p->value, p->arg, szWork);
 				break;
 
 			case PFTYPE_SINT8:
 			case PFTYPE_UINT8:
-				val = (UINT8)GetPrivateProfileInt(title, p->item,
-												*(UINT8 *)p->value, path);
-				*(UINT8 *)p->value = (UINT8)val;
+				val = GetPrivateProfileInt(lpTitle, p->item, *(static_cast<const UINT8*>(p->value)), lpPath);
+				*(static_cast<UINT8*>(p->value)) = static_cast<UINT8>(val);
 				break;
 
 			case PFTYPE_SINT16:
 			case PFTYPE_UINT16:
-				val = (UINT16)GetPrivateProfileInt(title, p->item,
-												*(UINT16 *)p->value, path);
-				*(UINT16 *)p->value = (UINT16)val;
+				val = GetPrivateProfileInt(lpTitle, p->item, *(static_cast<const UINT16*>(p->value)), lpPath);
+				*(static_cast<UINT16*>(p->value)) = static_cast<UINT16>(val);
 				break;
 
 			case PFTYPE_SINT32:
 			case PFTYPE_UINT32:
-				val = (UINT32)GetPrivateProfileInt(title, p->item,
-												*(UINT32 *)p->value, path);
-				*(UINT32 *)p->value = (UINT32)val;
+				val = GetPrivateProfileInt(lpTitle, p->item, *(static_cast<const UINT32*>(p->value)), lpPath);
+				*(static_cast<UINT32*>(p->value)) = static_cast<UINT32>(val);
 				break;
 
 			case PFTYPE_HEX8:
-				OEMSPRINTF(work, str_x, *(UINT8 *)p->value),
-				GetPrivateProfileString(title, p->item, work,
-												work, NELEMENTS(work), path);
-				val = (UINT8)milstr_solveHEX(work);
-				*(UINT8 *)p->value = (UINT8)val;
+				wsprintf(szWork, str_x, *(static_cast<const UINT8*>(p->value)));
+				GetPrivateProfileString(lpTitle, p->item, szWork, szWork, _countof(szWork), lpPath);
+				*(static_cast<UINT8*>(p->value)) = static_cast<UINT8>(milstr_solveHEX(szWork));
 				break;
 
 			case PFTYPE_HEX16:
-				OEMSPRINTF(work, str_x, *(UINT16 *)p->value),
-				GetPrivateProfileString(title, p->item, work,
-												work, NELEMENTS(work), path);
-				val = (UINT16)milstr_solveHEX(work);
-				*(UINT16 *)p->value = (UINT16)val;
+				wsprintf(szWork, str_x, *(static_cast<const UINT16*>(p->value)));
+				GetPrivateProfileString(lpTitle, p->item, szWork, szWork, _countof(szWork), lpPath);
+				*(static_cast<UINT16*>(p->value)) = static_cast<UINT16>(milstr_solveHEX(szWork));
 				break;
 
 			case PFTYPE_HEX32:
-				OEMSPRINTF(work, str_x, *(UINT32 *)p->value),
-				GetPrivateProfileString(title, p->item, work,
-												work, NELEMENTS(work), path);
-				val = (UINT32)milstr_solveHEX(work);
-				*(UINT32 *)p->value = (UINT32)val;
+				wsprintf(szWork, str_x, *(static_cast<const UINT32*>(p->value)));
+				GetPrivateProfileString(lpTitle, p->item, szWork, szWork, _countof(szWork), lpPath);
+				*(static_cast<UINT32*>(p->value)) = static_cast<UINT32>(milstr_solveHEX(szWork));
 				break;
 
 			case PFTYPE_ARGS16:
-				GetPrivateProfileString(title, p->item, str_null,
-												work, NELEMENTS(work), path);
-				inirdargs16(work, p);
+				GetPrivateProfileString(lpTitle, p->item, str_null, szWork, _countof(szWork), lpPath);
+				inirdargs16(szWork, p);
 				break;
 
 			case PFTYPE_BYTE3:
-				GetPrivateProfileString(title, p->item, str_null,
-												work, NELEMENTS(work), path);
-				inirdbyte3(work, p);
+				GetPrivateProfileString(lpTitle, p->item, str_null, szWork, _countof(szWork), lpPath);
+				inirdbyte3(szWork, p);
 				break;
 
 			case PFTYPE_KB:
-				GetPrivateProfileString(title, p->item, str_null,
-												work, NELEMENTS(work), path);
-				inirdkb(work, p);
+				GetPrivateProfileString(lpTitle, p->item, str_null, szWork, _countof(szWork), lpPath);
+				inirdkb(szWork, p);
 				break;
 		}
 		p++;
 	}
 }
 
-void ini_write(const OEMCHAR *path, const OEMCHAR *title,
-											const PFTBL *tbl, UINT count) {
+/**
+ * 設定書き込み
+ * @param[in] lpPath パス
+ * @param[in] lpTitle タイトル
+ * @param[in] lpTable 設定テーブル
+ * @param[in] nCount 設定テーブル アイテム数
+ */
+void ini_write(LPCTSTR lpPath, LPCTSTR lpTitle, const PFTBL* lpTable, UINT nCount)
+{
+	const PFTBL* p = lpTable;
+	const PFTBL* pTerminate = p + nCount;
+	while (p < pTerminate)
+	{
+		if (!(p->itemtype & PFFLAG_RO))
+		{
+			TCHAR szWork[512];
+			szWork[0] = '\0';
 
-const PFTBL		*p;
-const PFTBL		*pterm;
-const OEMCHAR	*set;
-	OEMCHAR		work[512];
-
-	p = tbl;
-	pterm = tbl + count;
-	while(p < pterm) {
-		if (!(p->itemtype & PFFLAG_RO)) {
-			work[0] = '\0';
-			set = work;
+			LPCTSTR lpSet = szWork;
 			switch(p->itemtype & PFTYPE_MASK) {
 				case PFTYPE_STR:
-					set = (OEMCHAR *)p->value;
+					lpSet = static_cast<LPCTSTR>(p->value);
 					break;
 
 				case PFTYPE_BOOL:
-					set = (*((UINT8 *)p->value))?str_true:str_false;
+					lpSet = (*(static_cast<const UINT8*>(p->value))) ? str_true : str_false;
 					break;
 
 				case PFTYPE_BITMAP:
-					set = (bitmapget((UINT8 *)p->value, p->arg))?
-														str_true:str_false;
+					lpSet = (bitmapget(p->value, p->arg)) ? str_true : str_false;
 					break;
 
 				case PFTYPE_BIN:
-					binget(work, NELEMENTS(work), (UINT8 *)p->value, p->arg);
+					binget(szWork, _countof(szWork), p->value, p->arg);
 					break;
 
 				case PFTYPE_SINT8:
-					OEMSPRINTF(work, str_d, *((SINT8 *)p->value));
+					wsprintf(szWork, str_d, *(static_cast<const SINT8*>(p->value)));
 					break;
 
 				case PFTYPE_SINT16:
-					OEMSPRINTF(work, str_d, *((SINT16 *)p->value));
+					wsprintf(szWork, str_d, *(static_cast<const SINT16*>(p->value)));
 					break;
 
 				case PFTYPE_SINT32:
-					OEMSPRINTF(work, str_d, *((SINT32 *)p->value));
+					wsprintf(szWork, str_d, *(static_cast<const SINT32*>(p->value)));
 					break;
 
 				case PFTYPE_UINT8:
-					OEMSPRINTF(work, str_u, *((UINT8 *)p->value));
+					wsprintf(szWork, str_u, *(static_cast<const UINT8*>(p->value)));
 					break;
 
 				case PFTYPE_UINT16:
-					OEMSPRINTF(work, str_u, *((UINT16 *)p->value));
+					wsprintf(szWork, str_u, *(static_cast<const UINT16*>(p->value)));
 					break;
 
 				case PFTYPE_UINT32:
-					OEMSPRINTF(work, str_u, *((UINT32 *)p->value));
+					wsprintf(szWork, str_u, *(static_cast<const UINT32*>(p->value)));
 					break;
 
 				case PFTYPE_HEX8:
-					OEMSPRINTF(work, str_x, *((UINT8 *)p->value));
+					wsprintf(szWork, str_x, *(static_cast<const UINT8*>(p->value)));
 					break;
 
 				case PFTYPE_HEX16:
-					OEMSPRINTF(work, str_x, *((UINT16 *)p->value));
+					wsprintf(szWork, str_x, *(static_cast<const UINT16*>(p->value)));
 					break;
 
 				case PFTYPE_HEX32:
-					OEMSPRINTF(work, str_x, *((UINT32 *)p->value));
+					wsprintf(szWork, str_x, *(static_cast<const UINT32*>(p->value)));
 					break;
 
 				default:
-					set = NULL;
+					lpSet = NULL;
 					break;
 			}
-			if (set) {
-				WritePrivateProfileString(title, p->item, set, path);
+			if (lpSet)
+			{
+				::WritePrivateProfileString(lpTitle, p->item, lpSet, lpPath);
 			}
 		}
 		p++;
@@ -344,33 +363,51 @@ const OEMCHAR	*set;
 
 // ---- Use profile.c
 
-static void pfread(const PFTBL *item, const OEMCHAR *string) {
-
-	switch(item->itemtype & PFTYPE_MASK) {
+/**
+ * コールバック
+ * @param[in] item アイテム
+ * @param[in] lpString 文字列
+ */
+static void UserReadItem(const PFTBL* item, LPCTSTR lpString)
+{
+	switch (item->itemtype & PFTYPE_MASK)
+	{
 		case PFTYPE_ARGS16:
-			inirdargs16(string, item);
+			inirdargs16(lpString, item);
 			break;
 
 		case PFTYPE_BYTE3:
-			inirdbyte3(string, item);
+			inirdbyte3(lpString, item);
 			break;
 
 		case PFTYPE_KB:
-			inirdkb(string, item);
+			inirdkb(lpString, item);
 			break;
 	}
 }
 
-void ini_read(const OEMCHAR *path, const OEMCHAR *title,
-											const PFTBL *tbl, UINT count) {
-
-	profile_iniread(path, title, tbl, count, pfread);
+/**
+ * 設定読み取り
+ * @param[in] lpPath パス
+ * @param[in] lpTitle タイトル
+ * @param[in] lpTable 設定テーブル
+ * @param[in] nCount 設定テーブル アイテム数
+ */
+void ini_read(LPCTSTR lpPath, LPCTSTR lpTitle, const PFTBL* lpTable, UINT nCount)
+{
+	profile_iniread(lpPath, lpTitle, lpTable, nCount, UserReadItem);
 }
 
-void ini_write(const OEMCHAR *path, const OEMCHAR *title,
-											const PFTBL *tbl, UINT count) {
-
-	profile_iniwrite(path, title, tbl, count, NULL);
+/**
+ * 設定書き込み
+ * @param[in] lpPath パス
+ * @param[in] lpTitle タイトル
+ * @param[in] lpTable 設定テーブル
+ * @param[in] nCount 設定テーブル アイテム数
+ */
+void ini_write(LPCTSTR lpPath, LPCTSTR lpTitle, const PFTBL* lpTable, UINT nCount)
+{
+	profile_iniwrite(lpPath, lpTitle, lpTable, nCount, NULL);
 }
 
 #endif	// !defined(_UNICODE)
@@ -379,12 +416,16 @@ void ini_write(const OEMCHAR *path, const OEMCHAR *title,
 // ----
 
 #if !defined(SUPPORT_PC9821)
-static const OEMCHAR ini_title[] = OEMTEXT("NekoProjectII");
+static const TCHAR s_szIniTitle[] = TEXT("NekoProjectII");		//!< アプリ名
 #else
-static const OEMCHAR ini_title[] = OEMTEXT("NekoProject21");
+static const TCHAR s_szIniTitle[] = TEXT("NekoProject21");		//!< アプリ名
 #endif
 
-enum {
+/**
+ * 追加設定
+ */
+enum
+{
 	PFRO_STR		= PFFLAG_RO + PFTYPE_STR,
 	PFRO_BOOL		= PFFLAG_RO + PFTYPE_BOOL,
 	PFRO_BITMAP		= PFFLAG_RO + PFTYPE_BITMAP,
@@ -396,7 +437,11 @@ enum {
 	PFRO_KB			= PFFLAG_RO + PFTYPE_KB
 };
 
-static const PFTBL iniitem[] = {
+/**
+ * OS 設定 テーブル
+ */
+static const PFTBL s_IniItems[] =
+{
 	PFSTR("np2title", PFRO_STR,			np2oscfg.titles),
 	PFVAL("np2winid", PFRO_BYTE3,		np2oscfg.winid),
 	PFVAL("WindposX", PFTYPE_SINT32,	&np2oscfg.winx),
@@ -434,7 +479,7 @@ static const PFTBL iniitem[] = {
 	PFSTR("SCSIHDD3", PFTYPE_STR,		np2cfg.scsihdd[3]),
 #endif
 
-	PFVAL("SampleHz", PFTYPE_UINT16,	&np2cfg.samplingrate),
+	PFVAL("SampleHz", PFTYPE_UINT32,	&np2cfg.samplingrate),
 	PFVAL("Latencys", PFTYPE_UINT16,	&np2cfg.delayms),
 	PFVAL("SNDboard", PFTYPE_HEX8,		&np2cfg.SOUND_SW),
 	PFAND("BEEP_vol", PFTYPE_UINT8,		&np2cfg.BEEP_VOL,		3),
@@ -503,8 +548,6 @@ static const PFTBL iniitem[] = {
 	PFAND("clock_up", PFRO_HEX32,		&np2oscfg.clk_color1,	0xffffff),
 	PFAND("clock_dn", PFRO_HEX32,		&np2oscfg.clk_color2,	0xffffff),
 
-	PFVAL("use_sstp", PFTYPE_BOOL,		&np2oscfg.sstp),
-	PFVAL("sstpport", PFTYPE_UINT16,	&np2oscfg.sstpport),
 	PFVAL("comfirm_", PFTYPE_BOOL,		&np2oscfg.comfirm),
 	PFVAL("shortcut", PFTYPE_HEX8,		&np2oscfg.shortcut),
 
@@ -551,48 +594,63 @@ static const PFTBL iniitem[] = {
 	PFVAL("fscrn_cy", PFRO_SINT32,		&np2oscfg.fscrn_cy),
 	PFVAL("fscrnbpp", PFRO_UINT8,		&np2oscfg.fscrnbpp),
 	PFVAL("fscrnmod", PFTYPE_HEX8,		&np2oscfg.fscrnmod),
-	PFVAL("I286SAVE", PFRO_BOOL,		&np2oscfg.I286SAVE)};
 
+	PFVAL("snddev_t", PFTYPE_UINT8,		&np2oscfg.cSoundDeviceType),
+	PFSTR("snddev_n", PFTYPE_STR,		np2oscfg.szSoundDeviceName),
 
-static const OEMCHAR ext_ini[] = OEMTEXT(".ini");
+#if defined(SUPPORT_VSTi)
+	PFSTR("VSTiFile", PFRO_STR,			np2oscfg.szVSTiFile),
+#endif	// defined(SUPPORT_VSTi)
 
-void initgetfile(OEMCHAR *path, UINT size) {
+	PFVAL("I286SAVE", PFRO_BOOL,		&np2oscfg.I286SAVE)
+};
 
-const OEMCHAR	*ext;
+//! .ini 拡張子
+static const TCHAR s_szExt[] = TEXT(".ini");
 
-	file_cpyname(path, modulefile, size);
-	if (np2arg.ini) {
-		if ((np2arg.ini[0] == '/') || (np2arg.ini[0] == '-')) {
-			file_cutname(path);
-			file_catname(path, file_getname(np2arg.ini + 2), size);
-		}
-		else {
-			file_cpyname(path, np2arg.ini, size);
-		}
-		ext = file_getext(path);
-		if (ext[0] != '\0') {
-			file_catname(path, ext_ini, size);
+/**
+ * 設定ファイルのパスを得る
+ * @param[out] lpPath パス
+ * @param[in] cchPath パス バッファの長さ
+ */
+void initgetfile(LPTSTR lpPath, UINT cchPath)
+{
+	LPCTSTR lpIni = Np2Arg::GetInstance()->iniFilename();
+	if (lpIni)
+	{
+		file_cpyname(lpPath, lpIni, cchPath);
+		LPCTSTR lpExt = file_getext(lpPath);
+		if (lpExt[0] == '\0')
+		{
+			file_catname(lpPath, s_szExt, cchPath);
 		}
 	}
-	else {
-		file_cutext(path);
-		file_catname(path, ext_ini, size);
+	else
+	{
+		file_cpyname(lpPath, modulefile, cchPath);
+		file_cutext(lpPath);
+		file_catname(lpPath, s_szExt, cchPath);
 	}
 }
 
-void initload(void) {
+/**
+ * 読み込み
+ */
+void initload(void)
+{
+	TCHAR szPath[MAX_PATH];
 
-	OEMCHAR	path[MAX_PATH];
-
-	initgetfile(path, NELEMENTS(path));
-	ini_read(path, ini_title, iniitem, NELEMENTS(iniitem));
+	initgetfile(szPath, _countof(szPath));
+	ini_read(szPath, s_szIniTitle, s_IniItems, _countof(s_IniItems));
 }
 
-void initsave(void) {
+/**
+ * 書き出し
+ */
+void initsave(void)
+{
+	TCHAR szPath[MAX_PATH];
 
-	OEMCHAR	path[MAX_PATH];
-
-	initgetfile(path, NELEMENTS(path));
-	ini_write(path, ini_title, iniitem, NELEMENTS(iniitem));
+	initgetfile(szPath, _countof(szPath));
+	ini_write(szPath, s_szIniTitle, s_IniItems, _countof(s_IniItems));
 }
-

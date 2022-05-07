@@ -1,3 +1,9 @@
+/**
+ * @file	sxsibios.h
+ * @brief	Interface of SxSI BIOS
+ */
+
+#pragma once
 
 enum {
 	SXSIBIOS_SASI		= 0,
@@ -27,4 +33,3 @@ void np2sysp_scsidev(const void *arg1, long arg2);
 #ifdef __cplusplus
 }
 #endif
-

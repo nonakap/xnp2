@@ -1,8 +1,11 @@
-#include	"compiler.h"
-#include	"fontmng.h"
-#include	"vramhdl.h"
-#include	"vrammix.h"
+/**
+ * @file	vrammix.c
+ * @brief	Implementation of mixing vram
+ */
 
+#include "compiler.h"
+#include "vrammix.h"
+#include "fontmng.h"
 
 enum {
 	VRAMALPHABASE	= (1 << VRAMALPHABIT) - VRAMALPHA,
@@ -2609,12 +2612,8 @@ const UINT8	*p;
 	UINT	alpha;
 	int		cnt;
 	UINT	col16;
-	int		c16[3];
 
 	col16 = MAKE16PAL(color);
-	c16[0] = col16 & B16MASK;
-	c16[1] = col16 & G16MASK;
-	c16[2] = col16 & R16MASK;
 
 	p = (UINT8 *)(fnt + 1);
 	p += mr->srcpos;

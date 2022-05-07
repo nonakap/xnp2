@@ -35,7 +35,7 @@
 #endif
 
 #include "np2.h"
-#include "diskdrv.h"
+#include "fdd/diskdrv.h"
 #include "dosio.h"
 #include "ini.h"
 #include "parts.h"
@@ -129,7 +129,7 @@ int
 main(int argc, char *argv[])
 {
 	struct stat sb;
-	BOOL result;
+	BRESULT result;
 	int rv = 1;
 	int ch;
 	int i, drvmax;
@@ -276,18 +276,18 @@ main(int argc, char *argv[])
 
 	if (soundmng_initialize() == SUCCESS) {
 		result = soundmng_pcmload(SOUND_PCMSEEK, file_getcd("fddseek.wav"));
-		if (!result) {
+		if (result != SUCCESS) {
 			result = soundmng_pcmload(SOUND_PCMSEEK, SYSRESPATH "/fddseek.wav");
 		}
-		if (result) {
+		if (result == SUCCESS) {
 			soundmng_pcmvolume(SOUND_PCMSEEK, np2cfg.MOTORVOL);
 		}
 
 		result = soundmng_pcmload(SOUND_PCMSEEK1, file_getcd("fddseek1.wav"));
-		if (!result) {
+		if (result != SUCCESS) {
 			result = soundmng_pcmload(SOUND_PCMSEEK1, SYSRESPATH "/fddseek1.wav");
 		}
-		if (result) {
+		if (result == SUCCESS) {
 			soundmng_pcmvolume(SOUND_PCMSEEK1, np2cfg.MOTORVOL);
 		}
 	}

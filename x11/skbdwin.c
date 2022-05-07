@@ -11,7 +11,7 @@
 SKBDCFG skbdcfg;
 
 
-BOOL
+BRESULT
 skbdwin_initialize(void)
 {
 

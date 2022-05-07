@@ -21,7 +21,7 @@ static	MEMDBG32	memdbg32;
 
 static const char _mode0[] = "Real Mode";
 static const char _mode1[] = "Protected Mode";
-static const char _mode2[] = "Virutal86";
+static const char _mode2[] = "Virtual86";
 static const char *modestr[3] = {_mode0, _mode1, _mode2};
 static const RGB32 md32pal[MEMDBG32_PALS] = {
 			RGB32D(0x33, 0x33, 0x33),

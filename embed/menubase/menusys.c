@@ -1,11 +1,17 @@
-#include	"compiler.h"
-#include	"fontmng.h"
-#include	"inputmng.h"
-#include	"vramhdl.h"
-#include	"vrammix.h"
-#include	"menudeco.inc"
-#include	"menubase.h"
+/**
+ * @file	menusys.c
+ * @brief	Implementation of the menu of the system
+ */
 
+#include "compiler.h"
+#include "menusys.h"
+#include "menubase.h"
+#include "menudeco.inc"
+#include "menures.h"
+#include "menuvram.h"
+#include "../vrammix.h"
+#include "fontmng.h"
+#include "inputmng.h"
 
 typedef struct _mhdl {
 struct _mhdl	*chain;
@@ -1072,7 +1078,7 @@ mssf_end:
 	return;
 }
 
-static void menusys_settxt(MENUID id, void *arg) {
+static void menusys_settxt(MENUID id, const OEMCHAR *arg) {
 
 	MENUSYS	*sys;
 	MENUHDL	itm;
@@ -1087,7 +1093,7 @@ static void menusys_settxt(MENUID id, void *arg) {
 	}
 
 	if (arg) {
-		milstr_ncpy(itm->string, (OEMCHAR *)arg, NELEMENTS(itm->string));
+		milstr_ncpy(itm->string, arg, NELEMENTS(itm->string));
 	}
 	else {
 		itm->string[0] = '\0';
@@ -1120,13 +1126,13 @@ msst_end:
 	return;
 }
 
-void *menusys_msg(int ctrl, MENUID id, void *arg) {
+INTPTR menusys_msg(int ctrl, MENUID id, INTPTR arg) {
 
-	void	*ret;
+	INTPTR	ret;
 	MENUSYS	*sys;
 	MENUHDL	itm;
 
-	ret = NULL;
+	ret = 0;
 	sys = &menusys;
 	itm = itemsea(sys, id);
 	if (itm == NULL) {
@@ -1135,36 +1141,34 @@ void *menusys_msg(int ctrl, MENUID id, void *arg) {
 
 	switch(ctrl) {
 		case SMSG_SETHIDE:
-			ret = (void *)((itm->flag & MENU_DISABLE)?1:0);
-			menusys_setflag(id,
-							(MENUFLG)((arg)?MENU_DISABLE:0), MENU_DISABLE);
+			ret = (itm->flag & MENU_DISABLE) ? 1 : 0;
+			menusys_setflag(id, (MENUFLG)((arg) ? MENU_DISABLE : 0), MENU_DISABLE);
 			break;
 
 		case SMSG_GETHIDE:
-			ret = (void *)((itm->flag & MENU_DISABLE)?1:0);
+			ret = (itm->flag & MENU_DISABLE) ? 1 : 0;
 			break;
 
 		case SMSG_SETENABLE:
-			ret = (void *)((itm->flag & MENU_GRAY)?0:1);
-			menusys_setflag(id, (MENUFLG)((arg)?0:MENU_GRAY), MENU_GRAY);
+			ret = (itm->flag & MENU_GRAY) ? 0 : 1;
+			menusys_setflag(id, (MENUFLG)((arg) ? 0 : MENU_GRAY), MENU_GRAY);
 			break;
 
 		case SMSG_GETENABLE:
-			ret = (void *)((itm->flag & MENU_GRAY)?0:1);
+			ret = (itm->flag & MENU_GRAY) ? 0 : 1;
 			break;
 
 		case SMSG_SETCHECK:
-			ret = (void *)((itm->flag & MENU_CHECKED)?1:0);
-			menusys_setflag(id,
-							(MENUFLG)((arg)?MENU_CHECKED:0), MENU_CHECKED);
+			ret = (itm->flag & MENU_CHECKED) ? 1 : 0;
+			menusys_setflag(id, (MENUFLG)((arg) ? MENU_CHECKED : 0), MENU_CHECKED);
 			break;
 
 		case SMSG_GETCHECK:
-			ret = (void *)((itm->flag & MENU_CHECKED)?1:0);
+			ret = (itm->flag & MENU_CHECKED) ? 1 : 0;
 			break;
 
 		case SMSG_SETTEXT:
-			menusys_settxt(id, arg);
+			menusys_settxt(id, (OEMCHAR*)arg);
 			break;
 	}
 

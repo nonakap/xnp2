@@ -11,7 +11,7 @@
 KDISPCFG kdispcfg;
 
 
-BOOL
+BRESULT
 kdispwin_initialize(void)
 {
 

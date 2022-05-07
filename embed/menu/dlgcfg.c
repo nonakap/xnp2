@@ -1,13 +1,16 @@
-#include	"compiler.h"
-#include	"strres.h"
-#include	"np2.h"
-#include	"sysmng.h"
-#include	"pccore.h"
-#include	"vramhdl.h"
-#include	"menubase.h"
-#include	"menustr.h"
-#include	"sysmenu.res"
+/**
+ * @file	dlgcfg.c
+ * @brief	Implementation of the configure dialog
+ */
 
+#include "compiler.h"
+#include "dlgcfg.h"
+#include "../menubase/menudlg.h"
+#include "../menubase/menures.h"
+#include "strres.h"
+#include "pccore.h"
+#include "np2.h"
+#include "sysmng.h"
 
 enum {
 	DID_CLOCK1	= DID_USER,
@@ -284,21 +287,6 @@ const OEMCHAR	*str;
 		update |= SYS_UPDATECFG | SYS_UPDATECLOCK;
 	}
 
-	if (menudlg_getval(DID_RATE11)) {
-		val = 11025;
-	}
-	else if (menudlg_getval(DID_RATE44)) {
-		val = 44100;
-	}
-	else {
-		val = 22050;
-	}
-	if (np2cfg.samplingrate != (UINT16)val) {
-		np2cfg.samplingrate = (UINT16)val;
-		update |= SYS_UPDATECFG | SYS_UPDATERATE;
-		soundrenewal = 1;
-	}
-
 	if (menudlg_getval(DID_MODELVM)) {
 		str = str_VM;
 	}
@@ -322,8 +310,8 @@ const OEMCHAR	*str;
 	else {
 		val = 22050;
 	}
-	if (np2cfg.samplingrate != (UINT16)val) {
-		np2cfg.samplingrate = (UINT16)val;
+	if (np2cfg.samplingrate != val) {
+		np2cfg.samplingrate = val;
 		update |= SYS_UPDATECFG | SYS_UPDATERATE;
 		soundrenewal = 1;
 	}

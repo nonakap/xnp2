@@ -4,7 +4,7 @@
 #include	"iocore.h"
 #include	"memtram.h"
 #include	"vram.h"
-#include	"font.h"
+#include	"font/font.h"
 
 
 REG8 MEMCALL memtram_rd8(UINT32 address) {

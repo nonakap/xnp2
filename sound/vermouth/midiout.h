@@ -121,7 +121,7 @@ struct _miditoneloadparam {
 extern "C" {
 #endif
 
-VEXTERN UINT VEXPORT midiout_getver(char *string, int leng);
+VEXTERN UINT VEXPORT midiout_getver(char *string, UINT leng);
 VEXTERN _MIDIHDL * VEXPORT midiout_create(MIDIMOD mod, UINT worksize);
 VEXTERN void VEXPORT midiout_destroy(MIDIHDL hdl);
 VEXTERN void VEXPORT midiout_shortmsg(MIDIHDL hdl, UINT32 msg);

@@ -1,15 +1,22 @@
-#include "codecnv.h"
+#ifndef	NP2_X11_OEMTEXT_H__
+#define	NP2_X11_OEMTEXT_H__
 
-#if 1
+#include "codecnv/codecnv.h"
+
+#if defined(OSLANG_UTF8)
+#define	oemtext_sjistooem	codecnv_sjistoutf8
+#define	oemtext_oemtosjis	codecnv_utf8tosjis
+#elif defined(OSLANG_EUC)
 #define	oemtext_sjistooem	codecnv_sjistoeuc
 #define	oemtext_oemtosjis	codecnv_euctosjis
-#else
-
-G_BEGIN_DECLS
-
-UINT oemtext_sjistooem(OEMCHAR *dst, UINT dcnt, const char *src, UINT scnt);
-UINT oemtext_oemtosjis(char *dst, UINT dcnt, const OEMCHAR *src, UINT scnt);
-
-G_END_DECLS
-
 #endif
+
+#ifdef __cplusplus
+#include <string>
+namespace std
+{
+	typedef string oemstring;
+}
+#endif  /* __cplusplus */
+
+#endif	/* NP2_X11_OEMTEXT_H__ */

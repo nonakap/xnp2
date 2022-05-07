@@ -1,3 +1,9 @@
+/**
+ * @file	inttrap.h
+ * @brief	Interface of the trap of interrupt
+ */
+
+#pragma once
 
 #if defined(ENABLE_TRAP)
 

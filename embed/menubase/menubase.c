@@ -1,12 +1,18 @@
-#include	"compiler.h"
-#include	"fontmng.h"
-#include	"inputmng.h"
-#include	"scrnmng.h"
-#include	"taskmng.h"
-#include	"vramhdl.h"
-#include	"menudeco.inc"
-#include	"menubase.h"
+/**
+ * @file	menubase.c
+ * @brief	Implementation of the base of the menu
+ */
 
+#include "compiler.h"
+#include "menubase.h"
+#include "menudeco.inc"
+#include "menudlg.h"
+#include "menuicon.h"
+#include "menusys.h"
+#include "fontmng.h"
+#include "inputmng.h"
+#include "scrnmng.h"
+#include "taskmng.h"
 
 	VRAMHDL		menuvram;
 	MENUBASE	menubase;

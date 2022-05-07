@@ -171,10 +171,8 @@ void picmask(NEVENTITEM item) {
 
 	PICITEM		pi;
 
-	if (item->flag & NEVENT_SETEVENT) {
-		pi = &pic.pi[0];
-		pi->irr &= ~(pi->imr & PIC_SYSTEMTIMER);
-	}
+	pi = &pic.pi[0];
+	pi->irr &= ~(pi->imr & PIC_SYSTEMTIMER);
 }
 
 void pic_setirq(REG8 irq) {

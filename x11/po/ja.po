@@ -1,0 +1,386 @@
+# Japanese translations for xnp2 package
+# xnp2 パッケージに対する英訳.
+# Copyright (C) 2022 Nonaka Kimihiro
+# This file is distributed under the same license as the xnp2 package.
+# Kimihiro Nonaka <nonakap@gmail.com>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: xnp2 0.86\n"
+"Report-Msgid-Bugs-To: nonakap@gmail.com\n"
+"POT-Creation-Date: 2022-05-07 21:18+0900\n"
+"PO-Revision-Date: 2022-05-07 16:04+0900\n"
+"Last-Translator: Kimihiro Nonaka <nonakap@gmail.com>\n"
+"Language-Team: Japanese <nonakap@gmail.com>\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Emulate"
+msgstr "エミュレート"
+
+msgid "_Reset"
+msgstr "リセット(_R)"
+
+msgid "_Configure..."
+msgstr "設定(_C)..."
+
+msgid "_New disk..."
+msgstr "新しいディスクイメージを作成(_N)..."
+
+msgid "_Font..."
+msgstr "フォント設定(_F)..."
+
+msgid "_Exit"
+msgstr "終了(_E)"
+
+msgid "Stat"
+msgstr "ステートセーブ"
+
+msgid "Save 0"
+msgstr "スロット0にセーブ"
+
+msgid "Save 1"
+msgstr "スロット1にセーブ"
+
+msgid "Save 2"
+msgstr "スロット2にセーブ"
+
+msgid "Save 3"
+msgstr "スロット3にセーブ"
+
+msgid "Save 4"
+msgstr "スロット4にセーブ"
+
+msgid "Save 5"
+msgstr "スロット5にセーブ"
+
+msgid "Save 6"
+msgstr "スロット6にセーブ"
+
+msgid "Save 7"
+msgstr "スロット7にセーブ"
+
+msgid "Save 8"
+msgstr "スロット8にセーブ"
+
+msgid "Save 9"
+msgstr "スロット9にセーブ"
+
+msgid "Load 0"
+msgstr "スロット0をロード"
+
+msgid "Load 1"
+msgstr "スロット1をロード"
+
+msgid "Load 2"
+msgstr "スロット2をロード"
+
+msgid "Load 3"
+msgstr "スロット3をロード"
+
+msgid "Load 4"
+msgstr "スロット4をロード"
+
+msgid "Load 5"
+msgstr "スロット5をロード"
+
+msgid "Load 6"
+msgstr "スロット6をロード"
+
+msgid "Load 7"
+msgstr "スロット7をロード"
+
+msgid "Load 8"
+msgstr "スロット8をロード"
+
+msgid "Load 9"
+msgstr "スロット9をロード"
+
+msgid "FDD"
+msgstr "フロッピー"
+
+msgid "Drive_1"
+msgstr "ドライブ1(_1)"
+
+msgid "_Open..."
+msgstr "イメージファイルを指定(_O)..."
+
+msgid "_Remove"
+msgstr "取り出す(_R)"
+
+msgid "Drive_2"
+msgstr "ドライブ2(_2)"
+
+msgid "Drive_3"
+msgstr "ドライブ3(_3)"
+
+msgid "Drive_4"
+msgstr "ドライブ4(_4)"
+
+msgid "HardDisk"
+msgstr "ハードディスク"
+
+msgid "IDE0-_0"
+msgstr "IDE0-0(_0)"
+
+msgid "IDE0-_1"
+msgstr "IDE0-1(_1)"
+
+msgid "_CD-ROM"
+msgstr "CD-ROM(_C)"
+
+msgid "SASI-_1"
+msgstr "SASI #1(_1)"
+
+msgid "SASI-_2"
+msgstr "SASI #2(_2)"
+
+msgid "Screen"
+msgstr "画面"
+
+msgid "_Full screen"
+msgstr "フルスクリーン(_F)"
+
+msgid "_Window"
+msgstr "ウィンドウモード(_W)"
+
+msgid "Nor_mal"
+msgstr "画面回転無し(_M)"
+
+msgid "_Left rotate"
+msgstr "画面左回転(_L)"
+
+msgid "_Right rotate"
+msgstr "画面右回転(_R)"
+
+msgid "_Disp Vsync"
+msgstr "V-SYNC発生時画面更新(_D)"
+
+msgid "Real _palettes"
+msgstr "16色より多い色を表示(_P)"
+
+msgid "_No wait"
+msgstr "CPUウェイト無し(_N)"
+
+msgid "_Auto frame"
+msgstr "描画フレーム数自動決定(_A)"
+
+msgid "_Full frame"
+msgstr "全フレーム描画(_F)"
+
+msgid "1/_2 frame"
+msgstr "2回に1度フレーム描画(_2)"
+
+msgid "1/_3 frame"
+msgstr "3回に1度フレーム描画(_3)"
+
+msgid "1/_4 frame"
+msgstr "4回に1度フレーム描画(_4)"
+
+msgid "_Size"
+msgstr "画面解像度(_S)"
+
+msgid "320x240"
+msgstr "320x240"
+
+msgid "480x300"
+msgstr "480x300"
+
+msgid "640x400"
+msgstr "640x400"
+
+msgid "800x500"
+msgstr "800x500"
+
+msgid "960x600"
+msgstr "960x600"
+
+msgid "1280x800"
+msgstr "1280x800"
+
+msgid "Screen _option..."
+msgstr "画面オプション(_O)"
+
+msgid "Device"
+msgstr "デバイス"
+
+msgid "_Keyboard"
+msgstr "キーボード(_K)"
+
+msgid "Normal(_K)"
+msgstr "キーボードを通常モードで使用(_K)"
+
+msgid "Joykey-_1"
+msgstr "テンキーとZXキーをジョイパッド1として使用(_1)"
+
+msgid "Joykey-_2"
+msgstr "テンキーとZXキーをジョイパッド2として使用(_2)"
+
+msgid "mechanical _SHIFT"
+msgstr "シフトキー押下の度にロック・アンロックを切り替える(_S)"
+
+msgid "mechanical _CTRL"
+msgstr "コントロールキー押下の度にロック・アンロックを切り替える(_C)"
+
+msgid "mechanical _GRPH"
+msgstr "GRPHキー押下の度にロック・アンロックを切り替える(_G)"
+
+msgid "F11 = none"
+msgstr "F11キー：未割り当て"
+
+msgid "F11 = Menu toggle"
+msgstr "F11キー：フルスクリーン時メニュー表示切り替え"
+
+msgid "F11 = Full Screen"
+msgstr "F11キー：フルスクリーン切り替え"
+
+msgid "F12 = _Mouse"
+msgstr "F12キー：マウス切り替え(_M)"
+
+msgid "F12 = Co_py"
+msgstr "F12キー：COPYキー(_P)"
+
+msgid "F12 = S_top"
+msgstr "F12キー：STOPキー(_T)"
+
+msgid "F12 = _Help"
+msgstr "F12キー：HELPキー(_H)"
+
+msgid "F12 = tenkey [=]"
+msgstr "F12キー：テンキーの「=」キー"
+
+msgid "F12 = tenkey [,]"
+msgstr "F12キー：テンキーの「,」キー"
+
+msgid "_Sound"
+msgstr "音源(_S)"
+
+msgid "Beep _off"
+msgstr "ビープ音を再生しない(_O)"
+
+msgid "Beep _low"
+msgstr "ビープ音量小(_L)"
+
+msgid "Beep _mid"
+msgstr "ビープ音量中(_M)"
+
+msgid "Beep _high"
+msgstr "ビープ音量大(_H)"
+
+msgid "_Disable boards"
+msgstr "サウンドボードを使用しない(_D)"
+
+msgid "PC-9801-_14"
+msgstr "PC-9801-14(_1)"
+
+msgid "PC-9801-_26K"
+msgstr "PC-9801-26K(_2)"
+
+msgid "PC-9801-8_6"
+msgstr "PC-9801-86(_6)"
+
+msgid "PC-9801-26_K + 86"
+msgstr "PC-9801-26K+86(_2)"
+
+msgid "PC-9801-86 + _Chibi-oto"
+msgstr "PC-9801-86+ちびおと(_C)"
+
+msgid "PC-9801-11_8"
+msgstr "PC-9801-118(_8)"
+
+msgid "S_peak board"
+msgstr "スピークボード(_P)"
+
+msgid "Spa_rk board"
+msgstr "スパークボード(_R)"
+
+msgid "_AMD98"
+msgstr "AMD98(_A)"
+
+msgid "_Jast sound"
+msgstr "ジャストサウンド使用(_J)"
+
+msgid "_Seek sound"
+msgstr "ディスクシーク音再生(_S)"
+
+msgid "M_emory"
+msgstr "メモリー(_E)"
+
+msgid "64_0KB"
+msgstr "640KB(_0)"
+
+msgid "_1.6MB"
+msgstr "1.6MB(_1)"
+
+msgid "_3.6MB"
+msgstr "3.6MB(_3)"
+
+msgid "_5.6MB"
+msgstr "5.6MB(_5)"
+
+msgid "_7.6MB"
+msgstr "7.6MB(_7)"
+
+msgid "_9.6MB"
+msgstr "9.6MB(_9)"
+
+msgid "13._6MB"
+msgstr "13.6MB(_6)"
+
+msgid "_Mouse mode"
+msgstr "マウスエミュレーション(_M)"
+
+msgid "Se_rial option..."
+msgstr "シリアルポート設定(_R)"
+
+msgid "MIDI _option..."
+msgstr "MIDI設定(_O)"
+
+msgid "MIDI _panic"
+msgstr "MIDI消音(_P)"
+
+msgid "So_und option..."
+msgstr "音源設定(_U)"
+
+msgid "Other"
+msgstr "その他"
+
+msgid "_BMP save..."
+msgstr "画面画像保存(_B)"
+
+msgid "_S98 logging..."
+msgstr "音源ログ記録(_S)"
+
+msgid "Ca_lendar..."
+msgstr "カレンダー設定(_L)"
+
+msgid "_Clock disp"
+msgstr "実行クロック数表示(_C)"
+
+msgid "_Frame disp"
+msgstr "描画フレーム数表示(_F)"
+
+msgid "Joy re_verse"
+msgstr "ジョイスティックボタン反転(_V)"
+
+msgid "Joy _rapid"
+msgstr "ジョイスティックボタン連射(_R)"
+
+msgid "_Mouse rapid"
+msgstr "マウスボタン連射(_M)"
+
+msgid "_Tool window"
+msgstr "ツールウィンドウ表示(_T)"
+
+msgid "Key display"
+msgstr "キーディスプレイ表示"
+
+msgid "S_oftware keyboard"
+msgstr "ソフトウェアキーボード表示(_O)"
+
+msgid "_About..."
+msgstr "このプログラムについて"

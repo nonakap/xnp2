@@ -397,3 +397,10 @@ cleandir:: distclean
 
 .man1.1 .jman1.1j:
 	@sed -e 's;@PKGDATADIR@;${DESTDIR}${pkgdatadir};' < $< > $@
+
+SUBDIRS = po
+
+ACLOCAL_AMFLAGS = -I m4
+
+update-po::
+	$(MAKE) -C po update-po

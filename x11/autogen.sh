@@ -1,5 +1,7 @@
 #!/bin/sh
 aclocal
+autopoint
+aclocal -I m4
 autoheader
 automake -aci --foreign
 autoconf

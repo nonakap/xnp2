@@ -5,7 +5,7 @@ dnl
 AC_PREREQ([2.71])
 
 AC_INIT([Xnp2],[0.86],[nonakap@gmail.com],[xnp2])
-AM_INIT_AUTOMAKE([no-define no-dist no-installinfo subdir-objects])
+AM_INIT_AUTOMAKE([foreign no-define no-dist no-installinfo subdir-objects])
 AC_CONFIG_SRCDIR([../np2ver.h])
 AC_CONFIG_HEADERS(config.h)
 AC_CANONICAL_HOST
@@ -288,7 +288,13 @@ if test x"$NP2VER_X11" != "x"; then
 fi
 
 dnl
+dnl Checks for NLS
+dnl
+AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_REQUIRE_VERSION([0.20])
+
+dnl
 dnl Output Makefiles
 dnl
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile po/Makefile.in])
 AC_OUTPUT

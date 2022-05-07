@@ -1,0 +1,7 @@
+# List of source files which contain translatable strings.
+# Copyright (C) 2022 Kimihiro Nonaka <nonakap@gmail.com>
+
+gtk4/main.ui
+gtk4/menu.ui
+
+gtk4/dialog_about.ui
